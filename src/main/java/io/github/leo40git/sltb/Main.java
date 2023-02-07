@@ -21,9 +21,7 @@ public class Main {
 			return;
 		}
 
-		// TODO figure this value out
-		//  it's in System.rvdata2, need to unmarshal it
-		var tint = new WindowTint(0, 0, 0);
+		var tint = new WindowTint(-255, -255, -255);
 		var ctx = new WindowContext(window, tint);
 
 		var image = new BufferedImage(544, 120, BufferedImage.TYPE_INT_ARGB);
