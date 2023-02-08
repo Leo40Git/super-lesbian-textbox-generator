@@ -1,4 +1,4 @@
-package io.github.leo40git.sltb.window;
+package io.github.leo40git.sltbg.window;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;

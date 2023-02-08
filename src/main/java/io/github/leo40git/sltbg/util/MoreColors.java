@@ -1,4 +1,4 @@
-package io.github.leo40git.sltb.util;
+package io.github.leo40git.sltbg.util;
 
 import java.awt.Color;
 

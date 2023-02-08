@@ -1,4 +1,4 @@
-package io.github.leo40git.sltb;
+package io.github.leo40git.sltbg;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -9,9 +9,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import io.github.leo40git.sltb.util.MoreColors;
-import io.github.leo40git.sltb.window.WindowContext;
-import io.github.leo40git.sltb.window.WindowTint;
+import io.github.leo40git.sltbg.util.MoreColors;
+import io.github.leo40git.sltbg.window.WindowContext;
+import io.github.leo40git.sltbg.window.WindowTint;
 import org.jetbrains.annotations.Nullable;
 
 public class Main {
