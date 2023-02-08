@@ -16,6 +16,7 @@ import io.github.leo40git.sltbg.util.MoreColors;
 import io.github.leo40git.sltbg.window.WindowBackground;
 import io.github.leo40git.sltbg.window.WindowContext;
 import io.github.leo40git.sltbg.window.WindowTint;
+import org.jetbrains.annotations.NotNull;
 
 public class Main {
 	public static void main(String[] args) {
@@ -35,20 +36,23 @@ public class Main {
 					messageStart + "\n"
 							+ "In this folder, add the following files from your SLARPG installation:\n"
 							+ " - \"fonts/ChinaCat.ttf\"\n"
-							+ " - \"Graphics/System/Window.png\" from the Game.rgss3a archive (NOT the one in the \"Graphics/System\" folder)"
-							+ " - \"Graphics/Faces/melody faces.png\"",
+							+ " - \"Graphics/System/Window.png\" from the Game.rgss3a archive (NOT the one in the \"Graphics/System\" folder)\n"
+							+ " - \"Graphics/Faces/melody faces.png\"\n"
+							+ " - \"Graphics/Faces/allison faces.png\"",
 					"Super Lesbian Textbox Generator", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
 
 		Font font;
-		BufferedImage window, faces;
+		BufferedImage window, facesM, facesA;
 		try (var fontIn = Files.newInputStream(workDir.resolve("ChinaCat.ttf"));
 			 var windowIn = Files.newInputStream(workDir.resolve("Window.png"));
-			 var facesIn = Files.newInputStream(workDir.resolve("melody faces.png"))) {
+			 var facesMIn = Files.newInputStream(workDir.resolve("melody faces.png"));
+			 var facesAIn = Files.newInputStream(workDir.resolve("allison faces.png"))) {
 			font = Font.createFont(Font.TRUETYPE_FONT, fontIn).deriveFont(18f);
 			window = ImageIO.read(windowIn);
-			faces = ImageIO.read(facesIn);
+			facesM = ImageIO.read(facesMIn);
+			facesA = ImageIO.read(facesAIn);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null,
 					"Failed to read assets from working folder \"" + workDir + "\":\n" + e,
@@ -59,21 +63,14 @@ public class Main {
 		var tint = new WindowTint(-255, -255, -255);
 		var ctx = new WindowContext(window, tint);
 
-		var image = new BufferedImage(640, 120, BufferedImage.TYPE_INT_ARGB);
+		final int textboxWidth = 640, textboxHeight = 120;
+		final int textboxCount = 2;
+		final int textboxVMargin = 2;
+		var image = new BufferedImage(textboxWidth, textboxHeight * textboxCount + textboxVMargin * (textboxCount - 1), BufferedImage.TYPE_INT_ARGB);
 
 		var g = image.createGraphics();
 		g.setBackground(MoreColors.TRANSPARENT);
 		g.clearRect(0, 0, image.getWidth(), image.getHeight());
-
-		ctx.drawBackground(g,
-				WindowBackground.MARGIN, WindowBackground.MARGIN,
-				image.getWidth() - WindowBackground.MARGIN * 2, image.getHeight() - WindowBackground.MARGIN * 2,
-				null);
-
-		g.drawImage(faces,
-				12, 12, 108, 108,
-				0, 0, 96, 96,
-				null);
 
 		g.setFont(font);
 
@@ -83,12 +80,35 @@ public class Main {
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		final int lineHeight = 24;
 
+		ctx.drawBackground(g,
+				WindowBackground.MARGIN, WindowBackground.MARGIN,
+				textboxWidth - WindowBackground.MARGIN * 2, textboxHeight - WindowBackground.MARGIN * 2,
+				null);
+
+		drawFace(g, facesM, 0, 12, 12);
+
 		g.setColor(ctx.getPaletteColor(6));
 		drawText(g, "Melody", 124, 12);
 		g.setColor(ctx.getPaletteColor(0));
 		drawText(g, "Bunny stew is delicious!", 124, 12 + lineHeight);
 
-		ctx.drawBorder(g, 0, 0, image.getWidth(), image.getHeight(), null);
+		ctx.drawBorder(g, 0, 0, textboxWidth, textboxHeight, null);
+
+		ctx.drawArrow(g, 0, 0, textboxWidth, textboxHeight, 0, null);
+
+		ctx.drawBackground(g,
+				WindowBackground.MARGIN, textboxHeight + textboxVMargin + WindowBackground.MARGIN,
+				textboxWidth - WindowBackground.MARGIN * 2, textboxHeight - WindowBackground.MARGIN * 2,
+				null);
+
+		drawFace(g, facesA, 18, 12, textboxHeight + textboxVMargin + 12);
+
+		g.setColor(ctx.getPaletteColor(6));
+		drawText(g, "Allison", 124, textboxHeight + textboxVMargin + 12);
+		g.setColor(ctx.getPaletteColor(0));
+		drawText(g, "babe what the FUCK", 124, textboxHeight + textboxVMargin + 12 + lineHeight);
+
+		ctx.drawBorder(g, 0, textboxHeight + textboxVMargin, textboxWidth, textboxHeight, null);
 
 		g.dispose();
 
@@ -102,7 +122,18 @@ public class Main {
 		}
 	}
 
-	private static void drawText(Graphics2D g, String text, int x, int y) {
+	private static void drawFace(@NotNull Graphics2D g, BufferedImage faceSheet, int index, int x, int y) {
+		int sx = (index % 4) * 96;
+		int sy = (index / 4) * 96;
+		assert sx > 0 && sx + 96 < faceSheet.getWidth();
+		assert sy > 0 && sy + 96 < faceSheet.getHeight();
+		g.drawImage(faceSheet,
+				x, y, x + 96, y + 96,
+				sx, sy, sx + 96, sy + 96,
+				null);
+	}
+
+	private static void drawText(@NotNull Graphics2D g, String text, int x, int y) {
 		final int yo = g.getFontMetrics().getMaxAscent();
 		var color = g.getColor();
 		g.setColor(Color.BLACK);
