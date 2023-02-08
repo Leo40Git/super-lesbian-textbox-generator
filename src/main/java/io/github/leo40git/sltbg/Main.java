@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import io.github.leo40git.sltbg.util.MoreColors;
+import io.github.leo40git.sltbg.window.WindowBackground;
 import io.github.leo40git.sltbg.window.WindowContext;
 import io.github.leo40git.sltbg.window.WindowTint;
 import org.jetbrains.annotations.Nullable;
@@ -30,8 +31,10 @@ public class Main {
 		g.setBackground(MoreColors.TRANSPARENT);
 		g.clearRect(0, 0, image.getWidth(), image.getHeight());
 
-		final int margin = 2;
-		ctx.drawBackground(g, margin, margin, image.getWidth() - margin * 2, image.getHeight() - margin * 2, null);
+		ctx.drawBackground(g,
+				WindowBackground.MARGIN, WindowBackground.MARGIN,
+				image.getWidth() - WindowBackground.MARGIN * 2, image.getHeight() - WindowBackground.MARGIN * 2,
+				null);
 		ctx.drawBorder(g, 0, 0, image.getWidth(), image.getHeight(), null);
 
 		g.dispose();

@@ -28,6 +28,10 @@ public final class WindowBackground {
 	//  while the "overlay" is tiled
 	// RPG Maker also renders both layers together at 75% opacity
 
+	// additionally, RPG Maker draws the background with a margin
+	//  (not directly handled in this class)
+	public static final int MARGIN = 2;
+
 	public static final int TILE_SIZE = 64;
 
 	private final @NotNull BufferedImage base, overlay;

@@ -57,7 +57,7 @@ public final class WindowContext {
 		return palette;
 	}
 
-	public @NotNull Color getColor(int index) {
+	public @NotNull Color getPaletteColor(int index) {
 		return palette.get(index);
 	}
 }
