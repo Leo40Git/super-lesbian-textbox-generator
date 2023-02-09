@@ -1,0 +1,36 @@
+; "Local pink fox enjoyer creates world's worst scripting language to split face sheets"
+; delimited via tabs, tab width is 4 spaces (should already be configured for you thanks to .editorconfig)
+
+; commands:
+; BGN	sheet.png
+;   opens a face sheet for splitting
+; ADD	category	name	destination/path.png	(tag1,tag2...)
+;   splits the face at the current index and advances the index by 1
+;   tags are optional
+; SKP	(count)
+;   advances the index by count
+;   count is optional, defaults to 1
+;   count must be 1 or higher
+; END
+;   closes the currently open file
+
+; Melody
+BGN	melody faces.png
+ADD	Melody	Happy	melody/happy.png
+ADD	Melody	Neutral	melody/neutral.png
+ADD	Melody	Neutral (Looking to Side)	melody/neutral_side.png
+ADD	Melody	Sad	melody/sad.png
+END
+
+; Allison
+BGN	allison faces.png
+ADD	Allison	Happy	allison/happy.png
+ADD	Allison	Neutral	allison/neutral.png
+ADD	Allison	Unamused	allison/unamused.png
+ADD	Allison	Flustered	allison/flustered.png
+; TODO
+SKP	7
+ADD	Allison	Empowered (Happy Tears)	allison/sform_happy.png	spoilers,sform
+END
+
+; TODO Claire, Jodie, literally everyone else

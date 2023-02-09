@@ -7,10 +7,16 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    maven {
+        url = 'https://maven.quiltmc.org/repository/release'
+        name = 'QuiltMC'
+    }
 }
 
 dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
+    implementation 'org.quiltmc:quilt-json5:1.0.3'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }

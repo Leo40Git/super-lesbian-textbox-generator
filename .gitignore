@@ -4,7 +4,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-work/
+/asset-extractor/input/*
+!/asset-extractor/input/faces.lst
+/asset-extractor/output/
 
 ### IntelliJ IDEA ###
 .idea/
