@@ -15,7 +15,7 @@ import javax.swing.JOptionPane;
 import io.github.leo40git.sltbg.util.MoreColors;
 import io.github.leo40git.sltbg.window.WindowBackground;
 import io.github.leo40git.sltbg.window.WindowContext;
-import io.github.leo40git.sltbg.window.WindowTint;
+import io.github.leo40git.sltbg.window.WindowTone;
 import org.jetbrains.annotations.NotNull;
 
 public final class Main {
@@ -57,7 +57,7 @@ public final class Main {
 			return;
 		}
 
-		var tint = new WindowTint(-255, -255, -255);
+		var tint = new WindowTone(-255, -255, -255, 0);
 		var ctx = new WindowContext(window, tint);
 
 		final int textboxWidth = 640, textboxHeight = 120;

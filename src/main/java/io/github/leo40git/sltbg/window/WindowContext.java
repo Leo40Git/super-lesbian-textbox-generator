@@ -13,8 +13,8 @@ import org.jetbrains.annotations.Range;
 
 /**
  * <strong>NOTE:</strong> This class is <em>not safe</em> for multithreading.
- *
- * <p>If you need to render the window on multiple threads, use the {@link #copy()} method to get a copy to
+ * <p>
+ * If you need to render the window on multiple threads, use the {@link #copy()} method to get a copy to
  * pass to another thread.
  */
 public final class WindowContext {
@@ -23,8 +23,8 @@ public final class WindowContext {
 	private final @NotNull WindowPalette palette;
 	private final @NotNull WindowArrow arrow;
 
-	public WindowContext(@NotNull BufferedImage window, @NotNull WindowTint tint) {
-		background = new WindowBackground(window, tint);
+	public WindowContext(@NotNull BufferedImage window, @NotNull WindowTone tone) {
+		background = new WindowBackground(window, tone);
 		border = new WindowBorder(window);
 		arrow = new WindowArrow(window);
 		palette = new WindowPalette(window);

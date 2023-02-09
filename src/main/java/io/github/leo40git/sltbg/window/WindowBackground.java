@@ -18,8 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * <strong>NOTE:</strong> This class is <em>not safe</em> for multithreading.
- *
- * <p>If you need to render the window background on multiple threads, use the {@link #copy()} method to get a copy to
+ * <p>
+ * If you need to render the window background on multiple threads, use the {@link #copy()} method to get a copy to
  * pass to another thread.
  */
 public final class WindowBackground {
@@ -35,19 +35,19 @@ public final class WindowBackground {
 	public static final int TILE_SIZE = 64;
 
 	private final @NotNull BufferedImage base, overlay;
-	private final @NotNull WindowTint color;
+	private final @NotNull WindowTone tone;
 	private BufferedImage scratchBuf;
 
-	public WindowBackground(@NotNull BufferedImage window, @NotNull WindowTint color) {
+	public WindowBackground(@NotNull BufferedImage window, @NotNull WindowTone tone) {
 		base = window.getSubimage(0, 0, TILE_SIZE, TILE_SIZE);
 		overlay = window.getSubimage(0, TILE_SIZE, TILE_SIZE, TILE_SIZE);
-		this.color = color;
+		this.tone = tone;
 	}
 
-	private WindowBackground(@NotNull BufferedImage base, @NotNull BufferedImage overlay, @NotNull WindowTint color, @Nullable BufferedImage scratchBuf) {
+	private WindowBackground(@NotNull BufferedImage base, @NotNull BufferedImage overlay, @NotNull WindowTone tone, @Nullable BufferedImage scratchBuf) {
 		this.base = base;
 		this.overlay = overlay;
-		this.color = color;
+		this.tone = tone;
 		this.scratchBuf = scratchBuf;
 	}
 
@@ -59,7 +59,7 @@ public final class WindowBackground {
 					scratchBuf.copyData(scratchBuf.getRaster().createCompatibleWritableRaster()),
 					scratchBuf.isAlphaPremultiplied(), null);
 		}
-		return new WindowBackground(base, overlay, color, scratchBufCopy);
+		return new WindowBackground(base, overlay, tone, scratchBufCopy);
 	}
 
 	public void draw(Graphics2D g, int x, int y, int width, int height, ImageObserver observer) {
@@ -67,7 +67,9 @@ public final class WindowBackground {
 			Graphics2D sg = scratchBuf.createGraphics();
 
 			// draw stretched and tinted base
-			sg.setComposite(new BaseComposite(color));
+			if (tone.intensity() > 0) {
+				sg.setComposite(new BaseComposite(tone));
+			}
 			sg.drawImage(base, 0, 0, width, height, 0, 0, base.getWidth(), base.getHeight(), null);
 			// draw tiled overlay
 			sg.setComposite(AlphaComposite.SrcOver);
@@ -104,7 +106,7 @@ public final class WindowBackground {
 	private static final class BaseComposite implements Composite {
 		private final Context context;
 
-		public BaseComposite(@NotNull WindowTint color) {
+		public BaseComposite(@NotNull WindowTone color) {
 			context = new Context(color);
 		}
 
@@ -113,7 +115,7 @@ public final class WindowBackground {
 			return context;
 		}
 
-		private record Context(WindowTint color) implements CompositeContext {
+		private record Context(WindowTone tone) implements CompositeContext {
 			@Override
 			public void dispose() { }
 
@@ -127,9 +129,9 @@ public final class WindowBackground {
 				for (int x = 0; x < w; x++) {
 					for (int y = 0; y < h; y++) {
 						src.getPixel(x + src.getMinX(), y + src.getMinY(), srcRgba);
-						srcRgba[0] = Math.min(255, Math.max(0, srcRgba[0] + color.red()));
-						srcRgba[1] = Math.min(255, Math.max(0, srcRgba[1] + color.green()));
-						srcRgba[2] = Math.min(255, Math.max(0, srcRgba[2] + color.blue()));
+						srcRgba[0] = Math.min(255, Math.max(0, srcRgba[0] + tone.redScaled()));
+						srcRgba[1] = Math.min(255, Math.max(0, srcRgba[1] + tone.greenScaled()));
+						srcRgba[2] = Math.min(255, Math.max(0, srcRgba[2] + tone.blueScaled()));
 						dstOut.setPixel(x + dstOut.getMinX(), y + dstOut.getMinY(), srcRgba);
 					}
 				}
