@@ -18,7 +18,7 @@ import io.github.leo40git.sltbg.window.WindowContext;
 import io.github.leo40git.sltbg.window.WindowTint;
 import org.jetbrains.annotations.NotNull;
 
-public class Main {
+public final class Main {
 	public static void main(String[] args) {
 		var workDir = Paths.get("work").toAbsolutePath();
 		if (!Files.isDirectory(workDir)) {
@@ -37,22 +37,19 @@ public class Main {
 							+ "In this folder, add the following files from your SLARPG installation:\n"
 							+ " - \"fonts/ChinaCat.ttf\"\n"
 							+ " - \"Graphics/System/Window.png\" from the Game.rgss3a archive (NOT the one in the \"Graphics/System\" folder)\n"
-							+ " - \"Graphics/Faces/melody faces.png\"\n"
-							+ " - \"Graphics/Faces/allison faces.png\"",
+							+ " - \"Graphics/Faces/melody faces.png\"",
 					"Super Lesbian Textbox Generator", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
 
 		Font font;
-		BufferedImage window, facesM, facesA;
+		BufferedImage window, facesM;
 		try (var fontIn = Files.newInputStream(workDir.resolve("ChinaCat.ttf"));
 			 var windowIn = Files.newInputStream(workDir.resolve("Window.png"));
-			 var facesMIn = Files.newInputStream(workDir.resolve("melody faces.png"));
-			 var facesAIn = Files.newInputStream(workDir.resolve("allison faces.png"))) {
+			 var facesMIn = Files.newInputStream(workDir.resolve("melody faces.png"))) {
 			font = Font.createFont(Font.TRUETYPE_FONT, fontIn).deriveFont(18f);
 			window = ImageIO.read(windowIn);
 			facesM = ImageIO.read(facesMIn);
-			facesA = ImageIO.read(facesAIn);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null,
 					"Failed to read assets from working folder \"" + workDir + "\":\n" + e,
@@ -64,7 +61,7 @@ public class Main {
 		var ctx = new WindowContext(window, tint);
 
 		final int textboxWidth = 640, textboxHeight = 120;
-		final int textboxCount = 2;
+		final int textboxCount = 1;
 		final int textboxVMargin = 2;
 		var image = new BufferedImage(textboxWidth, textboxHeight * textboxCount + textboxVMargin * (textboxCount - 1), BufferedImage.TYPE_INT_ARGB);
 
@@ -87,7 +84,7 @@ public class Main {
 
 		drawFace(g, facesM, 0, 12, 12);
 
-		g.setColor(ctx.getPaletteColor(6));
+		g.setColor(ctx.getPaletteColor(14));
 		drawText(g, "Melody", 124, 12);
 		g.setColor(ctx.getPaletteColor(0));
 		drawText(g, "Bunny stew is delicious!", 124, 12 + lineHeight);
@@ -95,20 +92,6 @@ public class Main {
 		ctx.drawBorder(g, 0, 0, textboxWidth, textboxHeight, null);
 
 		ctx.drawArrow(g, 0, 0, textboxWidth, textboxHeight, 0, null);
-
-		ctx.drawBackground(g,
-				WindowBackground.MARGIN, textboxHeight + textboxVMargin + WindowBackground.MARGIN,
-				textboxWidth - WindowBackground.MARGIN * 2, textboxHeight - WindowBackground.MARGIN * 2,
-				null);
-
-		drawFace(g, facesA, 18, 12, textboxHeight + textboxVMargin + 12);
-
-		g.setColor(ctx.getPaletteColor(6));
-		drawText(g, "Allison", 124, textboxHeight + textboxVMargin + 12);
-		g.setColor(ctx.getPaletteColor(0));
-		drawText(g, "babe what the FUCK", 124, textboxHeight + textboxVMargin + 12 + lineHeight);
-
-		ctx.drawBorder(g, 0, textboxHeight + textboxVMargin, textboxWidth, textboxHeight, null);
 
 		g.dispose();
 

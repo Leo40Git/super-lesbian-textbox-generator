@@ -9,6 +9,7 @@ import java.awt.image.ImageObserver;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 /**
  * <strong>NOTE:</strong> This class is <em>not safe</em> for multithreading.
@@ -49,15 +50,18 @@ public final class WindowContext {
 		border.draw(g, x, y, width, height, observer);
 	}
 
-	public void drawArrow(@NotNull Graphics g, int boxX, int boxY, int boxWidth, int boxHeight, int frame, @Nullable ImageObserver observer) {
-		arrow.draw(g, boxX, boxY, boxWidth, boxHeight, frame, observer);
+	public void drawArrow(@NotNull Graphics g, int boxX, int boxY, int boxWidth, int boxHeight,
+			@Range(from = 0, to = WindowArrow.FRAME_COUNT) int frame, @Nullable ImageObserver observer) {
+		int x = boxX + (boxWidth / 2) - (WindowArrow.FRAME_SIZE / 2);
+		int y = boxY + boxHeight - WindowArrow.FRAME_SIZE;
+		arrow.draw(g, x, y, frame, observer);
 	}
 
 	public @NotNull WindowPalette getPalette() {
 		return palette;
 	}
 
-	public @NotNull Color getPaletteColor(int index) {
+	public @NotNull Color getPaletteColor(@Range(from = 0, to = WindowPalette.SIZE) int index) {
 		return palette.get(index);
 	}
 }

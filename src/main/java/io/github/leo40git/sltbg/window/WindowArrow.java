@@ -6,6 +6,7 @@ import java.awt.image.ImageObserver;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 public final class WindowArrow {
 	// this simple "arrow moving up and down" animation is stored as 4 pre-moved frames in the Window sheet
@@ -14,6 +15,7 @@ public final class WindowArrow {
 	// and the next button press will begin the next textbox
 	// TODO document animation speed
 
+	public static final int FRAME_COUNT = 4;
 	public static final int FRAME_SIZE = 16;
 
 	private final BufferedImage[] frames = new BufferedImage[4];
@@ -28,10 +30,7 @@ public final class WindowArrow {
 		}
 	}
 
-	public void draw(@NotNull Graphics g, int boxX, int boxY, int boxWidth, int boxHeight, int frame, @Nullable ImageObserver observer) {
-		int x = boxX + (boxWidth / 2) - (FRAME_SIZE / 2);
-		int y = boxY + boxHeight - FRAME_SIZE;
-
+	public void draw(@NotNull Graphics g, int x, int y, @Range(from = 0, to = FRAME_COUNT) int frame, @Nullable ImageObserver observer) {
 		g.drawImage(frames[frame], x, y, observer);
 	}
 }
