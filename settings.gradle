@@ -1,2 +1,4 @@
 rootProject.name = 'super-lesbian-textbox-generator'
+include 'app'
+include 'asset-extractor'
 

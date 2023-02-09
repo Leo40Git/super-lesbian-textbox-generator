@@ -1,4 +1,4 @@
-package io.github.leo40git.sltbg;
+package io.github.leo40git.sltbg.assext;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -12,10 +12,10 @@ import java.nio.file.Paths;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
-import io.github.leo40git.sltbg.util.MoreColors;
-import io.github.leo40git.sltbg.window.WindowBackground;
-import io.github.leo40git.sltbg.window.WindowContext;
-import io.github.leo40git.sltbg.window.WindowTone;
+import io.github.leo40git.sltbg.assext.util.MoreColors;
+import io.github.leo40git.sltbg.assext.window.WindowBackground;
+import io.github.leo40git.sltbg.assext.window.WindowContext;
+import io.github.leo40git.sltbg.assext.window.WindowTone;
 import org.jetbrains.annotations.NotNull;
 
 public final class Main {

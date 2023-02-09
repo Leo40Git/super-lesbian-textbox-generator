@@ -1,4 +1,4 @@
-package io.github.leo40git.sltbg.window;
+package io.github.leo40git.sltbg.assext.window;
 
 import org.jetbrains.annotations.Range;
 
