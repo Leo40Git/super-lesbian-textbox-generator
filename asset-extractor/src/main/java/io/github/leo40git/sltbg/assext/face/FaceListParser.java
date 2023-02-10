@@ -54,6 +54,7 @@ public final class FaceListParser {
 
 	private static int parseOne(@NotNull Path sheetPath, @NotNull BufferedReader reader, int lineNum,
 			@NotNull List<FaceCollector> results, @NotNull Map<String, Set<String>> names, @NotNull Set<String> paths) throws IOException {
+		int order = 0;
 		var entries = new ArrayList<FaceListEntry>();
 
 		boolean ended = false;
@@ -85,6 +86,13 @@ public final class FaceListParser {
 							throw new FaceListException("%s: duplicate path '%s'".formatted(CMD_ADD, path), lineNum);
 						}
 
+						int myOrder;
+						if (scn.hasNextInt()) {
+							order = myOrder = scn.nextInt();
+						} else {
+							myOrder = order++;
+						}
+
 						var tags = NO_TAGS;
 						if (scn.hasNext()) {
 							String tagTkn = scn.next();
@@ -95,7 +103,7 @@ public final class FaceListParser {
 							}
 						}
 
-						entries.add(new FaceListEntry.Add(category, name, path, tags));
+						entries.add(new FaceListEntry.Add(category, name, path, order, tags));
 					}
 					case CMD_SKIP -> {
 						int indexAdvance = 1;

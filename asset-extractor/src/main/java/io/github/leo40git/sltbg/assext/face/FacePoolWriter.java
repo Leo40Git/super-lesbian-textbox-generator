@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 
@@ -17,7 +20,7 @@ import org.quiltmc.json5.JsonWriter;
 
 public final class FacePoolWriter {
 	private final List<Entry> faces;
-	private final Map<String, List<@NotNull Entry>> byCategory;
+	private final Map<String, Set<Entry>> byCategory;
 
 	public FacePoolWriter() {
 		faces = new ArrayList<>();
@@ -26,7 +29,7 @@ public final class FacePoolWriter {
 
 	public void add(@NotNull FacePoolWriter.Entry face) {
 		faces.add(face);
-		byCategory.computeIfAbsent(face.category(), ignored -> new ArrayList<>()).add(face);
+		byCategory.computeIfAbsent(face.category(), ignored -> new TreeSet<>(Comparator.comparing(Entry::order))).add(face);
 	}
 
 	public void write(@NotNull Path dir) throws IOException {
@@ -80,5 +83,6 @@ public final class FacePoolWriter {
 		}
 	}
 
-	public record Entry(@NotNull String category, @NotNull String name, @NotNull String path, @NotNull String @NotNull [] tags, @NotNull BufferedImage image) { }
+	public record Entry(@NotNull String category, @NotNull String name, @NotNull String path, int order, @NotNull String @NotNull [] tags,
+						@NotNull BufferedImage image) { }
 }

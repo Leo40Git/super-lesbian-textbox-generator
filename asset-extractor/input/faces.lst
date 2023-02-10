@@ -4,9 +4,9 @@
 ; commands:
 ; BGN	sheet.png
 ;   opens a face sheet for splitting
-; ADD	category	name	destination/path.png	(tag1,tag2...)
+; ADD	category	name	destination/path.png	(order)	(tag1,tag2...)
 ;   splits the face at the current index and advances the index by 1
-;   tags are optional
+;   order and tags are optional
 ; SKP	(count)
 ;   advances the index by count
 ;   count is optional, defaults to 1
@@ -16,79 +16,79 @@
 
 ; Melody
 BGN	melody faces.png
-ADD	Melody	Happy	melody/happy.png
-ADD	Melody	Neutral	melody/neutral.png
-ADD	Melody	Neutral, Looking to Side	melody/neutral_side.png
-ADD	Melody	Sad	melody/sad.png
-ADD	Melody	Happy, Looking to Side	melody/happy_side.png
-ADD	Melody	Embarrassed	melody/embarrassed.png
-ADD	Melody	Smug	melody/smug.png
-ADD	Melody	Worried	melody/worried.png
-ADD	Melody	Unamused	melody/unamused.png
-ADD	Melody	Shocked	melody/shocked.png
-ADD	Melody	Surprised	melody/surprised.png
-ADD	Melody	Wistful	melody/oh_you.png
-ADD	Melody	Flustered	melody/flustered.png
-ADD	Melody	Furious	melody/fuckign_pissed.png
-ADD	Melody	Angry	melody/pissed.png
-ADD	Melody	Sad, Looking to Side	melody/sad_side.png
-ADD	Melody	Happy (casual)	melody/happy_casual.png
-ADD	Melody	Neutral (casual)	melody/neutral_casual.png
-ADD	Melody	Embarrassed (casual)	melody/embarrassed_casual.png
+ADD	Melody	Happy	melody/happy.png	100
+ADD	Melody	Neutral	melody/neutral.png	200
+ADD	Melody	Neutral, Looking to Side	melody/neutral_side.png	210
+ADD	Melody	Sad	melody/sad.png	300
+ADD	Melody	Happy, Looking to Side	melody/happy_side.png	110
+ADD	Melody	Embarrassed	melody/embarrassed.png	400
+ADD	Melody	Smug	melody/smug.png	500
+ADD	Melody	Worried	melody/worried.png	600
+ADD	Melody	Unamused	melody/unamused.png	700
+ADD	Melody	Shocked	melody/shocked.png	800
+ADD	Melody	Surprised	melody/surprised.png	900
+ADD	Melody	Wistful	melody/oh_you.png	1000
+ADD	Melody	Flustered	melody/flustered.png	1100
+ADD	Melody	Furious	melody/fuckign_pissed.png	1210
+ADD	Melody	Angry	melody/pissed.png	1200
+ADD	Melody	Sad, Looking to Side	melody/sad_side.png	310
+ADD	Melody	Happy (casual)	melody/happy_casual.png	3000
+ADD	Melody	Neutral (casual)	melody/neutral_casual.png	3100
+ADD	Melody	Embarrassed (casual)	melody/embarrassed_casual.png	3200
 ; empty slot
 SKP
-ADD	Melody	Unamused (casual)	melody/unamused_casual.png
-ADD	Melody	Shocked (casual)	melody/shocked_casual.png
-ADD	Melody	Shocked, Looking to Side (casual)	melody/shocked_side_casual.png
+ADD	Melody	Unamused (casual)	melody/unamused_casual.png	3300
+ADD	Melody	Shocked (casual)	melody/shocked_casual.png	3400
+ADD	Melody	Shocked, Looking to Side (casual)	melody/shocked_side_casual.png	3410
 END
 
 BGN	melody faces 2.png
 ; Happy but transparent, duplicate of Furious
 SKP	2
-ADD	Melody	Furious, Tears	melody/fuckign_pissed_tears.png
+ADD	Melody	Furious, Tears	melody/fuckign_pissed_tears.png	1220
 ; empty slot
 SKP
-ADD	Melody	Screaming, Eyes Closed, Tears	melody/fuckign_screaming_closed_tears.png
-ADD	Melody	Screaming	melody/fuckign_screaming.png
-ADD	Melody	Crying	melody/fuckign_crying.png
+ADD	Melody	Screaming, Eyes Closed, Tears	melody/fuckign_screaming_closed_tears.png	1820
+ADD	Melody	Screaming	melody/fuckign_screaming.png	1800
+ADD	Melody	Crying	melody/fuckign_crying.png	1900
 ; empty slot
 SKP
-ADD	Melody	Crying, Eyes Closed	melody/fuckign_crying_closed.png
-ADD	Melody	Screaming, Crying, Eyes Closed	melody/fuckign_screaming_closed_crying.png
-ADD	Melody	Crying, Mouth Closed	melody/crying.png
+ADD	Melody	Crying, Eyes Closed	melody/fuckign_crying_closed.png	1910
+ADD	Melody	Crying, Screaming	melody/fuckign_crying_screaming.png	1920
+ADD	Melody	Crying, Mouth Closed	melody/crying.png	1930
 ; empty slot
 SKP
-ADD	Melody	Shocked, Tears	melody/shocked_tears.png
-ADD	Melody	Screaming, Eyes Closed	melody/fuckign_screaming_closed.png
-ADD	Melody	Wistful, Tears	melody/oh_you_tears.png
+ADD	Melody	Shocked, Tears	melody/shocked_tears.png	810
+ADD	Melody	Screaming, Eyes Closed	melody/fuckign_screaming_closed.png	1810
+ADD	Melody	Wistful, Tears	melody/oh_you_tears.png	1100
 ; empty slot
 SKP
-ADD	Melody	Smug +	melody/smugger.png
+ADD	Melody	Smug +	melody/smugger.png	510
 ; 3 empty slots!
 SKP	3
-ADD	Melody	Empowered, Happy	melody/sl_happy.png	spoilers
-ADD	Melody	Empowered, Wistful	melody/sl_oh_you.png	spoilers
-ADD	Melody	Empowered, Fading	melody/sl_dying.png	spoilers
-ADD	Melody	Empowered, Faded	melody/sl_rip.png	spoilers
+ADD	Melody	Empowered, Happy	melody/sl_happy.png	9000	spoilers
+ADD	Melody	Empowered, Wistful	melody/sl_oh_you.png	9100	spoilers
+ADD	Melody	Empowered, Fading	melody/sl_dying.png	9200	spoilers
+ADD	Melody	Empowered, Faded	melody/sl_rip.png	9300	spoilers
 END
 
 BGN	melody faces winter.png
-ADD	Melody	Happy (winter)	melody/happy_winter.png
-ADD	Melody	Neutral (winter)	melody/neutral_winter.png
-ADD	Melody	Neutral, Looking to Side (winter)	melody/neutral_side_winter.png
-ADD	Melody	Sad (winter)	melody/sad_winter.png
-ADD	Melody	Happy, Looking to Side (winter)	melody/happy_side_winter.png
-ADD	Melody	Embarrassed (winter)	melody/embarrassed_winter.png
-ADD	Melody	Smug (winter)	melody/smug_winter.png
-ADD	Melody	Worried (winter)	melody/worried_winter.png
-ADD	Melody	Unamused (winter)	melody/unamused_winter.png
-ADD	Melody	Shocked (winter)	melody/shocked_winter.png
-ADD	Melody	Surprised (winter)	melody/surprised_winter.png
-ADD	Melody	Wistful (winter)	melody/oh_you_winter.png
-ADD	Melody	Flustered (winter)	melody/flustered_winter.png
-ADD	Melody	Furious (winter)	melody/fuckign_pissed_winter.png
-ADD	Melody	Angry (winter)	melody/pissed_winter.png
-ADD	Melody	Sad, Looking to Side (winter)	melody/sad_side_winter.png
+ADD	Melody	Happy (winter)	melody/happy_winter.png	4100
+ADD	Melody	Neutral (winter)	melody/neutral_winter.png	4200
+ADD	Melody	Neutral, Looking to Side (winter)	melody/neutral_side_winter.png	4210
+ADD	Melody	Sad (winter)	melody/sad_winter.png	4300
+ADD	Melody	Happy, Looking to Side (winter)	melody/happy_side_winter.png	4110
+ADD	Melody	Embarrassed (winter)	melody/embarrassed_winter.png	4400
+ADD	Melody	Smug (winter)	melody/smug_winter.png	4500
+ADD	Melody	Worried (winter)	melody/worried_winter.png	4600
+ADD	Melody	Unamused (winter)	melody/unamused_winter.png	4700
+ADD	Melody	Shocked (winter)	melody/shocked_winter.png	4800
+ADD	Melody	Surprised (winter)	melody/surprised_winter.png	4900
+ADD	Melody	Wistful (winter)	melody/oh_you_winter.png	5000
+ADD	Melody	Flustered (winter)	melody/flustered_winter.png	5100
+ADD	Melody	Furious (winter)	melody/fuckign_pissed_winter.png	5210
+ADD	Melody	Angry (winter)	melody/pissed_winter.png	5200
+ADD	Melody	Sad, Looking to Side (winter)	melody/sad_side_winter.png	4310
 END
 
 ; Allison
