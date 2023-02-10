@@ -11,6 +11,7 @@
             <Policies>
                 <OnStartupTriggeringPolicy />
             </Policies>
+			<DefaultRolloverStrategy max="10"/>
         </RollingFile>
     </Appenders>
     <Loggers>
