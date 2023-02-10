@@ -1,0 +1,13 @@
+{
+  "name": "Super Lesbian Textbox Generator",
+  "version": "${version}",
+  "urls": {
+    "homepage": "https://github.com/Leo40Git/super-lesbian-textbox-generator",
+    "source": "https://github.com/Leo40Git/super-lesbian-textbox-generator",
+    "issues": "https://github.com/Leo40Git/super-lesbian-textbox-generator/issues"
+  },
+  "credits": [
+    "Developed by ADudeCalledLeo",
+    "Super Lesbian Animal RPG by Bobby Schroeder (AKA ponnett) and co."
+  ]
+}
