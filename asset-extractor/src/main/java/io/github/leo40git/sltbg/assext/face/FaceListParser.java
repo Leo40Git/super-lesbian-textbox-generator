@@ -82,7 +82,8 @@ public final class FaceListParser {
 						if (scn.hasNextInt()) {
 							indexAdvance = scn.nextInt();
 							if (indexAdvance < 1) {
-								throw new FaceListException("%s command has invalid advance argument (must be 1 or higher)", lineNum);
+								throw new FaceListException("%s command has invalid advance argument (must be 1 or higher, but was %d)"
+										.formatted(CMD_SKIP, indexAdvance), lineNum);
 							}
 						}
 						entries.add(new FaceListEntry.Skip(indexAdvance));
