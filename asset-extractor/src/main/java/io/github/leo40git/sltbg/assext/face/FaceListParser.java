@@ -103,7 +103,7 @@ public final class FaceListParser {
 							}
 						}
 
-						entries.add(new FaceListEntry.Add(category, name, path, order, tags));
+						entries.add(new FaceListEntry.Add(category, name, path, myOrder, tags));
 					}
 					case CMD_SKIP -> {
 						int indexAdvance = 1;

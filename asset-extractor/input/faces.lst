@@ -63,7 +63,7 @@ ADD	Melody	Screaming, Eyes Closed	melody/fuckign_screaming_closed.png	1810
 ADD	Melody	Wistful, Tears	melody/oh_you_tears.png	1100
 ; empty slot
 SKP
-ADD	Melody	Smug +	melody/smugger.png	510
+ADD	Melody	Confident	melody/confident.png	510
 ; 3 empty slots!
 SKP	3
 ADD	Melody	Empowered, Happy	melody/sl_happy.png	9000	spoilers
@@ -93,13 +93,29 @@ END
 
 ; Allison
 BGN	allison faces.png
-ADD	Allison	Happy	allison/happy.png
-ADD	Allison	Neutral	allison/neutral.png
-ADD	Allison	Unamused	allison/unamused.png
-ADD	Allison	Flustered	allison/flustered.png
-; TODO
-SKP	7
-ADD	Allison	Empowered, Happy Tears	allison/sl_happy.png	spoilers
+ADD	Allison	Happy	allison/happy.png	100
+ADD	Allison	Neutral	allison/neutral.png	200
+ADD	Allison	Unamused	allison/unamused.png	300
+ADD	Allison	Flustered	allison/flustered.png	400
+ADD	Allison	Smug	allison/smug.png	500
+ADD	Allison	Worried	allison/worried.png	600
+ADD	Allison	Happy (alt)	allison/happy_alt.png	110
+ADD	Allison	Happy Tears	allison/happy_tears.png	120
+ADD	Allison	Angry	allison/angry.png	700
+ADD	Allison	Confident	allison/confident.png	510
+ADD	Allison	Shocked	allison/shocked.png	800
+ADD	Allison	Empowered, Happy	allison/sl_happy.png	9000	spoilers
+ADD	Allison	Happy, Eyes Closed	allison/happy_closed.png	130
+ADD	Allison	Neutral, Eyes Closed	allison/neutral_closed.png	210
+ADD	Allison	Confused	allison/what.png	900
+ADD	Allison	Empowered, Neutral	allison/sl_neutral.png	9100	spoilers
+ADD	Allison	Surprised	allison/surprised.png	1000
+ADD	Allison	Miffed	allison/bruh.png	1100
+ADD	Allison	Sad	allison/sad.png	1200
+ADD	Allison	Empowered, Fading	allison/sl_dying.png	9200	spoilers
+ADD	Allison	Introspective	allison/thinking.png	1300
+ADD	Allison	Introspective, Smiling	allison/thinking_happy.png	1400
+ADD	Allison	Neutral (fuzzy signal)	allison/neutral_static.png	205
 END
 
 ; TODO Claire, Jodie, literally everyone else
