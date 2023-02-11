@@ -59,8 +59,6 @@ public final class FaceListParser {
 		return results;
 	}
 
-	private static final String[] NO_TAGS = new String[0];
-
 	private static int parseOne(@NotNull Path sheetPath, @NotNull BufferedReader reader, int lineNum,
 			@NotNull List<FaceCollector> results, @NotNull Map<String, Set<String>> names, @NotNull Set<String> paths) throws IOException {
 		int order = 0;
@@ -102,17 +100,7 @@ public final class FaceListParser {
 							myOrder = order++;
 						}
 
-						var tags = NO_TAGS;
-						if (scn.hasNext()) {
-							String tagTkn = scn.next();
-							if (tagTkn.contains(",")) {
-								tags = tagTkn.split(",");
-							} else {
-								tags = new String[] { tagTkn };
-							}
-						}
-
-						entries.add(new FaceListEntry.Add(category, name, path, myOrder, tags));
+						entries.add(new FaceListEntry.Add(category, name, path, myOrder));
 					}
 					case CMD_SKIP -> {
 						int indexAdvance = 1;

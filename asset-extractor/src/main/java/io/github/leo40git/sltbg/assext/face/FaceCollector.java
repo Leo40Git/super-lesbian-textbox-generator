@@ -49,7 +49,7 @@ public final class FaceCollector {
 		for (var entry : entries) {
 			if (entry instanceof FaceListEntry.Add addEntry) {
 				var image = sheet.getSubimage((index % ROW_SIZE) * FACE_SIZE, (index / ROW_SIZE) * FACE_SIZE, FACE_SIZE, FACE_SIZE);
-				output.add(new FacePoolWriter.Entry(addEntry.category(), addEntry.name(), addEntry.path(), addEntry.order(), addEntry.tags(), image));
+				output.add(new FacePoolWriter.Entry(addEntry.category(), addEntry.name(), addEntry.path(), addEntry.order(), image));
 			}
 
 			index += entry.indexAdvance();

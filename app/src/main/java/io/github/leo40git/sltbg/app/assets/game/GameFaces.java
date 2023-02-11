@@ -13,19 +13,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import io.github.leo40git.sltbg.app.json.JsonReadUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import org.quiltmc.json5.JsonReader;
-import org.quiltmc.json5.JsonToken;
 
 public final class GameFaces {
 	private static final Map<String, Map<String, GameFace>> FACES = new LinkedHashMap<>();
@@ -53,39 +49,17 @@ public final class GameFaces {
 		var faces = new LinkedHashMap<String, GameFace>();
 
 		String name = reader.nextName();
-		String path = null;
-		var tags = Set.<String>of();
-
-		if (reader.peek() == JsonToken.STRING) {
-			path = reader.nextString();
-		} else {
-			reader.beginObject();
-			while (reader.hasNext()) {
-				switch (reader.nextName()) {
-					case "path" -> path = reader.nextString();
-					case "tags" -> {
-						tags = new HashSet<>();
-						JsonReadUtils.readArray(reader, JsonReader::nextString, tags::add);
-					}
-					default -> reader.skipValue();
-				}
-			}
-			reader.endObject();
-		}
-
-		if (path == null) {
-			throw new IOException("%s/%s: missing path".formatted(category, name));
-		}
+		String rawPath = reader.nextString();
 
 		BufferedImage image;
-		var imagePath = rootPath.resolve(path).toAbsolutePath();
-		try (var imageIn = Files.newInputStream(imagePath)) {
+		var path = rootPath.resolve(rawPath).toAbsolutePath();
+		try (var imageIn = Files.newInputStream(path)) {
 			image = ImageIO.read(imageIn);
 		} catch (IOException e) {
-			throw new IOException("%s/%s: failed to read image from file '%s'".formatted(category, name, imagePath));
+			throw new IOException("%s/%s: failed to read image from file '%s'".formatted(category, name, path));
 		}
 
-		faces.put(name, new GameFace(category, name, tags, image));
+		faces.put(name, new GameFace(category, name, image));
 
 		return faces;
 	}

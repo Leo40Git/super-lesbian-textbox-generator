@@ -184,13 +184,11 @@ public final class Main {
 
 		executor.shutdownNow();
 
-		var facesDir = outputDir.resolve("faces");
 		try {
-			Files.createDirectories(facesDir);
-			pool.write(facesDir);
+			pool.write(outputDir);
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null,
-					"Failed to write face pool to directory \"" + facesDir + "\"\n" + e,
+					"Failed to write face pool to directory \"" + outputDir + "\"\n" + e,
 					"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
 		}
 	}

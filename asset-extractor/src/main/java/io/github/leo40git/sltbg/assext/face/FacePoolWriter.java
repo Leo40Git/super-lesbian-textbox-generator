@@ -42,8 +42,9 @@ public final class FacePoolWriter {
 	}
 
 	public void write(@NotNull Path dir) throws IOException {
+		var facesRoot = dir.resolve("faces");
 		for (var face : faces) {
-			var path = dir.resolve(face.path());
+			var path = facesRoot.resolve(face.path());
 			Files.createDirectories(path.getParent());
 			try (var os = Files.newOutputStream(path)) {
 				ImageIO.write(face.image(), "PNG", os);
@@ -60,29 +61,7 @@ public final class FacePoolWriter {
 
 				for (var face : entry.getValue()) {
 					writer.name(face.name());
-
-					var tags = face.tags();
-					if (tags.length == 0) {
-						writer.value(face.path());
-					} else {
-						writer.beginObject();
-
-						writer.name("path");
-						writer.value(face.path());
-
-						writer.name("tags");
-						if (tags.length == 1) {
-							writer.value(tags[0]);
-						} else {
-							writer.beginArray();
-							for (String tag : tags) {
-								writer.value(tag);
-							}
-							writer.endArray();
-						}
-
-						writer.endObject();
-					}
+					writer.value("faces/" + face.path());
 				}
 
 				writer.endObject();
@@ -92,6 +71,5 @@ public final class FacePoolWriter {
 		}
 	}
 
-	public record Entry(@NotNull String category, @NotNull String name, @NotNull String path, int order, @NotNull String @NotNull [] tags,
-						@NotNull BufferedImage image) { }
+	public record Entry(@NotNull String category, @NotNull String name, @NotNull String path, int order, @NotNull BufferedImage image) { }
 }

@@ -4,9 +4,9 @@
 ; commands:
 ; BGN	sheet.png
 ;   opens a face sheet for splitting
-; ADD	category	name	destination/path.png	(order)	(tag1,tag2...)
+; ADD	category	name	destination/path.png	(order)
 ;   splits the face at the current index and advances the index by 1
-;   order and tags are optional
+;   order is optional
 ; SKP	(count)
 ;   advances the index by count
 ;   count is optional, defaults to 1
@@ -66,10 +66,10 @@ SKP
 ADD	Melody	Confident	melody/confident.png	510
 ; 3 empty slots!
 SKP	3
-ADD	Melody	Empowered, Happy	melody/sl_happy.png	9000	spoilers
-ADD	Melody	Empowered, Wistful	melody/sl_oh_you.png	9100	spoilers
-ADD	Melody	Empowered, Fading	melody/sl_dying.png	9200	spoilers
-ADD	Melody	Empowered, Faded	melody/sl_rip.png	9300	spoilers
+ADD	Melody	Empowered, Happy	melody/sl_happy.png	9000
+ADD	Melody	Empowered, Wistful	melody/sl_oh_you.png	9100
+ADD	Melody	Empowered, Fading	melody/sl_dying.png	9200
+ADD	Melody	Empowered, Faded	melody/sl_rip.png	9300
 END
 
 BGN	melody faces winter.png
@@ -104,15 +104,15 @@ ADD	Allison	Happy Tears	allison/happy_tears.png	120
 ADD	Allison	Angry	allison/angry.png	700
 ADD	Allison	Confident	allison/confident.png	510
 ADD	Allison	Shocked	allison/shocked.png	800
-ADD	Allison	Empowered, Happy	allison/sl_happy.png	9000	spoilers
+ADD	Allison	Empowered, Happy	allison/sl_happy.png	9000
 ADD	Allison	Happy, Eyes Closed	allison/happy_closed.png	130
 ADD	Allison	Neutral, Eyes Closed	allison/neutral_closed.png	210
 ADD	Allison	Confused	allison/what.png	900
-ADD	Allison	Empowered, Neutral	allison/sl_neutral.png	9100	spoilers
+ADD	Allison	Empowered, Neutral	allison/sl_neutral.png	9100
 ADD	Allison	Surprised	allison/surprised.png	1000
 ADD	Allison	Miffed	allison/bruh.png	1100
 ADD	Allison	Sad	allison/sad.png	1200
-ADD	Allison	Empowered, Fading	allison/sl_dying.png	9200	spoilers
+ADD	Allison	Empowered, Fading	allison/sl_dying.png	9200
 ADD	Allison	Introspective	allison/thinking.png	1300
 ADD	Allison	Introspective, Smiling	allison/thinking_happy.png	1400
 ADD	Allison	Neutral (fuzzy signal)	allison/neutral_static.png	205
