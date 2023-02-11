@@ -52,12 +52,16 @@ public final class TextParser {
 
 						int value;
 						try {
+							if (valueStr.get().charAt(0) == '+') {
+								// allowed by Integer.parseUnsignedInt, but not by us
+								throw new NumberFormatException();
+							}
 							value = Integer.parseUnsignedInt(valueStr.get(), 16);
 						} catch (NumberFormatException ignored) {
 							sbStart = flushTextElement(elems, scn, sb, sbStart, sbLength);
 							sbLength = 0;
 							elems.add(new ErrorElement(sbStart, 6, true,
-									"\\u: value is not valid hex number"));
+									"\\u: value is not a valid hex number"));
 							sbStart += 6;
 							break;
 						}
@@ -85,12 +89,16 @@ public final class TextParser {
 
 						int value;
 						try {
+							if (valueStr.get().charAt(0) == '+') {
+								// allowed by Integer.parseUnsignedInt, but not by us
+								throw new NumberFormatException();
+							}
 							value = Integer.parseUnsignedInt(valueStr.get(), 16);
 						} catch (NumberFormatException ignored) {
 							sbStart = flushTextElement(elems, scn, sb, sbStart, sbLength);
 							sbLength = 0;
 							elems.add(new ErrorElement(sbStart, 10, true,
-									"\\U: value is not valid hex number"));
+									"\\U: value is not a valid hex number"));
 							sbStart += 10;
 							break;
 						}
