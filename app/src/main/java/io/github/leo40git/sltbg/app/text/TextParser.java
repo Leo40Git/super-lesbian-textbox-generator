@@ -23,29 +23,20 @@ public final class TextParser {
 		final var sb = new StringBuilder();
 
 		int sbStart = 0, sbLength = 0;
-		boolean escaped = false, ignoreNextNL = false;
+		boolean escaped = false;
 		char ch;
 		while ((ch = scn.read()) != StringScanner.EOF) {
 			if (escaped) {
 				escaped = false;
 				switch (ch) {
-					case '_' -> {
-						if (ignoreNextNL) {
+					case '\n' -> {
+						if (preserveEscapes) {
 							sbStart = flushTextElement(elems, scn, sb, sbStart, sbLength);
 							sbLength = 0;
-							elems.add(new ErrorElement(sbStart, 2, true,
-									"\\_: duplicate on same line"));
+							elems.add(new ContinueLineControlElement(sbStart));
 							sbStart += 2;
 						} else {
-							ignoreNextNL = true;
-							if (preserveEscapes) {
-								sbStart = flushTextElement(elems, scn, sb, sbStart, sbLength);
-								sbLength = 0;
-								elems.add(new ContinueLineControlElement(sbStart));
-								sbStart += 2;
-							} else {
-								sbLength += 2;
-							}
+							sbLength += 2;
 						}
 					}
 					case 'u' -> {
@@ -129,15 +120,10 @@ public final class TextParser {
 			} else switch (ch) {
 				case '\\' -> escaped = true;
 				case '\n' -> {
-					if (ignoreNextNL) {
-						ignoreNextNL = false;
-						sbLength++;
-					} else {
-						sbStart = flushTextElement(elems, scn, sb, sbStart, sbLength);
-						sbLength = 0;
-						elems.add(new LineBreakElement(sbStart));
-						sbStart++;
-					}
+					sbStart = flushTextElement(elems, scn, sb, sbStart, sbLength);
+					sbLength = 0;
+					elems.add(new LineBreakElement(sbStart));
+					sbStart++;
 				}
 				default -> {
 					sb.append(ch);

@@ -5,7 +5,7 @@ import io.github.leo40git.sltbg.app.text.element.LineBreakElement;
 
 public final class TextParserTest {
 	public static void main(String[] args) {
-		final String source = "Melody\nBunny stew is \\_\ndelicious! \\u1234\\w";
+		final String source = "Melody\nBunny stew is \\\ndelicious! \\u1234\\w";
 		var parser = new TextParser();
 		var elems = parser.parse(source, true);
 
@@ -16,7 +16,7 @@ public final class TextParserTest {
 			} else {
 				System.out.print(elem);
 				String sourcePart = source.substring(elem.getSourceStart(), elem.getSourceEnd());
-				System.out.format(" (from '%s')%n", sourcePart.replaceAll("\\n", "\\\\n"));
+				System.out.format(" (from '%s')%n", sourcePart.replaceAll("\\n", "<\\\\n>"));
 			}
 		}
 	}
