@@ -1,3 +1,13 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        maven {
+            name 'QuiltMC'
+            url 'https://maven.quiltmc.org/repository/release'
+        }
+    }
+}
+
 rootProject.name = 'super-lesbian-textbox-generator'
 include 'app'
 include 'asset-extractor'

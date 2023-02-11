@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.quiltmc.gradle.licenser' version '1.+'
 }
 
 group 'io.github.leo40git.sltbg'
@@ -24,8 +25,8 @@ application {
 repositories {
     mavenCentral()
     maven {
-        name = "QuiltMC Maven"
-        url = "https://maven.quiltmc.org/repository/release"
+        name 'QuiltMC'
+        url 'https://maven.quiltmc.org/repository/release'
     }
 }
 
@@ -58,4 +59,10 @@ processResources {
 
 test {
     useJUnitPlatform()
+}
+
+license {
+    rule rootProject.file("codeformat/HEADER")
+
+    include "**/*.java"
 }
