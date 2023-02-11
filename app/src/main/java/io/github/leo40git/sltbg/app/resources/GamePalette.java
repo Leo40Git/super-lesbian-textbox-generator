@@ -10,8 +10,8 @@
 package io.github.leo40git.sltbg.app.resources;
 
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,30 @@ public final class GamePalette {
 		COLORS[i] = color;
 	}
 
-	public static void read(@NotNull Path path) throws IOException {
-		// TODO
+	public static void read(@NotNull BufferedReader reader) throws IOException {
+		int i = 0;
+
+		String line;
+		while ((line = reader.readLine()) != null) {
+			if (line.isBlank()) {
+				continue;
+			}
+
+			if (i >= SIZE) {
+				throw new IOException("Too many lines!");
+			}
+
+			try {
+				COLORS[i] = Color.decode(line);
+			} catch (NumberFormatException e) {
+				throw new IOException("Line %d: invalid color format".formatted(i + 1), e);
+			}
+
+			i++;
+		}
+
+		if (i < SIZE - 1) {
+			throw new IOException("Not enough lines! Expected 32, got %d".formatted(i));
+		}
 	}
 }

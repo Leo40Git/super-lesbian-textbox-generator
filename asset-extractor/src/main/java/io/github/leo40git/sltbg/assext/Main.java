@@ -121,7 +121,7 @@ public final class Main {
 		try (var writer = Files.newBufferedWriter(outputDir.resolve("palette.txt"))) {
 			for (int i = 0; i < WindowPalette.SIZE; i++) {
 				var color = ctx.getPaletteColor(i);
-				writer.write("%03d,%03d,%03d%n".formatted(color.getRed(), color.getGreen(), color.getBlue()));
+				writer.write("#%02X%02X%02X%n".formatted(color.getRed(), color.getGreen(), color.getBlue()));
 			}
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null,
