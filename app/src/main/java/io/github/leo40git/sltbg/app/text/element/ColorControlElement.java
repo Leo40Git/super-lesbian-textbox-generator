@@ -2,12 +2,12 @@ package io.github.leo40git.sltbg.app.text.element;
 
 import java.awt.Color;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 public final class ColorControlElement extends Element {
-	private final @Nullable Color color;
+	private final @NotNull Color color;
 
-	public ColorControlElement(int sourceStart, int sourceLength, @Nullable Color color) {
+	public ColorControlElement(int sourceStart, int sourceLength, @NotNull Color color) {
 		super(sourceStart, sourceLength);
 		this.color = color;
 	}
@@ -17,7 +17,7 @@ public final class ColorControlElement extends Element {
 		return true;
 	}
 
-	public @Nullable Color getColor() {
+	public @NotNull Color getColor() {
 		return color;
 	}
 
