@@ -10,27 +10,33 @@
 package io.github.leo40git.sltbg.app.resources;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class GamePalette {
 	public static final int SIZE = 32;
+	private static final Color[] COLORS = new Color[SIZE];
 
-	private final Color[] colors = new Color[SIZE];
+	private GamePalette() {
+		throw new UnsupportedOperationException("GamePalette only contains static declarations.");
+	}
 
-	public GamePalette() {
-		for (int i = 0; i < SIZE; i++) {
-			colors[i] = Color.BLACK;
+	public static @NotNull Color get(int i) {
+		var color = COLORS[i];
+		if (color == null) {
+			return COLORS[i] = Color.BLACK;
+		} else {
+			return color;
 		}
 	}
 
-	// TODO read from text file
-
-	public @NotNull Color get(int i) {
-		return colors[i];
+	public static void set(int i, @NotNull Color color) {
+		COLORS[i] = color;
 	}
 
-	public void set(int i, @NotNull Color color) {
-		colors[i] = color;
+	public static void read(@NotNull Path path) throws IOException {
+		// TODO
 	}
 }

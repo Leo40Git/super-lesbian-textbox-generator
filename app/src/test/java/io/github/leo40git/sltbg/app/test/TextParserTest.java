@@ -17,14 +17,11 @@ import io.github.leo40git.sltbg.app.text.element.LineBreakElement;
 
 public final class TextParserTest {
 	public static void main(String[] args) {
+		GamePalette.set(0, Color.WHITE);
+		GamePalette.set(14, new Color(255, 241, 120));
+
 		final String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\\n\\c[#BB2929]delicious\\c!";
-
-		var palette = new GamePalette();
-		palette.set(0, Color.WHITE);
-		palette.set(14, new Color(255, 241, 120));
-
-		var parser = new TextParser(palette);
-		var elems = parser.parse(source, true);
+		var elems = TextParser.parse(source, true);
 
 		System.out.format("%d element(s):%n", elems.size());
 		for (var elem : elems) {
