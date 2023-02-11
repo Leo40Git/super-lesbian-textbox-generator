@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.app.resources;
+package io.github.leo40git.sltbg.app.assets.game;
 
 import java.awt.Color;
 import java.io.BufferedReader;

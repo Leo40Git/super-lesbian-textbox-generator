@@ -13,7 +13,7 @@ import java.awt.Color;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.github.leo40git.sltbg.app.resources.GamePalette;
+import io.github.leo40git.sltbg.app.assets.game.GamePalette;
 import io.github.leo40git.sltbg.app.text.element.ColorControlElement;
 import io.github.leo40git.sltbg.app.text.element.ContinueLineControlElement;
 import io.github.leo40git.sltbg.app.text.element.Element;

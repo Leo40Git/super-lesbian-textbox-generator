@@ -13,7 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import io.github.leo40git.sltbg.app.resources.GamePalette;
+import io.github.leo40git.sltbg.app.assets.game.GamePalette;
 
 public final class GamePaletteReadTest {
 	public static void main(String[] args) {

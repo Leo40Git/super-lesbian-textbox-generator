@@ -11,7 +11,7 @@ package io.github.leo40git.sltbg.app.test;
 
 import java.awt.Color;
 
-import io.github.leo40git.sltbg.app.resources.GamePalette;
+import io.github.leo40git.sltbg.app.assets.game.GamePalette;
 import io.github.leo40git.sltbg.app.text.TextParser;
 import io.github.leo40git.sltbg.app.text.element.LineBreakElement;
 
