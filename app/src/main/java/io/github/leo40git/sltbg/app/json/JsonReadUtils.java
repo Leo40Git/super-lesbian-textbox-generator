@@ -30,7 +30,9 @@ import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
 
 public final class JsonReadUtils {
-	private JsonReadUtils() { }
+	private JsonReadUtils() {
+		throw new UnsupportedOperationException("JsonReadUtils only contains static declarations.");
+	}
 
 	public static <T> void readArray(@NotNull JsonReader reader, @NotNull JsonReadDelegate<T> delegate, @NotNull Consumer<T> consumer) throws IOException {
 		if (reader.peek() == JsonToken.BEGIN_ARRAY) {

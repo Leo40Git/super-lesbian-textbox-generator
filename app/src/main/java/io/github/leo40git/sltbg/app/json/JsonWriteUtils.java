@@ -19,7 +19,9 @@ import org.jetbrains.annotations.Nullable;
 import org.quiltmc.json5.JsonWriter;
 
 public final class JsonWriteUtils {
-	private JsonWriteUtils() { }
+	private JsonWriteUtils() {
+		throw new UnsupportedOperationException("JsonWriteUtils only contains static declarations.");
+	}
 
 	public static <T> void writeArray(@NotNull JsonWriter writer, @NotNull JsonWriteDelegate<T> delegate,
 			@NotNull Iterable<T> values) throws IOException {

@@ -8,6 +8,11 @@ build/
 !/asset-extractor/input/faces.lst
 /asset-extractor/output/
 
+/assets/
+app.log
+/logs/
+preferences.json5
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws

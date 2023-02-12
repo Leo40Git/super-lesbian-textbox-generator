@@ -7,15 +7,16 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.app.assets.game;
+package io.github.leo40git.sltbg.app.assets;
 
-import java.awt.image.BufferedImage;
+import java.io.IOException;
 
-import org.jetbrains.annotations.NotNull;
+public final class AppAssets {
+	private AppAssets() {
+		throw new UnsupportedOperationException("AppAssets only contains static declarations.");
+	}
 
-public record GameFace(@NotNull String category, @NotNull String name, @NotNull BufferedImage image) {
-	@Override
-	public String toString() {
-		return "%s/%s".formatted(category, name);
+	public static void load() throws IOException {
+		// TODO
 	}
 }

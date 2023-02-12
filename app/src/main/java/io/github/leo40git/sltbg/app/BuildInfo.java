@@ -26,14 +26,16 @@ import org.jetbrains.annotations.Nullable;
 import org.quiltmc.json5.JsonReader;
 
 public final class BuildInfo {
+	private BuildInfo() {
+		throw new UnsupportedOperationException("BuildInfo only contains static declarations.");
+	}
+
 	private static boolean loaded = false;
 	private static boolean isDevelopment = false;
 	private static String name;
 	private static Version version;
 	private static @Nullable URL updateJsonUrl, homepageUrl, issuesUrl, sourceUrl;
 	private static String[] credits;
-
-	private BuildInfo() { }
 
 	static void setDevelopment() {
 		if (loaded) {

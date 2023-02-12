@@ -13,7 +13,7 @@ import java.awt.Color;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.github.leo40git.sltbg.app.assets.game.GamePalette;
+import io.github.leo40git.sltbg.app.assets.GameAssets;
 import io.github.leo40git.sltbg.app.text.element.ColorControlElement;
 import io.github.leo40git.sltbg.app.text.element.ContinueLineControlElement;
 import io.github.leo40git.sltbg.app.text.element.Element;
@@ -151,7 +151,7 @@ public final class TextParser {
 						} else {
 							sbStart = flushTextElement(elems, scn, sb, sbStart, sbLength);
 							sbLength = 0;
-							elems.add(new ColorControlElement(sbStart, 2, GamePalette.get(0)));
+							elems.add(new ColorControlElement(sbStart, 2, GameAssets.getPaletteColor(0)));
 							sbStart += 2;
 						}
 					}
@@ -229,11 +229,11 @@ public final class TextParser {
 			} catch (NumberFormatException e) {
 				throw new IllegalArgumentException("Failed to parse palette index", e);
 			}
-			if (palIdx >= GamePalette.SIZE) {
+			if (palIdx >= GameAssets.PALETTE_SIZE) {
 				throw new IllegalArgumentException("Palette index is out of bounds (must be below %d, but was %d)"
-						.formatted(palIdx, GamePalette.SIZE));
+						.formatted(palIdx, GameAssets.PALETTE_SIZE));
 			}
-			return GamePalette.get(palIdx);
+			return GameAssets.getPaletteColor(palIdx);
 		}
 	}
 
