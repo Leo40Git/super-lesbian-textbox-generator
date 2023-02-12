@@ -44,18 +44,29 @@ public final class UIColors {
 	public static final class List {
 		private static Color background, foreground;
 		private static Color selectionBackground;
-		private static Color hoveredOverlay, disabledOverlay;
+		private static Color hoveredOverlay, disabledOverlay, alternateOverlay;
+		private static Color hoveredBackground, disabledBackground, alternateBackground;
 
 		private static void update() {
 			background = getColor("List.background");
 			foreground = getColor("List.foreground");
 			selectionBackground = getColor("List.selectionBackground", "List[Selected].textBackground");
+
 			hoveredOverlay = MoreColors.withAlpha(selectionBackground, 127);
-			disabledOverlay = MoreColors.withAlpha(foreground, 127);
+			disabledOverlay = MoreColors.withAlpha(foreground, 191);
+			alternateOverlay = MoreColors.withAlpha(foreground, 63);
+
+			hoveredBackground = MoreColors.preMultiply(background, hoveredOverlay);
+			disabledBackground = MoreColors.preMultiply(background, disabledOverlay);
+			alternateBackground = MoreColors.preMultiply(background, alternateOverlay);
 		}
 
 		public static Color getBackground() {
 			return background;
+		}
+
+		public static Color getAlternateBackground() {
+			return alternateBackground;
 		}
 
 		public static Color getForeground() {
@@ -72,6 +83,18 @@ public final class UIColors {
 
 		public static Color getDisabledOverlay() {
 			return disabledOverlay;
+		}
+
+		public static Color getHoveredBackground() {
+			return hoveredBackground;
+		}
+
+		public static Color getDisabledBackground() {
+			return disabledBackground;
+		}
+
+		public static Color getAlternateOverlay() {
+			return alternateOverlay;
 		}
 	}
 
