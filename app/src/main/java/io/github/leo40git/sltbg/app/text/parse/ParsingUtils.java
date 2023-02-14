@@ -7,16 +7,18 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.app.util;
+package io.github.leo40git.sltbg.app.text.parse;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 public final class ParsingUtils {
 	private ParsingUtils() {
 		throw new UnsupportedOperationException("ParsingUtils only contains static declarations.");
 	}
 
-	public static int parseDecInt(@NotNull String s) {
+	public static @Range(from = 0, to = Integer.MAX_VALUE) int parseDecInt(@NotNull String s) {
 		s = s.trim();
 		if (s.charAt(0) == '+') {
 			throw new NumberFormatException("Illegal leading plus sign on decimal string %s.".formatted(s));
@@ -24,11 +26,20 @@ public final class ParsingUtils {
 		return Integer.parseUnsignedInt(s, 10);
 	}
 
-	public static int parseHexInt(@NotNull String s) {
+	public static @Range(from = 0, to = Integer.MAX_VALUE) int parseHexInt(@NotNull String s) {
 		s = s.trim();
 		if (s.charAt(0) == '+') {
 			throw new NumberFormatException("Illegal leading plus sign on hexadecimal string %s.".formatted(s));
 		}
 		return Integer.parseUnsignedInt(s, 16);
+	}
+
+	public static @Nullable String getArgument(@NotNull TextScanner scn) {
+		if (scn.peek() != '[') {
+			return null;
+		} else {
+			scn.skip();
+			return scn.until(']');
+		}
 	}
 }

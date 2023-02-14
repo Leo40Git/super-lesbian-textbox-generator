@@ -17,6 +17,7 @@ import javax.swing.JPopupMenu;
 
 import io.github.leo40git.sltbg.app.assets.AppAssets;
 import io.github.leo40git.sltbg.app.assets.GameAssets;
+import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
 import io.github.leo40git.sltbg.app.theme.UIColors;
 import io.github.leo40git.sltbg.app.theme.UITheme;
 import io.github.leo40git.sltbg.app.ui.AppFrame;
@@ -133,6 +134,8 @@ public final class Main {
 			System.exit(1);
 			return;
 		}
+
+		ControlElementRegistry.init();
 
 		var frame = new AppFrame();
 		frame.setLocationRelativeTo(null);

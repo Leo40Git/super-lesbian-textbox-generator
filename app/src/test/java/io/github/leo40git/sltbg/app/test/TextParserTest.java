@@ -14,13 +14,16 @@ import java.awt.Color;
 import io.github.leo40git.sltbg.app.assets.GameAssets;
 import io.github.leo40git.sltbg.app.text.TextParser;
 import io.github.leo40git.sltbg.app.text.element.LineBreakElement;
+import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
 
 public final class TextParserTest {
 	public static void main(String[] args) {
+		ControlElementRegistry.init();
+
 		GameAssets.setPaletteColor(0, Color.WHITE);
 		GameAssets.setPaletteColor(14, new Color(255, 241, 120));
 
-		final String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\\n\\c[#BB2929]delicious\\c!";
+		final String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\b\\i\\u\\s\\\n\\c[#BB2929]deli\\c[#123]cious\\c\\rf!\\w";
 		var elems = TextParser.parse(source, true);
 
 		System.out.format("%d element(s):%n", elems.size());

@@ -9,7 +9,8 @@
 
 package io.github.leo40git.sltbg.app.text.element;
 
-public sealed abstract class Element permits ColorControlElement, ContinueLineControlElement, ErrorElement, LineBreakElement, TextElement {
+public sealed abstract class Element
+		permits ColorControlElement, ContinueLineControlElement, ErrorElement, FormattingControlElement, LineBreakElement, TextElement {
 	protected final int sourceStart, sourceLength;
 
 	public Element(int sourceStart, int sourceLength) {
