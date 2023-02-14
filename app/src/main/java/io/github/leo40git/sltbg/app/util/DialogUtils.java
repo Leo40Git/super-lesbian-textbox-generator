@@ -12,6 +12,7 @@ package io.github.leo40git.sltbg.app.util;
 import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
@@ -143,15 +144,20 @@ public final class DialogUtils {
 
 	public static @Nullable String showMultilineInputDialog(Component parent, String message, String title, int messageType,
 			@Nullable String defaultValue) {
-		JTextArea textArea = new JTextArea(5, 10);
+		final JTextArea textArea = new JTextArea(5, 10);
 		textArea.setText(defaultValue);
-		textArea.addHierarchyListener(he -> {
-			if ((he.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
-				if (textArea.isShowing()) {
-					SwingUtilities.invokeLater(textArea::requestFocus);
+		textArea.addHierarchyListener(new HierarchyListener() {
+			@Override
+			public void hierarchyChanged(HierarchyEvent e) {
+				if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+					if (textArea.isShowing()) {
+						textArea.removeHierarchyListener(this);
+						SwingUtilities.invokeLater(textArea::requestFocus);
+					}
 				}
 			}
 		});
+
 		JScrollPane scrollPane = new JScrollPane(textArea);
 		if (JOptionPane.showOptionDialog(parent, new Object[] { message, scrollPane }, title,
 				JOptionPane.OK_CANCEL_OPTION, messageType, null, null, textArea) == JOptionPane.OK_OPTION) {
