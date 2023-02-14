@@ -12,6 +12,7 @@ package io.github.leo40git.sltbg.app.text.element;
 import io.github.leo40git.sltbg.app.text.parse.ControlElementParser;
 import io.github.leo40git.sltbg.app.text.parse.TextScanner;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 public final class FormattingControlElement extends Element {
 	public enum Type {
@@ -24,7 +25,7 @@ public final class FormattingControlElement extends Element {
 
 	private final @NotNull Type type;
 
-	public FormattingControlElement(int sourceStart, int sourceLength, @NotNull Type type) {
+	public FormattingControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength, @NotNull Type type) {
 		super(sourceStart, sourceLength);
 		this.type = type;
 	}
@@ -49,15 +50,15 @@ public final class FormattingControlElement extends Element {
 
 	public static final class Parser implements ControlElementParser {
 		private final @NotNull Type type;
-		private final int length;
+		private final @Range(from = 0, to = Integer.MAX_VALUE) int length;
 
-		public Parser(@NotNull Type type, int length) {
+		public Parser(@NotNull Type type, @Range(from = 0, to = Integer.MAX_VALUE) int length) {
 			this.type = type;
 			this.length = length;
 		}
 
 		@Override
-		public @NotNull Element parse(@NotNull TextScanner scn, int sourceStart) {
+		public @NotNull Element parse(@NotNull TextScanner scn, @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart) {
 			return new FormattingControlElement(sourceStart, length, type);
 		}
 	}

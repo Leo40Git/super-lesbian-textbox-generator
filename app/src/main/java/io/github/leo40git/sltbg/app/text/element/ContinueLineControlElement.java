@@ -9,8 +9,10 @@
 
 package io.github.leo40git.sltbg.app.text.element;
 
+import org.jetbrains.annotations.Range;
+
 public final class ContinueLineControlElement extends Element {
-	public ContinueLineControlElement(int sourcePosition) {
+	public ContinueLineControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourcePosition) {
 		super(sourcePosition, 2);
 	}
 

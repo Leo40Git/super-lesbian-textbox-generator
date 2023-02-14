@@ -11,8 +11,9 @@ package io.github.leo40git.sltbg.app.text.parse;
 
 import io.github.leo40git.sltbg.app.text.element.Element;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 @FunctionalInterface
 public interface ControlElementParser {
-	@NotNull Element parse(@NotNull TextScanner scn, int sourceStart);
+	@NotNull Element parse(@NotNull TextScanner scn, @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart);
 }

@@ -9,8 +9,10 @@
 
 package io.github.leo40git.sltbg.app.text.element;
 
+import org.jetbrains.annotations.Range;
+
 public final class LineBreakElement extends Element {
-	public LineBreakElement(int sourcePosition) {
+	public LineBreakElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourcePosition) {
 		super(sourcePosition, 1);
 	}
 

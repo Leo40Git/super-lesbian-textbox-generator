@@ -10,11 +10,12 @@
 package io.github.leo40git.sltbg.app.text.element;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 public sealed class TextElement extends Element permits EscapedTextElement {
 	protected final @NotNull String contents;
 
-	public TextElement(int sourceStart, int sourceLength, @NotNull String contents) {
+	public TextElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength, @NotNull String contents) {
 		super(sourceStart, sourceLength);
 		this.contents = contents;
 	}

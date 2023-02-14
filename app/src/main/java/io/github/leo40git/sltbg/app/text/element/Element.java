@@ -9,22 +9,24 @@
 
 package io.github.leo40git.sltbg.app.text.element;
 
+import org.jetbrains.annotations.Range;
+
 public sealed abstract class Element
 		permits ColorControlElement, ContinueLineControlElement, ErrorElement, FormattingControlElement, LineBreakElement, TextElement {
-	protected final int sourceStart, sourceLength;
+	protected final @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, sourceLength;
 
-	public Element(int sourceStart, int sourceLength) {
+	public Element(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength) {
 		this.sourceStart = sourceStart;
 		this.sourceLength = sourceLength;
 	}
 
 	public abstract boolean isControlElement();
 
-	public int getSourceStart() {
+	public @Range(from = 0, to = Integer.MAX_VALUE) int getSourceStart() {
 		return sourceStart;
 	}
 
-	public int getSourceLength() {
+	public @Range(from = 0, to = Integer.MAX_VALUE) int getSourceLength() {
 		return sourceLength;
 	}
 

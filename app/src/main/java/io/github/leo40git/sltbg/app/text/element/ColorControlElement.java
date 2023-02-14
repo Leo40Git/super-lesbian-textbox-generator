@@ -16,11 +16,12 @@ import io.github.leo40git.sltbg.app.text.parse.ControlElementParser;
 import io.github.leo40git.sltbg.app.text.parse.ParsingUtils;
 import io.github.leo40git.sltbg.app.text.parse.TextScanner;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 public final class ColorControlElement extends Element {
 	private final @NotNull Color color;
 
-	public ColorControlElement(int sourceStart, int sourceLength, @NotNull Color color) {
+	public ColorControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength, @NotNull Color color) {
 		super(sourceStart, sourceLength);
 		this.color = color;
 	}
@@ -45,7 +46,7 @@ public final class ColorControlElement extends Element {
 
 	public static final class Parser implements ControlElementParser {
 		@Override
-		public @NotNull Element parse(@NotNull TextScanner scn, int sourceStart) {
+		public @NotNull Element parse(@NotNull TextScanner scn, @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart) {
 			String arg = ParsingUtils.getArgument(scn);
 			if (arg == null) {
 				return new ColorControlElement(sourceStart, 2, GameAssets.getPaletteColor(0));

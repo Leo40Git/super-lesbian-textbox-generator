@@ -22,6 +22,7 @@ import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
 import io.github.leo40git.sltbg.app.text.parse.ParsingUtils;
 import io.github.leo40git.sltbg.app.text.parse.TextScanner;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 public final class TextParser {
 	private TextParser() {
@@ -81,7 +82,8 @@ public final class TextParser {
 		return elems;
 	}
 
-	private static int flushTextElement(@NotNull List<Element> elems, @NotNull StringBuilder sb, int sbStart, int sbLength) {
+	private static int flushTextElement(@NotNull List<Element> elems, @NotNull StringBuilder sb,
+			@Range(from = 0, to = Integer.MAX_VALUE) int sbStart, @Range(from = 0, to = Integer.MAX_VALUE) int sbLength) {
 		if (!sb.isEmpty()) {
 			elems.add(new TextElement(sbStart, sbLength, sb.toString()));
 			sb.setLength(0);
@@ -91,7 +93,8 @@ public final class TextParser {
 
 	// removed for now, may bring these back later (conflict with the underline control)
 	private static void processUnicodeEscapes(boolean preserveEscapes, @NotNull TextScanner scn,
-			@NotNull List<Element> elems, @NotNull StringBuilder sb, int sbStart, int sbLength,
+			@NotNull List<Element> elems, @NotNull StringBuilder sb,
+			@Range(from = 0, to = Integer.MAX_VALUE) int sbStart, @Range(from = 0, to = Integer.MAX_VALUE) int sbLength,
 			char ch) {
 		switch (ch) {
 			case 'u' -> {

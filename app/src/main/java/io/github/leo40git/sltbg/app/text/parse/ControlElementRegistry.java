@@ -17,6 +17,7 @@ import io.github.leo40git.sltbg.app.text.element.Element;
 import io.github.leo40git.sltbg.app.text.element.FormattingControlElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 public final class ControlElementRegistry {
 	private ControlElementRegistry() {
@@ -56,7 +57,7 @@ public final class ControlElementRegistry {
 
 	public static void init() { /* clinit */ }
 
-	public static @Nullable Element parse(@NotNull TextScanner scn, int sourceStart) {
+	public static @Nullable Element parse(@NotNull TextScanner scn, @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart) {
 		char[] buf = TL_BUFFER.get();
 		int maxNameLength = scn.peek(buf, 0, MAXIMUM_NAME_LENGTH);
 		if (maxNameLength == 0) {

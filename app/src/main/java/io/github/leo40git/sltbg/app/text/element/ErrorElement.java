@@ -10,12 +10,14 @@
 package io.github.leo40git.sltbg.app.text.element;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 public final class ErrorElement extends Element {
 	private final boolean isControlElement;
 	private final @NotNull String message;
 
-	public ErrorElement(int sourceStart, int sourceLength, boolean isControlElement, @NotNull String message) {
+	public ErrorElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength,
+			boolean isControlElement, @NotNull String message) {
 		super(sourceStart, sourceLength);
 		this.isControlElement = isControlElement;
 		this.message = message;
