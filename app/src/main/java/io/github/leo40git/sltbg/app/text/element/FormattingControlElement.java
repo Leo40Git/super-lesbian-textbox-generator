@@ -25,7 +25,8 @@ public final class FormattingControlElement extends Element {
 
 	private final @NotNull Type type;
 
-	public FormattingControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength, @NotNull Type type) {
+	public FormattingControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength,
+			@NotNull Type type) {
 		super(sourceStart, sourceLength);
 		this.type = type;
 	}

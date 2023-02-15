@@ -16,7 +16,7 @@ public final class ErrorElement extends Element {
 	private final boolean isControlElement;
 	private final @NotNull String message;
 
-	public ErrorElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength,
+	public ErrorElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength,
 			boolean isControlElement, @NotNull String message) {
 		super(sourceStart, sourceLength);
 		this.isControlElement = isControlElement;

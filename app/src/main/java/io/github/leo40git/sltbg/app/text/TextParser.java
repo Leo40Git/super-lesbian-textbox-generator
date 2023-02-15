@@ -12,10 +12,10 @@ package io.github.leo40git.sltbg.app.text;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.github.leo40git.sltbg.app.text.element.ContinueLineControlElement;
 import io.github.leo40git.sltbg.app.text.element.Element;
 import io.github.leo40git.sltbg.app.text.element.ErrorElement;
 import io.github.leo40git.sltbg.app.text.element.EscapedTextElement;
+import io.github.leo40git.sltbg.app.text.element.InvisibleControlElement;
 import io.github.leo40git.sltbg.app.text.element.LineBreakElement;
 import io.github.leo40git.sltbg.app.text.element.TextElement;
 import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
@@ -29,7 +29,7 @@ public final class TextParser {
 		throw new UnsupportedOperationException("TextParser only contains static declarations.");
 	}
 
-	public static @NotNull List<Element> parse(@NotNull String source, boolean preserveEscapes) {
+	public static @NotNull List<Element> parse(@NotNull String source, boolean preserveInvisible) {
 		final var elems = new LinkedList<Element>();
 		final var scn = new TextScanner(source);
 		final var sb = new StringBuilder();
@@ -40,11 +40,12 @@ public final class TextParser {
 		while ((ch = scn.read()) != TextScanner.EOF) {
 			if (escaped) {
 				escaped = false;
-				if (ch == '\n') {// C-style escaped newline
-					if (preserveEscapes) {
+				if (ch == '\n') {
+					// C-style escaped newline
+					if (preserveInvisible) {
 						sbStart = flushTextElement(elems, sb, sbStart, sbLength);
 						sbLength = 0;
-						elems.add(new ContinueLineControlElement(sbStart));
+						elems.add(new InvisibleControlElement(sbStart, 2));
 						sbStart += 2;
 					} else {
 						sbLength += 2;

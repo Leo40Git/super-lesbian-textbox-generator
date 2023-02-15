@@ -11,9 +11,9 @@ package io.github.leo40git.sltbg.app.text.element;
 
 import org.jetbrains.annotations.Range;
 
-public final class ContinueLineControlElement extends Element {
-	public ContinueLineControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourcePosition) {
-		super(sourcePosition, 2);
+public final class InvisibleControlElement extends Element {
+	public InvisibleControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength) {
+		super(sourceStart, sourceLength);
 	}
 
 	@Override

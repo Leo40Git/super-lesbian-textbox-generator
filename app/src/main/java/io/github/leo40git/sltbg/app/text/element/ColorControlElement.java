@@ -21,7 +21,8 @@ import org.jetbrains.annotations.Range;
 public final class ColorControlElement extends Element {
 	private final @NotNull Color color;
 
-	public ColorControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 0, to = Integer.MAX_VALUE) int sourceLength, @NotNull Color color) {
+	public ColorControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength,
+			@NotNull Color color) {
 		super(sourceStart, sourceLength);
 		this.color = color;
 	}
