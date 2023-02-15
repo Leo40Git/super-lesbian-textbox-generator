@@ -34,13 +34,17 @@ import org.quiltmc.json5.JsonReader;
 public final class GameAssets {
 	public static final Path ROOT_FOLDER = Paths.get("assets").toAbsolutePath();
 
-	public static final float FONT_DEFAULT_SIZE = 18;
 	public static final int PALETTE_SIZE = 32;
 	public static final int TEXTBOX_WIDTH = 640;
 	public static final int TEXTBOX_HEIGHT = 120;
+	public static final int ICON_SIZE = 24;
+	public static final int ICONS_PER_ROW = 16;
+	public static final int ICON_SHEET_WIDTH = ICON_SIZE * ICONS_PER_ROW;
+	public static final float FONT_DEFAULT_SIZE = 18;
 
 	private static Color[] palette;
-	private static BufferedImage textboxSheet;
+	private static BufferedImage textboxSheet, iconSheet;
+	private static int maximumIconIndex;
 	private static Font font;
 	private static Map<String, Map<String, Face>> faces;
 
@@ -51,6 +55,7 @@ public final class GameAssets {
 	public static void load() throws IOException {
 		palette = null;
 		textboxSheet = null;
+		iconSheet = null;
 		font = null;
 		faces = null;
 
@@ -100,6 +105,24 @@ public final class GameAssets {
 			throw new IOException("Image '%s' has incorrect dimensions: expected %dx%d, got %dx%d"
 					.formatted(textboxSheetPath, TEXTBOX_WIDTH, TEXTBOX_HEIGHT * 3, textboxSheet.getWidth(), textboxSheet.getHeight()));
 		}
+
+		var iconSheetPath = ROOT_FOLDER.resolve("iconset.png");
+		try (var in = Files.newInputStream(iconSheetPath)) {
+			iconSheet = ImageIO.read(in);
+		} catch (IOException e) {
+			throw new IOException("Failed to read image at '%s'".formatted(textboxSheetPath));
+		}
+
+		if (iconSheet.getWidth() != ICON_SHEET_WIDTH) {
+			throw new IOException("Image '%s' has incorrect dimensions: expected width of %d, got %d"
+					.formatted(iconSheetPath, ICON_SHEET_WIDTH, iconSheet.getWidth()));
+		}
+
+		if (iconSheet.getHeight() % ICON_SIZE != 0) {
+			throw new IOException("Image '%s' has invalid dimensions: height %d is not divisible by %d"
+					.formatted(iconSheetPath, iconSheet.getHeight(), ICON_SIZE));
+		}
+		maximumIconIndex = (iconSheet.getHeight() / ICON_SIZE) * ICONS_PER_ROW - 1;
 
 		var fontPath = ROOT_FOLDER.resolve("font.ttf");
 		try (var in = Files.newInputStream(fontPath)) {
@@ -211,6 +234,51 @@ public final class GameAssets {
 				x, y, x + TEXTBOX_WIDTH, y + TEXTBOX_HEIGHT,
 				0, TEXTBOX_HEIGHT * 2, TEXTBOX_WIDTH, TEXTBOX_HEIGHT,
 				null);
+	}
+
+	public static @NotNull BufferedImage getIconSheet() {
+		if (iconSheet == null) {
+			throw new IllegalStateException("Game assets haven't been loaded yet (or failed to load)");
+		}
+
+		return iconSheet;
+	}
+
+	public static @Range(from = 0, to = Integer.MAX_VALUE) int getMaximumIconIndex() {
+		return maximumIconIndex;
+	}
+
+	public static void drawIcon(@NotNull Graphics g, int x, int y, @Range(from = 0, to = Integer.MAX_VALUE) int index) {
+		if (iconSheet == null) {
+			throw new IllegalStateException("Game assets haven't been loaded yet (or failed to load)");
+		}
+
+		if (index > maximumIconIndex) {
+			throw new IndexOutOfBoundsException(index);
+		}
+
+		int sx = (index % ICONS_PER_ROW) * ICON_SIZE;
+		int sy = (index / ICONS_PER_ROW) * ICON_SIZE;
+
+		g.drawImage(iconSheet,
+				x, y, x + ICON_SIZE, y + ICON_SIZE,
+				sx, sy, sx + ICON_SIZE, sy + ICON_SIZE,
+				null);
+	}
+
+	public static @NotNull BufferedImage getIconImage(@Range(from = 0, to = Integer.MAX_VALUE) int index) {
+		if (iconSheet == null) {
+			throw new IllegalStateException("Game assets haven't been loaded yet (or failed to load)");
+		}
+
+		if (index > maximumIconIndex) {
+			throw new IndexOutOfBoundsException(index);
+		}
+
+		int sx = (index % ICONS_PER_ROW) * ICON_SIZE;
+		int sy = (index / ICONS_PER_ROW) * ICON_SIZE;
+
+		return iconSheet.getSubimage(sx, sy, ICON_SIZE, ICON_SIZE);
 	}
 
 	public static @NotNull Font getFont() {

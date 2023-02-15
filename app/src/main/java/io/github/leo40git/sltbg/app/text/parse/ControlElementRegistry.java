@@ -15,6 +15,7 @@ import java.util.IdentityHashMap;
 import io.github.leo40git.sltbg.app.text.element.ColorControlElement;
 import io.github.leo40git.sltbg.app.text.element.Element;
 import io.github.leo40git.sltbg.app.text.element.FontControlElement;
+import io.github.leo40git.sltbg.app.text.element.IconControlElement;
 import io.github.leo40git.sltbg.app.text.element.SizeControlElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,15 +35,20 @@ public final class ControlElementRegistry {
 		int l = 0;
 
 		l = register("C", new ColorControlElement.Parser(), l);
+
 		l = register("+", new SizeControlElement.Parser('+', 1), l);
 		l = register("-", new SizeControlElement.Parser('-', -1), l);
 		l = register("=", new SizeControlElement.ResetParser(), l);
+
 		l = register("FB", new FontControlElement.Parser(FontControlElement.Type.BOLD), l);
 		l = register("FI", new FontControlElement.Parser(FontControlElement.Type.ITALIC), l);
 		l = register("FU", new FontControlElement.Parser(FontControlElement.Type.UNDERLINE), l);
 		l = register("FS", new FontControlElement.Parser(FontControlElement.Type.STRIKETHROUGH), l);
 		l = register("FR", new FontControlElement.Parser(FontControlElement.Type.RESET), l);
 		// TODO style? (subscript, superscript)
+
+		l = register("I", new IconControlElement.Parser(), l);
+
 		// TODO animated??? (ani, rainbow)
 
 		MAXIMUM_NAME_LENGTH = l;
