@@ -40,32 +40,125 @@ public final class TextParser {
 			switch (ch) {
 				case '\\' -> {
 					ch = scn.peek(); // look at next character
-					if (ch == '0' || ch == '\n') {
-						// "null" escape, C-style escaped newline
-						if (preserveInvisible) {
-							sbStart = flushTextElement(elems, sb, sbStart, sbLength);
-							sbLength = 0;
-							elems.add(new InvisibleControlElement(sbStart, 2));
-							sbStart += 2;
-						} else {
-							sbLength += 2;
-						}
-						scn.skip();
-					} else {
-						if (ch != TextScanner.EOF) {
-							var elem = ControlElementRegistry.parse(scn, sbStart + sbLength);
-							if (elem != null) {
+					switch (ch) {
+						case '0', '\n' -> {
+							// "null" escape, C-style escaped newline
+							if (preserveInvisible) {
 								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
 								sbLength = 0;
-								elems.add(elem);
-								sbStart += elem.getSourceLength();
-								continue;
+								elems.add(new InvisibleControlElement(sbStart, 2));
+								sbStart += 2;
+							} else {
+								sbLength += 2;
+							}
+							scn.skip();
+						}
+						case 'u' -> {
+							// 16-bit unicode escape
+							scn.skip();
+							String valueStr = scn.read(4);
+							if (valueStr == null) {
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(new ErrorElement(sbStart, 2, true,
+										"\\u: value is missing or not long enough"));
+								sbStart += 2;
+								break;
+							}
+
+							int value;
+							try {
+								value = ParsingUtils.parseHexInt(valueStr);
+							} catch (NumberFormatException ignored) {
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(new ErrorElement(sbStart, 6, true,
+										"\\u: value is not a valid hex number"));
+								sbStart += 6;
+								break;
+							}
+
+							try {
+								if (preserveInvisible) {
+									String contents = Character.toString(value);
+									sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+									sbLength = 0;
+									elems.add(new EscapedTextElement(sbStart, 6, contents));
+									sbStart += 6;
+								} else {
+									sb.appendCodePoint(value);
+									sbLength += 6;
+								}
+							} catch (IllegalArgumentException e) {
+								// can only come from Character.toString/StringBuilder.appendCodePoint
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(new ErrorElement(sbStart, 6, true,
+										"\\u: value 0x%04X is not a valid Unicode code point".formatted(value)));
+								sbStart += 6;
 							}
 						}
+						case 'U' -> {
+							// 32-bit unicode escape
+							scn.skip();
+							String valueStr = scn.read(8);
+							if (valueStr == null) {
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(new ErrorElement(sbStart, 2, true,
+										"\\U: value is missing or not long enough"));
+								sbStart += 2;
+								break;
+							}
 
-						// return the backslash we ate
-						sb.append('\\');
-						sbLength++;
+							int value;
+							try {
+								value = ParsingUtils.parseHexInt(valueStr);
+							} catch (NumberFormatException ignored) {
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(new ErrorElement(sbStart, 10, true,
+										"\\U: value is not a valid hex number"));
+								sbStart += 10;
+								break;
+							}
+
+							try {
+								if (preserveInvisible) {
+									String contents = Character.toString(value);
+									sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+									sbLength = 0;
+									elems.add(new EscapedTextElement(sbStart, 10, contents));
+									sbStart += 10;
+								} else {
+									sb.appendCodePoint(value);
+									sbLength += 10;
+								}
+							} catch (IllegalArgumentException e) {
+								// can only come from Character.toString/StringBuilder.appendCodePoint
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(new ErrorElement(sbStart, 10, true,
+										"\\U: value 0x%08X is not a valid Unicode code point".formatted(value)));
+								sbStart += 6;
+							}
+						}
+						default -> {
+							if (ch != TextScanner.EOF) {
+								var elem = ControlElementRegistry.parse(scn, sbStart + sbLength);
+								if (elem != null) {
+									sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+									sbLength = 0;
+									elems.add(elem);
+									sbStart += elem.getSourceLength();
+									continue;
+								}
+							}
+
+							// return the backslash we ate
+							sb.append('\\');
+							sbLength++;
+						}
 					}
 				}
 				case '\n' -> {

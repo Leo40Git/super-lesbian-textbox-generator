@@ -23,7 +23,7 @@ public final class TextParserTest {
 		GameAssets.setPaletteColor(0, Color.WHITE);
 		GameAssets.setPaletteColor(14, new Color(255, 241, 120));
 
-		final String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\n\\++++\\fb\\c[#BB2929]delicious!";
+		final String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\n\\++++\\fb\\c[#BB2929]delicious! \\UDEADBEEF";
 		var elems = TextParser.parse(source, true);
 
 		System.out.format("%d element(s):%n", elems.size());
