@@ -37,7 +37,7 @@ public final class AppFrame extends JFrame {
 			super(null);
 
 			var label = new JLabel("WIP!!!");
-			label.setFont(GameAssets.getFont().deriveFont(GameAssets.FONT_DEFAULT_SIZE));
+			label.setFont(GameAssets.getFont().deriveFont(GameAssets.DEFAULT_FONT_SIZE));
 			label.setForeground(GameAssets.getPaletteColor(0));
 
 			label.setLocation(16, 12);

@@ -40,12 +40,12 @@ public final class GameAssets {
 	public static final int ICON_SIZE = 24;
 	public static final int ICONS_PER_ROW = 16;
 	public static final int ICON_SHEET_WIDTH = ICON_SIZE * ICONS_PER_ROW;
-	public static final float FONT_DEFAULT_SIZE = 18;
+	public static final float DEFAULT_FONT_SIZE = 18;
 
 	private static Color[] palette;
 	private static BufferedImage textboxSheet, iconSheet;
 	private static int maximumIconIndex;
-	private static Font font;
+	private static Font font, fontAtDefaultSize;
 	private static Map<String, Map<String, Face>> faces;
 
 	private GameAssets() {
@@ -57,6 +57,7 @@ public final class GameAssets {
 		textboxSheet = null;
 		iconSheet = null;
 		font = null;
+		fontAtDefaultSize = null;
 		faces = null;
 
 		if (!Files.isDirectory(ROOT_FOLDER)) {
@@ -287,6 +288,18 @@ public final class GameAssets {
 		}
 
 		return font;
+	}
+
+	public static Font getFontAtDefaultSize() {
+		if (font == null) {
+			throw new IllegalStateException("Game assets haven't been loaded yet (or failed to load)");
+		}
+
+		if (fontAtDefaultSize == null) {
+			fontAtDefaultSize = font.deriveFont(DEFAULT_FONT_SIZE);
+		}
+
+		return fontAtDefaultSize;
 	}
 
 	public static @NotNull Map<String, Map<String, Face>> getAllFaces() {
