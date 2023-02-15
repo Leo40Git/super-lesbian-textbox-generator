@@ -15,6 +15,7 @@ import java.util.IdentityHashMap;
 import io.github.leo40git.sltbg.app.text.element.ColorControlElement;
 import io.github.leo40git.sltbg.app.text.element.Element;
 import io.github.leo40git.sltbg.app.text.element.FormattingControlElement;
+import io.github.leo40git.sltbg.app.text.element.SizeControlElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
@@ -30,19 +31,21 @@ public final class ControlElementRegistry {
 
 	static {
 		BACKING_MAP = new HashMap<>();
-		int maximumNameLength = 0;
+		int l = 0;
 
-		maximumNameLength = register("C", new ColorControlElement.Parser(), maximumNameLength);
-		// TODO size up/down
-		maximumNameLength = register("B",  new FormattingControlElement.Parser(FormattingControlElement.Type.BOLD, 2), maximumNameLength);
-		maximumNameLength = register("I",  new FormattingControlElement.Parser(FormattingControlElement.Type.ITALIC, 2), maximumNameLength);
-		maximumNameLength = register("U",  new FormattingControlElement.Parser(FormattingControlElement.Type.UNDERLINE, 2), maximumNameLength);
-		maximumNameLength = register("S",  new FormattingControlElement.Parser(FormattingControlElement.Type.STRIKETHROUGH, 2), maximumNameLength);
-		maximumNameLength = register("RF", new FormattingControlElement.Parser(FormattingControlElement.Type.RESET, 3), maximumNameLength);
+		l = register("C", new ColorControlElement.Parser(), l);
+		l = register("+", new SizeControlElement.Parser('+', 1), l);
+		l = register("-", new SizeControlElement.Parser('-', -1), l);
+		l = register("=", new SizeControlElement.ResetParser(), l);
+		l = register("B",  new FormattingControlElement.Parser(FormattingControlElement.Type.BOLD, 2), l);
+		l = register("I",  new FormattingControlElement.Parser(FormattingControlElement.Type.ITALIC, 2), l);
+		l = register("U",  new FormattingControlElement.Parser(FormattingControlElement.Type.UNDERLINE, 2), l);
+		l = register("S",  new FormattingControlElement.Parser(FormattingControlElement.Type.STRIKETHROUGH, 2), l);
+		l = register("RF", new FormattingControlElement.Parser(FormattingControlElement.Type.RESET, 3), l);
 		// TODO style? (subscript, superscript)
 		// TODO animated??? (ani, rainbow)
 
-		MAXIMUM_NAME_LENGTH = maximumNameLength;
+		MAXIMUM_NAME_LENGTH = l;
 		TL_BUFFER = ThreadLocal.withInitial(() -> new char[MAXIMUM_NAME_LENGTH]);
 	}
 
