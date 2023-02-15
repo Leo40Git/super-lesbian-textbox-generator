@@ -35,37 +35,32 @@ public final class TextParser {
 		final var sb = new StringBuilder();
 
 		int sbStart = 0, sbLength = 0;
-		boolean escaped = false;
 		char ch;
 		while ((ch = scn.read()) != TextScanner.EOF) {
-			if (escaped) {
-				escaped = false;
-				if (ch == '\n') {
-					// C-style escaped newline
-					if (preserveInvisible) {
-						sbStart = flushTextElement(elems, sb, sbStart, sbLength);
-						sbLength = 0;
-						elems.add(new InvisibleControlElement(sbStart, 2));
-						sbStart += 2;
+			switch (ch) {
+				case '\\' -> {
+					ch = scn.peek(); // look at next character
+					if (ch == '\n') {
+						// C-style escaped newline
+						if (preserveInvisible) {
+							sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+							sbLength = 0;
+							elems.add(new InvisibleControlElement(sbStart, 2));
+							sbStart += 2;
+						} else {
+							sbLength += 2;
+						}
+						scn.skip();
 					} else {
-						sbLength += 2;
-					}
-				} else {
-					scn.rewind();
-					var elem = ControlElementRegistry.parse(scn, sbStart + sbLength);
-					if (elem == null) {
-						// return the backslash we ate
-						sb.append('\\');
-						sbLength++;
-					} else {
-						sbStart = flushTextElement(elems, sb, sbStart, sbLength);
-						sbLength = 0;
-						elems.add(elem);
-						sbStart += elem.getSourceLength();
+						var elem = ControlElementRegistry.parse(scn, sbStart + sbLength);
+						if (elem != null) {
+							sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+							sbLength = 0;
+							elems.add(elem);
+							sbStart += elem.getSourceLength();
+						}
 					}
 				}
-			} else switch (ch) {
-				case '\\' -> escaped = true;
 				case '\n' -> {
 					sbStart = flushTextElement(elems, sb, sbStart, sbLength);
 					sbLength = 0;
