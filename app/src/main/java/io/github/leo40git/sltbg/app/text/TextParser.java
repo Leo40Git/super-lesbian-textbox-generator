@@ -29,10 +29,22 @@ public final class TextParser {
 		throw new UnsupportedOperationException("TextParser only contains static declarations.");
 	}
 
+	private static final ThreadLocal<StringBuilder> TL_SB = new ThreadLocal<>();
+
+	private static @NotNull StringBuilder getStringBuilder() {
+		var sb = TL_SB.get();
+		if (sb == null) {
+			TL_SB.set(sb = new StringBuilder());
+		} else {
+			sb.setLength(0);
+		}
+		return sb;
+	}
+
 	public static @NotNull List<Element> parse(@NotNull String source, boolean preserveInvisible) {
 		final var elems = new LinkedList<Element>();
 		final var scn = new TextScanner(source);
-		final var sb = new StringBuilder();
+		final var sb = getStringBuilder();
 
 		int sbStart = 0, sbLength = 0;
 		char ch;
