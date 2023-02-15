@@ -41,6 +41,19 @@ public final class TextParser {
 				case '\\' -> {
 					ch = scn.peek(); // look at next character
 					switch (ch) {
+						case '\\' -> {
+							// escaped backslash
+							if (preserveInvisible) {
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(new EscapedTextElement(sbStart, 2, "\\"));
+								sbStart += 2;
+							} else {
+								sb.append('\\');
+								sbLength += 2;
+							}
+							scn.skip();
+						}
 						case '0', '\n' -> {
 							// "null" escape, C-style escaped newline
 							if (preserveInvisible) {
