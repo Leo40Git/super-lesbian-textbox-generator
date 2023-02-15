@@ -51,14 +51,21 @@ public final class TextParser {
 							sbLength += 2;
 						}
 						scn.skip();
-					} else if (ch != TextScanner.EOF) {
-						var elem = ControlElementRegistry.parse(scn, sbStart + sbLength);
-						if (elem != null) {
-							sbStart = flushTextElement(elems, sb, sbStart, sbLength);
-							sbLength = 0;
-							elems.add(elem);
-							sbStart += elem.getSourceLength();
+					} else {
+						if (ch != TextScanner.EOF) {
+							var elem = ControlElementRegistry.parse(scn, sbStart + sbLength);
+							if (elem != null) {
+								sbStart = flushTextElement(elems, sb, sbStart, sbLength);
+								sbLength = 0;
+								elems.add(elem);
+								sbStart += elem.getSourceLength();
+								continue;
+							}
 						}
+
+						// return the backslash we ate
+						sb.append('\\');
+						sbLength++;
 					}
 				}
 				case '\n' -> {
