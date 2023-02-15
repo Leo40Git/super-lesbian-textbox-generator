@@ -40,8 +40,8 @@ public final class TextParser {
 			switch (ch) {
 				case '\\' -> {
 					ch = scn.peek(); // look at next character
-					if (ch == '\n') {
-						// C-style escaped newline
+					if (ch == '0' || ch == '\n') {
+						// "null" escape, C-style escaped newline
 						if (preserveInvisible) {
 							sbStart = flushTextElement(elems, sb, sbStart, sbLength);
 							sbLength = 0;
@@ -51,7 +51,7 @@ public final class TextParser {
 							sbLength += 2;
 						}
 						scn.skip();
-					} else {
+					} else if (ch != TextScanner.EOF) {
 						var elem = ControlElementRegistry.parse(scn, sbStart + sbLength);
 						if (elem != null) {
 							sbStart = flushTextElement(elems, sb, sbStart, sbLength);
@@ -79,7 +79,7 @@ public final class TextParser {
 	}
 
 	private static int flushTextElement(@NotNull List<Element> elems, @NotNull StringBuilder sb,
-			@Range(from = 0, to = Integer.MAX_VALUE) int sbStart, @Range(from = 0, to = Integer.MAX_VALUE) int sbLength) {
+			@Range(from = 0, to = Integer.MAX_VALUE) int sbStart, @Range(from = 1, to = Integer.MAX_VALUE) int sbLength) {
 		if (!sb.isEmpty()) {
 			elems.add(new TextElement(sbStart, sbLength, sb.toString()));
 			sb.setLength(0);
@@ -90,7 +90,7 @@ public final class TextParser {
 	// removed for now, may bring these back later (conflict with the underline control)
 	private static void processUnicodeEscapes(boolean preserveEscapes, @NotNull TextScanner scn,
 			@NotNull List<Element> elems, @NotNull StringBuilder sb,
-			@Range(from = 0, to = Integer.MAX_VALUE) int sbStart, @Range(from = 0, to = Integer.MAX_VALUE) int sbLength,
+			@Range(from = 0, to = Integer.MAX_VALUE) int sbStart, @Range(from = 1, to = Integer.MAX_VALUE) int sbLength,
 			char ch) {
 		switch (ch) {
 			case 'u' -> {
