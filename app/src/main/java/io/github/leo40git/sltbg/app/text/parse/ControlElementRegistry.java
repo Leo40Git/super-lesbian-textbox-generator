@@ -14,7 +14,7 @@ import java.util.IdentityHashMap;
 
 import io.github.leo40git.sltbg.app.text.element.ColorControlElement;
 import io.github.leo40git.sltbg.app.text.element.Element;
-import io.github.leo40git.sltbg.app.text.element.FormattingControlElement;
+import io.github.leo40git.sltbg.app.text.element.FontControlElement;
 import io.github.leo40git.sltbg.app.text.element.SizeControlElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,11 +37,11 @@ public final class ControlElementRegistry {
 		l = register("+", new SizeControlElement.Parser('+', 1), l);
 		l = register("-", new SizeControlElement.Parser('-', -1), l);
 		l = register("=", new SizeControlElement.ResetParser(), l);
-		l = register("B",  new FormattingControlElement.Parser(FormattingControlElement.Type.BOLD, 2), l);
-		l = register("I",  new FormattingControlElement.Parser(FormattingControlElement.Type.ITALIC, 2), l);
-		l = register("U",  new FormattingControlElement.Parser(FormattingControlElement.Type.UNDERLINE, 2), l);
-		l = register("S",  new FormattingControlElement.Parser(FormattingControlElement.Type.STRIKETHROUGH, 2), l);
-		l = register("RF", new FormattingControlElement.Parser(FormattingControlElement.Type.RESET, 3), l);
+		l = register("FB", new FontControlElement.Parser(FontControlElement.Type.BOLD), l);
+		l = register("FI", new FontControlElement.Parser(FontControlElement.Type.ITALIC), l);
+		l = register("FU", new FontControlElement.Parser(FontControlElement.Type.UNDERLINE), l);
+		l = register("FS", new FontControlElement.Parser(FontControlElement.Type.STRIKETHROUGH), l);
+		l = register("FR", new FontControlElement.Parser(FontControlElement.Type.RESET), l);
 		// TODO style? (subscript, superscript)
 		// TODO animated??? (ani, rainbow)
 

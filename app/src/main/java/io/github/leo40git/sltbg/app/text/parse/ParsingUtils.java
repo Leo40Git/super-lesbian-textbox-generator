@@ -20,17 +20,29 @@ public final class ParsingUtils {
 
 	public static @Range(from = 0, to = Integer.MAX_VALUE) int parseDecInt(@NotNull String s) {
 		s = s.trim();
+
+		if (s.isEmpty()) {
+			throw new NumberFormatException("Cannot parse empty string as number.");
+		}
+
 		if (s.charAt(0) == '+') {
 			throw new NumberFormatException("Illegal leading plus sign on decimal string %s.".formatted(s));
 		}
+
 		return Integer.parseUnsignedInt(s, 10);
 	}
 
 	public static @Range(from = 0, to = Integer.MAX_VALUE) int parseHexInt(@NotNull String s) {
 		s = s.trim();
+
+		if (s.isEmpty()) {
+			throw new NumberFormatException("Cannot parse empty string as number.");
+		}
+
 		if (s.charAt(0) == '+') {
 			throw new NumberFormatException("Illegal leading plus sign on hexadecimal string %s.".formatted(s));
 		}
+
 		return Integer.parseUnsignedInt(s, 16);
 	}
 
