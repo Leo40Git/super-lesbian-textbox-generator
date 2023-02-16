@@ -12,8 +12,8 @@ package io.github.leo40git.sltbg.app.text.element;
 import org.jetbrains.annotations.Range;
 
 public sealed abstract class Element
-		permits ColorControlElement, ErrorElement, FontControlElement, IconControlElement, InvisibleControlElement, LineBreakElement, SizeControlElement,
-		TextElement {
+		permits ColorControlElement, ErrorElement, IconControlElement, InvisibleControlElement, LineBreakElement, SizeControlElement,
+		StyleControlElement, TextElement {
 	protected final @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, sourceLength;
 
 	public Element(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength) {

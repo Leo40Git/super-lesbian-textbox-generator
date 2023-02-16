@@ -12,11 +12,12 @@ package io.github.leo40git.sltbg.app.text.parse;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 
+import io.github.leo40git.sltbg.app.text.TextStyle;
 import io.github.leo40git.sltbg.app.text.element.ColorControlElement;
 import io.github.leo40git.sltbg.app.text.element.Element;
-import io.github.leo40git.sltbg.app.text.element.FontControlElement;
 import io.github.leo40git.sltbg.app.text.element.IconControlElement;
 import io.github.leo40git.sltbg.app.text.element.SizeControlElement;
+import io.github.leo40git.sltbg.app.text.element.StyleControlElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
@@ -40,11 +41,11 @@ public final class ControlElementRegistry {
 		l = register("-", new SizeControlElement.Parser('-', -1), l);
 		l = register("=", new SizeControlElement.ResetParser(), l);
 
-		l = register("FB", new FontControlElement.Parser(FontControlElement.Type.BOLD), l);
-		l = register("FI", new FontControlElement.Parser(FontControlElement.Type.ITALIC), l);
-		l = register("FU", new FontControlElement.Parser(FontControlElement.Type.UNDERLINE), l);
-		l = register("FS", new FontControlElement.Parser(FontControlElement.Type.STRIKETHROUGH), l);
-		l = register("FR", new FontControlElement.Parser(FontControlElement.Type.RESET), l);
+		l = register("SB", new StyleControlElement.ToggleParser(2, TextStyle.BOLD), l);
+		l = register("SI", new StyleControlElement.ToggleParser(2, TextStyle.ITALIC), l);
+		l = register("SU", new StyleControlElement.ToggleParser(2, TextStyle.UNDERLINE), l);
+		l = register("SS", new StyleControlElement.ToggleParser(2, TextStyle.STRIKETHROUGH), l);
+		l = register("SR", new StyleControlElement.ResetParser(), l);
 		// TODO style? (subscript, superscript)
 
 		l = register("I", new IconControlElement.Parser(), l);
