@@ -14,13 +14,13 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.UIManager;
 
 import io.github.leo40git.sltbg.app.assets.AppAssets;
 import io.github.leo40git.sltbg.app.assets.GameAssets;
 import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
-import io.github.leo40git.sltbg.app.theme.UIColors;
-import io.github.leo40git.sltbg.app.theme.UITheme;
 import io.github.leo40git.sltbg.app.ui.AppFrame;
+import io.github.leo40git.sltbg.app.ui.UIColors;
 import io.github.leo40git.sltbg.app.util.DialogUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,39 +78,48 @@ public final class Main {
 
 		fixSwing();
 
-		UITheme.init();
-		UITheme theme = null;
-
-		if (Preferences.getThemeName() != null) {
+		boolean useCrossPlatformLAF = false;
+		if (Boolean.getBoolean("sltbg.skipSystemLAF")) {
+			useCrossPlatformLAF = true;
+		} else {
+			String cn = UIManager.getSystemLookAndFeelClassName();
 			try {
-				theme = UITheme.getTheme(Preferences.getThemeName());
-			} catch (IllegalArgumentException e) {
+				UIManager.setLookAndFeel(cn);
+			} catch (Exception e) {
+				logger.error("Failed to set system L&F \"" + cn + "\", falling back to cross-platform L&F", e);
+				useCrossPlatformLAF = true;
+
 				var windowsThatNeedAOTSet = DialogUtils.saveAndResetAlwaysOnTopWindows();
-				JOptionPane.showMessageDialog(null,
-						"Couldn't find theme with name \"" + Preferences.getThemeName() + "\"!\n"
-								+ "Using default theme instead.",
-						"Invalid theme name", JOptionPane.ERROR_MESSAGE);
-				DialogUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
+				try {
+					JOptionPane.showMessageDialog(null,
+							"Failed to set Swing's Look & Feel to the system Look & Feel.\n"
+									+ DialogUtils.LOG_FILE_INSTRUCTION + "\n\n"
+									+ "Using cross-platform Look & Feel instead.\n"
+									+ "(the application will *not* look \"native\"!)\n\n"
+									+ "If this issue persists, consider setting the \"sltbg.skipSystemLAF\" system property to \"true\".",
+							"Failed to set system Look & Feel", JOptionPane.ERROR_MESSAGE);
+				} finally {
+					DialogUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
+				}
 			}
 		}
 
-		if (theme == null) {
-			theme = Boolean.getBoolean("skipSystemLookAndFeel") ? UITheme.getCrossPlatformTheme() : UITheme.getSystemTheme();
+		if (useCrossPlatformLAF) {
+			String cn = UIManager.getSystemLookAndFeelClassName();
+			try {
+				UIManager.setLookAndFeel(cn);
+			} catch (Exception e) {
+				logger.error("Failed to set cross-platform L&F " + cn, e);
+
+				DialogUtils.ensureNoAlwaysOnTopWindows();
+				DialogUtils.showErrorDialog(null,
+						"Failed to set Swing's Look & Feel to the cross platform Look & Feel.", "Failed to set Look & Feel");
+				System.exit(1);
+				return;
+			}
 		}
 
-		if (theme.apply()) {
-			Preferences.setThemeName(theme.getName());
-		} else {
-			var windowsThatNeedAOTSet = DialogUtils.saveAndResetAlwaysOnTopWindows();
-			JOptionPane.showMessageDialog(null,
-					"Failed to set theme \"" + theme.getName() + "\"!\n"
-							+ DialogUtils.LOG_FILE_INSTRUCTION + "\n"
-							+ "Using default Swing theme instead.",
-					"Failed to set theme!", JOptionPane.ERROR_MESSAGE);
-			DialogUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
-		}
-
-		UIColors.update();
+		UIColors.init();
 
 		// TODO splash screen?
 		// TODO check for updates

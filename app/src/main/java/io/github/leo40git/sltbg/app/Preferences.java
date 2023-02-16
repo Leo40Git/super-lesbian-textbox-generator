@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonWriter;
@@ -34,13 +33,11 @@ public final class Preferences {
 		}
 
 		public static final String VERSION = "version";
-		public static final String THEME_NAME = "theme";
 		public static final String AUTO_UPDATE_CHECK_ENABLED = "auto_update_check_enabled";
 		public static final String SHOULD_COPY_CURRENT_FACE = "copy_current_face";
 	}
 
 	private static boolean initialized = false;
-	private static @Nullable String themeName;
 	private static boolean autoUpdateCheckEnabled;
 	private static boolean shouldCopyCurrentFace;
 
@@ -50,7 +47,6 @@ public final class Preferences {
 		while (reader.hasNext()) {
 			String field = reader.nextName();
 			switch (field) {
-				case Fields.THEME_NAME -> themeName = reader.nextString();
 				case Fields.AUTO_UPDATE_CHECK_ENABLED -> autoUpdateCheckEnabled = reader.nextBoolean();
 				case Fields.SHOULD_COPY_CURRENT_FACE -> shouldCopyCurrentFace = reader.nextBoolean();
 				default -> {
@@ -64,8 +60,6 @@ public final class Preferences {
 	private static void write(@NotNull JsonWriter writer) throws IOException {
 		writer.name(Fields.VERSION);
 		writer.value(CURRENT_VERSION);
-		writer.name(Fields.THEME_NAME);
-		writer.value(themeName);
 		writer.name(Fields.AUTO_UPDATE_CHECK_ENABLED);
 		writer.value(autoUpdateCheckEnabled);
 		writer.name(Fields.SHOULD_COPY_CURRENT_FACE);
@@ -117,7 +111,6 @@ public final class Preferences {
 	}
 
 	public static void reset() {
-		themeName = null;
 		autoUpdateCheckEnabled = true;
 		shouldCopyCurrentFace = true;
 
@@ -136,14 +129,6 @@ public final class Preferences {
 		} catch (Exception e) {
 			Main.logger().error("Failed to flush preferences!", e);
 		}
-	}
-
-	public static @Nullable String getThemeName() {
-		return themeName;
-	}
-
-	public static void setThemeName(@Nullable String themeName) {
-		Preferences.themeName = themeName;
 	}
 
 	public static boolean isAutoUpdateCheckEnabled() {

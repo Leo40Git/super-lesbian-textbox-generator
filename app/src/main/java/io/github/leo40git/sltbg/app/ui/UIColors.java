@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.app.theme;
+package io.github.leo40git.sltbg.app.ui;
 
 import java.awt.Color;
 
@@ -20,9 +20,9 @@ public final class UIColors {
 		throw new UnsupportedOperationException("UIColors only contains static declarations.");
 	}
 
-	public static void update() {
-		Label.update();
-		List.update();
+	public static void init() {
+		Label.init();
+		List.init();
 	}
 
 	public static final class Label {
@@ -32,7 +32,7 @@ public final class UIColors {
 			throw new UnsupportedOperationException("Label only contains static declarations.");
 		}
 
-		private static void update() {
+		private static void init() {
 			disabledForeground = getColor("Label.disabledForeground", "Label.disabledText");
 		}
 
@@ -47,7 +47,7 @@ public final class UIColors {
 		private static Color hoveredOverlay, disabledOverlay, alternateOverlay;
 		private static Color hoveredBackground, disabledBackground, alternateBackground;
 
-		private static void update() {
+		private static void init() {
 			background = getColor("List.background");
 			foreground = getColor("List.foreground");
 			selectionBackground = getColor("List.selectionBackground", "List[Selected].textBackground");
