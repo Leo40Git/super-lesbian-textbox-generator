@@ -14,8 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import de.skuzzle.semantic.Version;
 import io.github.leo40git.sltbg.app.json.JsonReadUtils;
@@ -30,9 +28,10 @@ public final class BuildInfo {
 		throw new UnsupportedOperationException("BuildInfo only contains static declarations.");
 	}
 
+	public static final String APP_NAME = "Super Lesbian Textbox Generator";
+
 	private static boolean loaded = false;
 	private static boolean isDevelopment = false;
-	private static String name;
 	private static Version version;
 	private static @Nullable URL updateJsonUrl, homepageUrl, issuesUrl, sourceUrl;
 	private static String[] credits;
@@ -58,7 +57,6 @@ public final class BuildInfo {
 			while (reader.hasNext()) {
 				String field = reader.nextName();
 				switch (field) {
-					case "name" -> name = reader.nextString();
 					case "version" -> verStr = reader.nextString();
 					case "urls" -> readURLs(reader);
 					case "credits" -> credits = JsonReadUtils.readStringArray(reader);
@@ -72,16 +70,8 @@ public final class BuildInfo {
 			throw new IOException("Failed to parse JSON", e);
 		}
 
-		List<String> missingFields = new ArrayList<>();
-		if (name == null) {
-			missingFields.add("name");
-		}
 		if (verStr == null) {
-			missingFields.add("version");
-		}
-
-		if (!missingFields.isEmpty()) {
-			throw new MissingFieldsException("Build info", missingFields);
+			throw new MissingFieldsException("Build info", "version");
 		}
 
 		if ("${version}".equals(verStr)) {
@@ -137,11 +127,6 @@ public final class BuildInfo {
 	public static boolean isDevelopment() {
 		assertLoaded();
 		return isDevelopment;
-	}
-
-	public static String name() {
-		assertLoaded();
-		return name;
 	}
 
 	public static Version version() {

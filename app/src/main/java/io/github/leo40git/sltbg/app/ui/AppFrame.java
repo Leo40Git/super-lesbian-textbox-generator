@@ -25,7 +25,7 @@ public final class AppFrame extends JFrame {
 	public AppFrame() {
 		// TODO actual app!
 
-		setTitle(BuildInfo.name());
+		setTitle(BuildInfo.APP_NAME);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setContentPane(new TestPanel());
 		pack();

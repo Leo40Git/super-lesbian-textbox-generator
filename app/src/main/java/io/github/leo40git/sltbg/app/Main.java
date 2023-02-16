@@ -55,7 +55,7 @@ public final class Main {
 			return;
 		}
 
-		logger.info("{} v{} is now initializing...", BuildInfo.name(), BuildInfo.version().toString());
+		logger.info("{} v{} is now initializing...", BuildInfo.APP_NAME, BuildInfo.version().toString());
 		if (BuildInfo.isDevelopment()) {
 			logger.info(" === DEVELOPMENT MODE! === ");
 		}
