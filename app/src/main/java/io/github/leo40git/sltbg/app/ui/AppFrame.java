@@ -13,13 +13,16 @@ import java.awt.AlphaComposite;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.List;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import io.github.leo40git.sltbg.app.BuildInfo;
 import io.github.leo40git.sltbg.app.assets.GameAssets;
+import io.github.leo40git.sltbg.app.text.TextParser;
+import io.github.leo40git.sltbg.app.text.TextRenderer;
+import io.github.leo40git.sltbg.app.text.element.Element;
 
 public final class AppFrame extends JFrame {
 	public AppFrame() {
@@ -33,16 +36,13 @@ public final class AppFrame extends JFrame {
 	}
 
 	private static final class TestPanel extends JPanel {
+		private static final String SOURCE = "\\c[14]Melody\n\\c[0]\\i[98] Bunny stew is\n\\++\\sb\\c[#BB2929]delicious!";
+		private final List<Element> parsed;
+
 		public TestPanel() {
 			super(null);
 
-			var label = new JLabel("WIP!!!");
-			label.setFont(GameAssets.getFont().deriveFont(GameAssets.DEFAULT_FONT_SIZE));
-			label.setForeground(GameAssets.getPaletteColor(0));
-
-			label.setLocation(16, 12);
-			label.setSize(label.getPreferredSize());
-			add(label);
+			parsed = TextParser.parse(SOURCE, false);
 
 			setPreferredSize(new Dimension(GameAssets.TEXTBOX_WIDTH, GameAssets.TEXTBOX_HEIGHT));
 		}
@@ -53,7 +53,7 @@ public final class AppFrame extends JFrame {
 
 			var g2d = (Graphics2D)g;
 			g2d.setComposite(AlphaComposite.SrcOver);
-			GameAssets.drawTextboxBackground(g, 0, 0);
+			GameAssets.drawTextboxBackground(g2d, 0, 0);
 		}
 
 		@Override
@@ -62,8 +62,11 @@ public final class AppFrame extends JFrame {
 
 			var g2d = (Graphics2D)g;
 			g2d.setComposite(AlphaComposite.SrcOver);
-			GameAssets.drawTextboxBorder(g, 0, 0);
-			GameAssets.drawTextboxArrow(g, 0, 0);
+			//noinspection DataFlowIssue
+			g2d.drawImage(GameAssets.getFace("Melody", "Happy").image(), 12, 12, null);
+			TextRenderer.render(g2d, 16 + GameAssets.FACE_SIZE + 12, 12, parsed);
+			GameAssets.drawTextboxBorder(g2d, 0, 0);
+			GameAssets.drawTextboxArrow(g2d, 0, 0);
 		}
 	}
 }

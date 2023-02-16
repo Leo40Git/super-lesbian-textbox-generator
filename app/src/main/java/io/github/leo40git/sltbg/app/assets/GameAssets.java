@@ -41,6 +41,7 @@ public final class GameAssets {
 	public static final int ICONS_PER_ROW = 16;
 	public static final int ICON_SHEET_WIDTH = ICON_SIZE * ICONS_PER_ROW;
 	public static final float DEFAULT_FONT_SIZE = 18;
+	public static final int FACE_SIZE = 96;
 
 	private static Color[] palette;
 	private static BufferedImage textboxSheet, iconSheet;
@@ -164,6 +165,11 @@ public final class GameAssets {
 				image = ImageIO.read(imageIn);
 			} catch (IOException e) {
 				throw new IOException("%s/%s: failed to read image from file '%s'".formatted(category, name, path));
+			}
+
+			if (image.getWidth() != FACE_SIZE || image.getHeight() != FACE_SIZE) {
+				throw new IOException("Image '%s' has incorrect dimensions: expected %dx%2$d, got %dx%d"
+						.formatted(path, FACE_SIZE, image.getWidth(), image.getHeight()));
 			}
 
 			faces.put(name, new GameAssets.Face(category, name, image));
@@ -310,10 +316,23 @@ public final class GameAssets {
 		return faces;
 	}
 
-	public static @Nullable Map<String, Face> getFacesByCategory(String category) {
+	public static @Nullable Map<String, Face> getFacesByCategory(@NotNull String category) {
 		if (faces == null) {
 			throw new IllegalStateException("Game assets haven't been loaded yet (or failed to load)");
 		}
 		return faces.get(category);
+	}
+
+	public static @Nullable Face getFace(@NotNull String category, @NotNull String name) {
+		if (faces == null) {
+			throw new IllegalStateException("Game assets haven't been loaded yet (or failed to load)");
+		}
+
+		var catMap = faces.get(category);
+		if (catMap == null) {
+			return null;
+		} else {
+			return catMap.get(name);
+		}
 	}
 }

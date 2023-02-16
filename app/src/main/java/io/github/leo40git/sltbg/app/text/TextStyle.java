@@ -13,5 +13,7 @@ public enum TextStyle {
 	BOLD,
 	ITALIC,
 	UNDERLINE,
-	STRIKETHROUGH
+	STRIKETHROUGH;
+
+	public static final int COUNT = values().length;
 }
