@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class FaceCollector {
 	public static final int FACE_SIZE = 96;
-	public static final int ROW_SIZE = 4;
 
 	private final Path sheetPath;
 	private final List<FaceListEntry> entries;
@@ -43,12 +42,13 @@ public final class FaceCollector {
 		try (var is = Files.newInputStream(inputDir.resolve(sheetPath))) {
 			sheet = ImageIO.read(is);
 		}
+		final int rowSize = sheet.getWidth() / FACE_SIZE;
 
 		var output = new ArrayList<FacePoolWriter.Entry>();
 		int index = 0;
 		for (var entry : entries) {
 			if (entry instanceof FaceListEntry.Add addEntry) {
-				var image = sheet.getSubimage((index % ROW_SIZE) * FACE_SIZE, (index / ROW_SIZE) * FACE_SIZE, FACE_SIZE, FACE_SIZE);
+				var image = sheet.getSubimage((index % rowSize) * FACE_SIZE, (index / rowSize) * FACE_SIZE, FACE_SIZE, FACE_SIZE);
 				output.add(new FacePoolWriter.Entry(addEntry.category(), addEntry.name(), addEntry.path(), addEntry.order(), image));
 			}
 

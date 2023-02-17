@@ -118,4 +118,24 @@ ADD	Allison	Introspective, Smiling	allison/thinking_happy.png	1400
 ADD	Allison	Neutral (fuzzy signal)	allison/neutral_static.png	205
 END
 
-; TODO Claire, Jodie, literally everyone else
+; TODO Claire
+
+; TODO Jodie
+
+; Javis
+BGN	javis faces.png
+ADD	Javis	Neutral	javis/neutral.png	100
+ADD	Javis	Unamused	javis/unamused.png	200
+ADD	Javis	Excited	javis/excited.png	300
+ADD	Javis	Angry	javis/angry.png	400
+ADD	Javis	Sad	javis/sad.png	500
+ADD	Javis	Furious	javis/pissed.png	600
+ADD	Javis	Suspicious	javis/sus.png	700
+ADD	Javis	Eyeroll	javis/eyeroll.png	800
+ADD	Javis	Neutral, Looking to Side	javis/neutral_side.png	110
+ADD	Javis	Shocked	javis/shocked.png	900
+END
+
+; TODO Venera
+
+; TODO NPCs by region
