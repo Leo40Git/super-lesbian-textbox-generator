@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -178,7 +179,13 @@ public final class GameAssets {
 		return faces;
 	}
 
-	public record Face(@NotNull String category, @NotNull String name, @NotNull BufferedImage image) {
+	// TODO move this to separate class
+	// TODO create ImageIcon on demand?
+	public record Face(@NotNull String category, @NotNull String name, @NotNull BufferedImage image, @NotNull ImageIcon icon) {
+		public Face(@NotNull String category, @NotNull String name, @NotNull BufferedImage image) {
+			this(category, name, image, new ImageIcon(image, category + "/" + name));
+		}
+
 		@Override
 		public String toString() {
 			return "%s/%s".formatted(category, name);
