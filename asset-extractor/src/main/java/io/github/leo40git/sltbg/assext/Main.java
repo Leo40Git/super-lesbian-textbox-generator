@@ -16,10 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
@@ -141,11 +137,11 @@ public final class Main {
 			return;
 		}
 
-		var executor = Executors.newWorkStealingPool();
+		/*var executor = Executors.newWorkStealingPool();
 		var completionService = new ExecutorCompletionService<List<FacePoolWriter.Entry>>(executor);
 
 		for (var collector : collectors) {
-			collector.run(completionService, inputDir);
+			collector.runAsync(completionService, inputDir);
 		}
 
 		FacePoolWriter pool = new FacePoolWriter();
@@ -182,7 +178,21 @@ public final class Main {
 			}
 		}
 
-		executor.shutdownNow();
+		executor.shutdownNow();*/
+
+		FacePoolWriter pool = new FacePoolWriter();
+
+		for (var collector : collectors) {
+			try {
+				for (var face : collector.run(inputDir)) {
+					pool.add(face);
+				}
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(null,
+						"Failed to get face collection results:\n" + e,
+						"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+			}
+		}
 
 		try {
 			pool.write(outputDir);

@@ -33,11 +33,11 @@ public final class FaceCollector {
 		this.entries = List.copyOf(entries);
 	}
 
-	public @NotNull Future<List<FacePoolWriter.Entry>> run(@NotNull ExecutorCompletionService<List<FacePoolWriter.Entry>> completionService, @NotNull Path inputDir) {
-		return completionService.submit(() -> run0(inputDir));
+	public @NotNull Future<List<FacePoolWriter.Entry>> runAsync(@NotNull ExecutorCompletionService<List<FacePoolWriter.Entry>> completionService, @NotNull Path inputDir) {
+		return completionService.submit(() -> run(inputDir));
 	}
 
-	private @NotNull List<FacePoolWriter.Entry> run0(@NotNull Path inputDir) throws IOException {
+	public @NotNull List<FacePoolWriter.Entry> run(@NotNull Path inputDir) throws IOException {
 		BufferedImage sheet;
 		try (var is = Files.newInputStream(inputDir.resolve(sheetPath))) {
 			sheet = ImageIO.read(is);
