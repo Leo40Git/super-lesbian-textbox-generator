@@ -9,20 +9,19 @@
 
 package io.github.leo40git.sltbg.app.ui;
 
-import java.awt.AlphaComposite;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.util.List;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import io.github.leo40git.sltbg.app.BuildInfo;
-import io.github.leo40git.sltbg.app.assets.GameAssets;
-import io.github.leo40git.sltbg.app.text.TextParser;
-import io.github.leo40git.sltbg.app.text.TextRenderer;
-import io.github.leo40git.sltbg.app.text.element.Element;
+import io.github.leo40git.sltbg.app.ui.components.ExtendedScrollPane;
 
 public final class AppFrame extends JFrame {
 	public AppFrame() {
@@ -31,42 +30,40 @@ public final class AppFrame extends JFrame {
 		setTitle(BuildInfo.APP_NAME);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setContentPane(new TestPanel());
-		pack();
-		setResizable(false);
+		//pack();
+		//setResizable(false);
 	}
 
-	private static final class TestPanel extends JPanel {
-		private static final String SOURCE = "\\c[14]Melody\n\\c[0]\\i[98] Bunny stew is\n\\++\\sb\\c[#BB2929]delicious!";
-		private final List<Element> parsed;
+	private static final class TestPanel extends JPanel implements ActionListener {
+		private final Box box;
+		private final JButton btnAdd;
 
 		public TestPanel() {
-			super(null);
+			super(new BorderLayout());
 
-			parsed = TextParser.parse(SOURCE, false);
+			box = new Box(BoxLayout.PAGE_AXIS);
+			btnAdd = new JButton("add label");
+			btnAdd.addActionListener(this);
 
-			setPreferredSize(new Dimension(GameAssets.TEXTBOX_WIDTH, GameAssets.TEXTBOX_HEIGHT));
+			var btnColHeader = new JButton("col header");
+			var btnColFooter = new JButton("col footer");
+
+			var scroll = new ExtendedScrollPane(box);
+			scroll.setColumnHeaderView(btnColHeader);
+			scroll.setColumnFooterView(btnColFooter);
+
+			add(scroll, BorderLayout.CENTER);
+			add(btnAdd, BorderLayout.PAGE_END);
 		}
 
 		@Override
-		protected void paintComponent(Graphics g) {
-			super.paintComponent(g);
-
-			var g2d = (Graphics2D)g;
-			g2d.setComposite(AlphaComposite.SrcOver);
-			GameAssets.drawTextboxBackground(g2d, 0, 0);
-		}
-
-		@Override
-		protected void paintChildren(Graphics g) {
-			super.paintChildren(g);
-
-			var g2d = (Graphics2D)g;
-			g2d.setComposite(AlphaComposite.SrcOver);
-			//noinspection DataFlowIssue
-			g2d.drawImage(GameAssets.getFace("Melody", "Happy").image(), 12, 12, null);
-			TextRenderer.render(g2d, 16 + GameAssets.FACE_SIZE + 12, 12, parsed);
-			GameAssets.drawTextboxBorder(g2d, 0, 0);
-			GameAssets.drawTextboxArrow(g2d, 0, 0);
+		public void actionPerformed(ActionEvent e) {
+			if (e.getSource() == btnAdd) {
+				var lbl = new JLabel("test");
+				lbl.setAlignmentX(LEFT_ALIGNMENT);
+				box.add(lbl);
+				box.revalidate();
+			}
 		}
 	}
 }

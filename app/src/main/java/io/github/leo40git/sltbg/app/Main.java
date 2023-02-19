@@ -19,7 +19,7 @@ import javax.swing.UIManager;
 import io.github.leo40git.sltbg.app.assets.AppAssets;
 import io.github.leo40git.sltbg.app.assets.GameAssets;
 import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
-import io.github.leo40git.sltbg.app.ui.MicroFrame;
+import io.github.leo40git.sltbg.app.ui.AppFrame;
 import io.github.leo40git.sltbg.app.ui.UIColors;
 import io.github.leo40git.sltbg.app.util.DialogUtils;
 import org.apache.logging.log4j.LogManager;
@@ -146,8 +146,7 @@ public final class Main {
 
 		ControlElementRegistry.init();
 
-		//var frame = new AppFrame();
-		var frame = new MicroFrame();
+		var frame = new AppFrame();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		frame.requestFocus();
