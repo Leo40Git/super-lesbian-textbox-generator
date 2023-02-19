@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'org.quiltmc.gradle.licenser' version '1.+'
 }
 
@@ -15,7 +15,15 @@ repositories {
 }
 
 dependencies {
-    implementation project(':core')
+    compileOnlyApi 'org.jetbrains:annotations:23.0.0'
+    api 'org.quiltmc:quilt-json5:1.0.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 license {

@@ -16,9 +16,9 @@ import java.io.InputStreamReader;
 import java.net.URL;
 
 import de.skuzzle.semantic.Version;
-import io.github.leo40git.sltbg.app.json.JsonReadUtils;
-import io.github.leo40git.sltbg.app.json.MalformedJsonException;
-import io.github.leo40git.sltbg.app.json.MissingFieldsException;
+import io.leo40git.sltbg.json.JsonReadUtils;
+import io.leo40git.sltbg.json.MalformedJsonException;
+import io.leo40git.sltbg.json.MissingFieldsException;
 import org.jetbrains.annotations.Nullable;
 
 import org.quiltmc.json5.JsonReader;

@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.app.json;
+package io.leo40git.sltbg.json;
 
 import org.jetbrains.annotations.NotNull;
 
