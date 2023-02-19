@@ -20,9 +20,9 @@ import javax.imageio.ImageWriter;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ImageIOUtil {
-	private ImageIOUtil() {
-		throw new UnsupportedOperationException("ImageIOUtil only contains static declarations.");
+public final class ImageUtils {
+	private ImageUtils() {
+		throw new UnsupportedOperationException("ImageUtils only contains static declarations.");
 	}
 
 	public static void writeImage(@NotNull RenderedImage image, @NotNull Path path) throws IOException {

@@ -18,7 +18,7 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import io.leo40git.sltbg.json.MissingFieldsException;
-import io.leo40git.sltbg.util.ImageIOUtil;
+import io.leo40git.sltbg.util.ImageUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -237,7 +237,7 @@ public final class Face implements Comparable<Face> {
 		}
 
 		try {
-			ImageIOUtil.writeImage(image, rootDir.resolve(imagePath));
+			ImageUtils.writeImage(image, rootDir.resolve(imagePath));
 		} catch (IOException e) {
 			throw new IOException("Failed to write face image", e);
 		}
