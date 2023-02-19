@@ -9,6 +9,8 @@
 
 package io.leo40git.sltbg.gamedata;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,10 +18,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import io.leo40git.sltbg.json.MissingFieldsException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
+
+import org.quiltmc.json5.JsonReader;
+import org.quiltmc.json5.JsonWriter;
 
 public final class FaceCategory implements Comparable<FaceCategory> {
 	private @Nullable FacePool pool;
@@ -190,5 +196,66 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	@Override
 	public int compareTo(@NotNull FaceCategory o) {
 		return order - o.order;
+	}
+
+	@Contract("_, _ -> new")
+	public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull Path rootDir) throws IOException {
+		String name = reader.nextName();
+
+		var category = new FaceCategory(name);
+
+		boolean gotFaces = false;
+
+		reader.beginObject();
+		while (reader.hasNext()) {
+			String field = reader.nextName();
+			switch (field) {
+				case FaceFields.FACES -> {
+					reader.beginObject();
+					while (reader.hasNext()) {
+						category.add(Face.read(reader, rootDir));
+					}
+					reader.endObject();
+					gotFaces = true;
+				}
+				case FaceFields.ORDER -> category.setOrder(reader.nextInt());
+				case FaceFields.CHARACTER_NAME -> category.setAutoCharacterName(reader.nextString());
+				default -> reader.skipValue();
+			}
+		}
+		reader.endObject();
+
+		if (!gotFaces) {
+			throw new MissingFieldsException("Category", FaceFields.FACES);
+		}
+
+		return category;
+	}
+
+	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
+		sortIfNeeded();
+
+		writer.name(name);
+
+		writer.beginObject();
+
+		writer.name(FaceFields.FACES);
+		writer.beginObject();
+		for (var face : faces.values()) {
+			face.write(writer, rootDir);
+		}
+		writer.endObject();
+
+		if (orderSet) {
+			writer.name(FaceFields.ORDER);
+			writer.value(order);
+		}
+
+		if (autoCharacterName != null) {
+			writer.name(FaceFields.CHARACTER_NAME);
+			writer.value(order);
+		}
+
+		writer.endObject();
 	}
 }

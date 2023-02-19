@@ -9,15 +9,21 @@
 
 package io.leo40git.sltbg.gamedata;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
+
+import org.quiltmc.json5.JsonReader;
+import org.quiltmc.json5.JsonWriter;
 
 public final class FacePool {
 	public static final int DEFAULT_ORDER_BASE = 1000;
@@ -106,5 +112,28 @@ public final class FacePool {
 
 		categories.remove(category.getName(), category);
 		categories.put(newName, category);
+	}
+
+	@Contract("_, _ -> new")
+	public static @NotNull FacePool read(@NotNull JsonReader reader, @NotNull Path rootDir) throws IOException {
+		var pool = new FacePool();
+
+		reader.beginObject();
+		while (reader.hasNext()) {
+			pool.add(FaceCategory.read(reader, rootDir));
+		}
+		reader.endObject();
+
+		return pool;
+	}
+
+	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
+		sortIfNeeded();
+
+		writer.beginObject();
+		for (var category : categories.values()) {
+			category.write(writer, rootDir);
+		}
+		writer.endObject();
 	}
 }
