@@ -160,7 +160,7 @@ public final class Main {
 
 	/**
 	 * Original source is
-	 * <a href="https://git.sleeping.town/unascribed/unsup/src/branch/trunk/src/main/java/com/unascribed/sup/Util.java#L77">here</a>.
+	 * <a href="https://git.sleeping.town/unascribed/unsup/src/commit/2b59ada1fc14415bc5618768d5865326221146d2/src/main/java/com/unascribed/sup/Util.java#L118">here</a>.
 	 * @author unascribed
 	 */
 	public static void fixSwing() {
