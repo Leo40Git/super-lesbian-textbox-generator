@@ -33,8 +33,8 @@ public final class Face implements Comparable<Face> {
 	private @Nullable FaceCategory category;
 	@SuppressWarnings("FieldMayBeFinal")
 	private @NotNull String name;
-	private @NotNull BufferedImage image;
 	private @NotNull String imagePath;
+	private @Nullable BufferedImage image;
 	private int order;
 	private boolean orderSet;
 	private @Nullable String characterName;
@@ -42,12 +42,12 @@ public final class Face implements Comparable<Face> {
 
 	private @Nullable ImageIcon imageAsIcon;
 
-	public Face(@NotNull String name, @NotNull BufferedImage image, @NotNull String imagePath) {
+	public Face(@NotNull String name, @NotNull String imagePath) {
 		this.name = name;
-		this.image = image;
 		this.imagePath = imagePath;
 
 		category = null;
+		image = null;
 		order = 0;
 		orderSet = false;
 		characterName = null;
@@ -87,7 +87,23 @@ public final class Face implements Comparable<Face> {
 		}
 	}
 
+	public @NotNull String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(@NotNull String imagePath) {
+		this.imagePath = imagePath;
+	}
+
+	public boolean hasImage() {
+		return image != null;
+	}
+
 	public @NotNull BufferedImage getImage() {
+		if (image == null) {
+			throw new IllegalStateException("No image!");
+		}
+
 		return image;
 	}
 
@@ -96,12 +112,9 @@ public final class Face implements Comparable<Face> {
 		imageAsIcon = null;
 	}
 
-	public @NotNull String getImagePath() {
-		return imagePath;
-	}
-
-	public void setImagePath(@NotNull String imagePath) {
-		this.imagePath = imagePath;
+	public void clearImage() {
+		image = null;
+		imageAsIcon = null;
 	}
 
 	boolean isOrderSet() {
@@ -120,6 +133,11 @@ public final class Face implements Comparable<Face> {
 				category.markDirty();
 			}
 		}
+	}
+
+	public void clearOrder() {
+		order = 0;
+		orderSet = false;
 	}
 
 	public @NotNull String getCharacterName() {
@@ -144,12 +162,16 @@ public final class Face implements Comparable<Face> {
 		characterNameSet = true;
 	}
 
-	public void unsetCharacterName() {
+	public void clearCharacterName() {
 		characterName = null;
 		characterNameSet = false;
 	}
 
-	public @NotNull ImageIcon getImageAsIcon() {
+	public @Nullable ImageIcon getImageAsIcon() {
+		if (image == null) {
+			return null;
+		}
+
 		if (imageAsIcon == null) {
 			imageAsIcon = new ImageIcon(image, createImageAsIconDescription());
 		}
@@ -167,12 +189,12 @@ public final class Face implements Comparable<Face> {
 
 	@Contract(" -> new")
 	public @NotNull Face copy() {
-		var clone = new Face(name, image, imagePath);
+		var clone = new Face(name, imagePath);
+		clone.image = image;
 		clone.order = order;
 		clone.orderSet = orderSet;
 		clone.characterName = characterName;
 		clone.characterNameSet = characterNameSet;
-		clone.imageAsIcon = imageAsIcon;
 		return clone;
 	}
 
@@ -181,8 +203,8 @@ public final class Face implements Comparable<Face> {
 		return order - o.order;
 	}
 
-	@Contract("_, _, _ -> new")
-	public static @NotNull Face read(@NotNull JsonReader reader, @NotNull String name, @NotNull Path rootPath) throws IOException {
+	@Contract("_, _ -> new")
+	public static @NotNull Face read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
 		String imagePath = null;
 		boolean orderSet = false;
 		int order = 0;
@@ -211,14 +233,7 @@ public final class Face implements Comparable<Face> {
 			}
 		}
 
-		BufferedImage image;
-		try (var is = Files.newInputStream(rootPath.resolve(imagePath))) {
-			image = ImageIO.read(is);
-		} catch (IOException e) {
-			throw new IOException("Failed to read face image", e);
-		}
-
-		var face = new Face(name, image, imagePath);
+		var face = new Face(name, imagePath);
 		if (orderSet) {
 			face.setOrder(order);
 		}
@@ -228,7 +243,20 @@ public final class Face implements Comparable<Face> {
 		return face;
 	}
 
+	public void load(@NotNull Path rootDir) throws FaceLoadException {
+		var imagePath = rootDir.resolve(this.imagePath);
+		try (var is = Files.newInputStream(imagePath)) {
+			setImage(ImageIO.read(is));
+		} catch (IOException e) {
+			throw new FaceLoadException(this, imagePath, e);
+		}
+	}
+
 	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
+		if (image == null) {
+			throw new IOException("Can't write face because it has no image");
+		}
+
 		writer.name(name);
 		if (!orderSet && !characterNameSet) {
 			writer.value(imagePath);

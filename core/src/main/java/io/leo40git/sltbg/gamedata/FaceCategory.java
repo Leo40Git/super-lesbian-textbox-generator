@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
@@ -99,14 +98,17 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		orderSet = true;
 	}
 
+	public void clearOrder() {
+		order = 0;
+		orderSet = false;
+	}
+
 	public @Nullable String getCharacterName() {
 		return characterName;
 	}
 
 	public void setCharacterName(@Nullable String characterName) {
-		if (!Objects.equals(this.characterName, characterName)) {
-			this.characterName = characterName;
-		}
+		this.characterName = characterName;
 	}
 
 	public @Nullable Face getIconFace() {
@@ -205,8 +207,8 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		return order - o.order;
 	}
 
-	@Contract("_, _, _ -> new")
-	public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name, @NotNull Path rootDir) throws IOException {
+	@Contract("_, _ -> new")
+	public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
 		var category = new FaceCategory(name);
 
 		boolean gotFaces = false;
@@ -216,7 +218,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 			String field = reader.nextName();
 			switch (field) {
 				case FaceFields.FACES -> {
-					JsonReadUtils.readSimpleMap(reader, (readerx, faceName) -> Face.read(readerx, faceName, rootDir), category::add);
+					JsonReadUtils.readSimpleMap(reader, Face::read, category::add);
 					gotFaces = true;
 				}
 				case FaceFields.ORDER -> category.setOrder(reader.nextInt());
@@ -231,6 +233,27 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		}
 
 		return category;
+	}
+
+	public void load(@NotNull Path rootDir) throws FaceCategoryLoadException {
+		sortIfNeeded();
+
+		FaceCategoryLoadException bigExc = null;
+
+		for (var face : faces.values()) {
+			try {
+				face.load(rootDir);
+			} catch (FaceLoadException e) {
+				if (bigExc == null) {
+					bigExc = new FaceCategoryLoadException(this);
+				}
+				bigExc.addSubException(e);
+			}
+		}
+
+		if (bigExc != null) {
+			throw bigExc;
+		}
 	}
 
 	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {

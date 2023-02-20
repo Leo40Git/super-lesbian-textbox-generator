@@ -134,11 +134,32 @@ public final class FacePool {
 		categories.put(newName, category);
 	}
 
-	@Contract("_, _ -> new")
-	public static @NotNull FacePool read(@NotNull JsonReader reader, @NotNull Path rootDir) throws IOException {
+	@Contract("_ -> new")
+	public static @NotNull FacePool read(@NotNull JsonReader reader) throws IOException {
 		var pool = new FacePool();
-		JsonReadUtils.readSimpleMap(reader, (readerx, name) -> FaceCategory.read(readerx, name, rootDir), pool::add);
+		JsonReadUtils.readSimpleMap(reader, FaceCategory::read, pool::add);
 		return pool;
+	}
+
+	public void load(@NotNull Path rootDir) throws FacePoolLoadException {
+		sortIfNeeded();
+
+		FacePoolLoadException bigExc = null;
+
+		for (var category : categories.values()) {
+			try {
+				category.load(rootDir);
+			} catch (FaceCategoryLoadException e) {
+				if (bigExc == null) {
+					bigExc = new FacePoolLoadException();
+				}
+				bigExc.addSubException(e);
+			}
+		}
+
+		if (bigExc != null) {
+			throw bigExc;
+		}
 	}
 
 	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
