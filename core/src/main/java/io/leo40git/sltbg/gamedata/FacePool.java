@@ -85,6 +85,24 @@ public final class FacePool {
 		return Collections.unmodifiableMap(categories);
 	}
 
+	public @Nullable FaceCategory getCategory(@NotNull String name) {
+		return categories.get(name);
+	}
+
+	public @Nullable Face getFace(@NotNull String path) {
+		int delIdx = path.indexOf(Face.PATH_DELIMITER);
+		if (delIdx < 0) {
+			throw new IllegalArgumentException("Path \"%s\" is missing delimiter '%s'".formatted(path, Face.PATH_DELIMITER));
+		}
+
+		var category = getCategory(path.substring(0, delIdx));
+		if (category == null) {
+			return null;
+		}
+
+		return category.getFace(path.substring(delIdx + 1));
+	}
+
 	public void add(@NotNull FaceCategory category) {
 		if (category.getPool() != null) {
 			throw new IllegalArgumentException("Category is already part of other pool");

@@ -69,6 +69,10 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	}
 
 	public void setName(@NotNull String name) {
+		if (!name.contains(Face.PATH_DELIMITER)) {
+			throw new IllegalArgumentException("Name \"%s\" contains path delimiter '%s'".formatted(name, Face.PATH_DELIMITER));
+		}
+
 		if (!this.name.equals(name)) {
 			if (pool != null) {
 				pool.rename(this, name);
@@ -141,6 +145,10 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	public @NotNull @UnmodifiableView Map<String, Face> getFaces() {
 		sortIfNeeded();
 		return Collections.unmodifiableMap(faces);
+	}
+
+	public @Nullable Face getFace(@NotNull String name) {
+		return faces.get(name);
 	}
 
 	public void add(@NotNull Face face) {

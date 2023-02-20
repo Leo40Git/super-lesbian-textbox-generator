@@ -28,6 +28,8 @@ import org.quiltmc.json5.JsonToken;
 import org.quiltmc.json5.JsonWriter;
 
 public final class Face implements Comparable<Face> {
+	public static final String PATH_DELIMITER = "/";
+
 	private @Nullable FaceCategory category;
 	private @NotNull String name;
 	private @NotNull BufferedImage image;
