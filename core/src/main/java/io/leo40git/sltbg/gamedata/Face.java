@@ -34,8 +34,8 @@ public final class Face implements Comparable<Face> {
 	private @NotNull String imagePath;
 	private int order;
 	private boolean orderSet;
-	private @Nullable String autoCharacterName;
-	private boolean autoCharacterNameSet;
+	private @Nullable String characterName;
+	private boolean characterNameSet;
 
 	private @Nullable ImageIcon imageAsIcon;
 
@@ -47,16 +47,10 @@ public final class Face implements Comparable<Face> {
 		category = null;
 		order = 0;
 		orderSet = false;
-		autoCharacterName = null;
-		autoCharacterNameSet = false;
+		characterName = null;
+		characterNameSet = false;
 
 		imageAsIcon = null;
-	}
-
-	void clearGeneratedAutoCharacterName() {
-		if (!autoCharacterNameSet) {
-			autoCharacterName = null;
-		}
 	}
 
 	public @Nullable FaceCategory getCategory() {
@@ -65,7 +59,6 @@ public final class Face implements Comparable<Face> {
 
 	void setCategory(@NotNull FaceCategory category) {
 		this.category = category;
-		clearGeneratedAutoCharacterName();
 		imageAsIcon = null;
 	}
 
@@ -78,7 +71,10 @@ public final class Face implements Comparable<Face> {
 			if (category != null) {
 				category.rename(this, name);
 			}
-			clearGeneratedAutoCharacterName();
+			
+			if (!characterNameSet) {
+				characterName = null;
+			}
 			imageAsIcon = null;
 		}
 	}
@@ -118,26 +114,31 @@ public final class Face implements Comparable<Face> {
 		}
 	}
 
-	public @NotNull String getAutoCharacterName() {
-		if (autoCharacterName == null) {
-			if (category != null && category.getAutoCharacterName() != null) {
-				autoCharacterName = category.getAutoCharacterName();
+	public @NotNull String getCharacterName() {
+		if (characterNameSet) {
+			assert characterName != null;
+			return characterName;
+		} else if (category != null && category.getCharacterName() != null) {
+			return category.getCharacterName();
+		} else {
+			int commaIndex = name.indexOf(',');
+			if (commaIndex < 0) {
+				characterName = name;
 			} else {
-				int commaIndex = name.indexOf(',');
-				if (commaIndex < 0) {
-					autoCharacterName = name;
-				} else {
-					autoCharacterName = name.substring(0, commaIndex);
-				}
+				characterName = name.substring(0, commaIndex);
 			}
+			return characterName;
 		}
-
-		return autoCharacterName;
 	}
 
-	public void setAutoCharacterName(@NotNull String autoCharacterName) {
-		this.autoCharacterName = autoCharacterName;
-		autoCharacterNameSet = true;
+	public void setCharacterName(@NotNull String characterName) {
+		this.characterName = characterName;
+		characterNameSet = true;
+	}
+
+	public void unsetCharacterName() {
+		characterName = null;
+		characterNameSet = false;
 	}
 
 	public @NotNull ImageIcon getImageAsIcon() {
@@ -157,8 +158,8 @@ public final class Face implements Comparable<Face> {
 		var clone = new Face(name, image, imagePath);
 		clone.order = order;
 		clone.orderSet = orderSet;
-		clone.autoCharacterName = autoCharacterName;
-		clone.autoCharacterNameSet = autoCharacterNameSet;
+		clone.characterName = characterName;
+		clone.characterNameSet = characterNameSet;
 		clone.imageAsIcon = imageAsIcon;
 		return clone;
 	}
@@ -212,14 +213,14 @@ public final class Face implements Comparable<Face> {
 			face.setOrder(order);
 		}
 		if (charName != null) {
-			face.setAutoCharacterName(charName);
+			face.setCharacterName(charName);
 		}
 		return face;
 	}
 
 	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
 		writer.name(name);
-		if (!orderSet && !autoCharacterNameSet) {
+		if (!orderSet && !characterNameSet) {
 			writer.value(imagePath);
 		} else {
 			writer.beginObject();
@@ -229,9 +230,9 @@ public final class Face implements Comparable<Face> {
 				writer.name(FaceFields.ORDER);
 				writer.value(order);
 			}
-			if (autoCharacterNameSet) {
+			if (characterNameSet) {
 				writer.name(FaceFields.CHARACTER_NAME);
-				writer.value(autoCharacterName);
+				writer.value(characterName);
 			}
 			writer.endObject();
 		}

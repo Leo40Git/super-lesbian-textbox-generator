@@ -33,7 +33,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	private @NotNull String name;
 	private boolean orderSet;
 	private int order;
-	private @Nullable String autoCharacterName;
+	private @Nullable String characterName;
 
 	private @Nullable Face iconFace, lastFace;
 	private boolean needsSort;
@@ -43,9 +43,9 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		this.faces = faces;
 
 		pool = null;
-		autoCharacterName = null;
 		orderSet = false;
 		order = 0;
+		characterName = null;
 
 		iconFace = null;
 		lastFace = null;
@@ -93,16 +93,13 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		orderSet = true;
 	}
 
-	public @Nullable String getAutoCharacterName() {
-		return autoCharacterName;
+	public @Nullable String getCharacterName() {
+		return characterName;
 	}
 
-	public void setAutoCharacterName(@Nullable String autoCharacterName) {
-		if (!Objects.equals(this.autoCharacterName, autoCharacterName)) {
-			this.autoCharacterName = autoCharacterName;
-			for (var face : faces.values()) {
-				face.clearGeneratedAutoCharacterName();
-			}
+	public void setCharacterName(@Nullable String characterName) {
+		if (!Objects.equals(this.characterName, characterName)) {
+			this.characterName = characterName;
 		}
 	}
 
@@ -189,7 +186,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 		clone.order = order;
 		clone.orderSet = orderSet;
-		clone.autoCharacterName = autoCharacterName;
+		clone.characterName = characterName;
 		return clone;
 	}
 
@@ -219,7 +216,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 					gotFaces = true;
 				}
 				case FaceFields.ORDER -> category.setOrder(reader.nextInt());
-				case FaceFields.CHARACTER_NAME -> category.setAutoCharacterName(reader.nextString());
+				case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
 				default -> reader.skipValue();
 			}
 		}
@@ -251,7 +248,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 			writer.value(order);
 		}
 
-		if (autoCharacterName != null) {
+		if (characterName != null) {
 			writer.name(FaceFields.CHARACTER_NAME);
 			writer.value(order);
 		}
