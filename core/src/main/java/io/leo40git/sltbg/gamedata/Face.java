@@ -31,6 +31,7 @@ public final class Face implements Comparable<Face> {
 	public static final String PATH_DELIMITER = "/";
 
 	private @Nullable FaceCategory category;
+	@SuppressWarnings("FieldMayBeFinal")
 	private @NotNull String name;
 	private @NotNull BufferedImage image;
 	private @NotNull String imagePath;
@@ -61,7 +62,10 @@ public final class Face implements Comparable<Face> {
 
 	void setCategory(@NotNull FaceCategory category) {
 		this.category = category;
-		imageAsIcon = null;
+
+		if (imageAsIcon != null) {
+			imageAsIcon.setDescription(createImageAsIconDescription());
+		}
 	}
 
 	public @NotNull String getName() {
@@ -77,7 +81,9 @@ public final class Face implements Comparable<Face> {
 			if (!characterNameSet) {
 				characterName = null;
 			}
-			imageAsIcon = null;
+			if (imageAsIcon != null) {
+				imageAsIcon.setDescription(createImageAsIconDescription());
+			}
 		}
 	}
 
@@ -145,14 +151,18 @@ public final class Face implements Comparable<Face> {
 
 	public @NotNull ImageIcon getImageAsIcon() {
 		if (imageAsIcon == null) {
-			String description = name;
-			if (category != null) {
-				description = category + "/" + name;
-			}
-			imageAsIcon = new ImageIcon(image, description);
+			imageAsIcon = new ImageIcon(image, createImageAsIconDescription());
 		}
 
 		return imageAsIcon;
+	}
+
+	private @NotNull String createImageAsIconDescription() {
+		if (category == null) {
+			return name;
+		} else {
+			return category + PATH_DELIMITER + name;
+		}
 	}
 
 	@Contract(" -> new")
