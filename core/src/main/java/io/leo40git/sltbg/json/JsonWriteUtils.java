@@ -10,6 +10,7 @@
 package io.leo40git.sltbg.json;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -23,8 +24,28 @@ public final class JsonWriteUtils {
 		throw new UnsupportedOperationException("JsonWriteUtils only contains static declarations.");
 	}
 
-	public static <T> void writeArray(@NotNull JsonWriter writer, @NotNull JsonWriteDelegate<T> delegate,
-			@NotNull Iterable<T> values) throws IOException {
+	@FunctionalInterface
+	public interface Delegate<T> {
+		void write(@NotNull JsonWriter writer, @NotNull T value) throws IOException;
+	}
+
+	public static <T> void writeNullable(@NotNull JsonWriter writer, @NotNull Delegate<T> delegate, @Nullable T value) throws IOException {
+		if (value == null) {
+			writer.nullValue();
+		} else {
+			delegate.write(writer, value);
+		}
+	}
+
+	public static void writeURL(@NotNull JsonWriter writer, @NotNull URL url) throws IOException {
+		writer.value(url.toString());
+	}
+
+	public static void writePath(@NotNull JsonWriter writer, @NotNull Path path) throws IOException {
+		writer.value(path.toUri().toString());
+	}
+
+	public static <T> void writeArray(@NotNull JsonWriter writer, @NotNull Delegate<T> delegate, @NotNull Iterable<T> values) throws IOException {
 		var it = values.iterator();
 		if (!it.hasNext()) {
 			// write empty array
@@ -48,8 +69,7 @@ public final class JsonWriteUtils {
 	}
 
 	@SafeVarargs
-	public static <T> void writeArray(@NotNull JsonWriter writer, @NotNull JsonWriteDelegate<T> delegate,
-			T @NotNull ... values) throws IOException {
+	public static <T> void writeArray(@NotNull JsonWriter writer, @NotNull Delegate<T> delegate, T @NotNull ... values) throws IOException {
 		if (values.length == 1) {
 			delegate.write(writer, values[0]);
 		} else {
@@ -61,9 +81,68 @@ public final class JsonWriteUtils {
 		}
 	}
 
+	public static void writeStringArray(@NotNull JsonWriter writer, String @NotNull [] values) throws IOException {
+		if (values.length == 1) {
+			writer.value(values[0]);
+		} else {
+			writer.beginArray();
+			for (var value : values) {
+				writer.value(value);
+			}
+			writer.endArray();
+		}
+	}
+
+	/**
+	 * Writes an object containing the specified values to JSON.
+	 * <br>
+	 * The delegate <em>must</em> handle writing names.
+	 *
+	 * @param writer   the writer
+	 * @param delegate a delegate to write value objects
+	 * @param values the values
+	 * @param <V>      the type of the object's values
+	 * @throws IOException if an I/O exception occurs.
+	 */
+	public static <V> void writeObject(@NotNull JsonWriter writer,
+			@NotNull Delegate<V> delegate,
+			@NotNull Iterable<V> values) throws IOException {
+		writer.beginObject();
+
+		for (var value : values) {
+			delegate.write(writer, value);
+		}
+
+		writer.endObject();
+	}
+
+	/**
+	 * Writes an object containing the specified values to JSON.
+	 * <br>
+	 * The delegate <em>must</em> handle writing names.
+	 *
+	 * @param writer   the writer
+	 * @param delegate a delegate to write value objects
+	 * @param values the values
+	 * @param <V>      the type of the object's values
+	 * @throws IOException if an I/O exception occurs.
+	 */
+	@SafeVarargs
+	public static <V> void writeObject(@NotNull JsonWriter writer,
+			@NotNull Delegate<V> delegate,
+			V @NotNull ... values) throws IOException {
+		writer.beginObject();
+
+		for (var value : values) {
+			delegate.write(writer, value);
+		}
+
+		writer.endObject();
+	}
+
 	@FunctionalInterface
 	public interface KeySerializer<K> {
-		@NotNull String serialize(@Nullable K key);
+		@NotNull String serialize(@Nullable K key) throws Exception;
 	}
 
 	/**
@@ -86,11 +165,17 @@ public final class JsonWriteUtils {
 	 * @throws IOException if an I/O exception occurs.
 	 */
 	public static <K, V> void writeSimpleMap(@NotNull JsonWriter writer,
-			@NotNull KeySerializer<K> keySerializer, @NotNull JsonWriteDelegate<V> valueDelegate,
+			@NotNull KeySerializer<K> keySerializer, @NotNull Delegate<V> valueDelegate,
 			@NotNull Map<K, V> map) throws IOException {
 		writer.beginObject();
 		for (var entry : map.entrySet()) {
-			writer.name(keySerializer.serialize(entry.getKey()));
+			String name;
+			try {
+				name = keySerializer.serialize(entry.getKey());
+			} catch (Exception e) {
+				throw new IOException("Failed to serialize key", e);
+			}
+			writer.name(name);
 			valueDelegate.write(writer, entry.getValue());
 		}
 		writer.endObject();
@@ -105,7 +190,7 @@ public final class JsonWriteUtils {
 	 * }
 	 * </code></pre>
 	 *
-	 * This method is a specialization of {@link #writeSimpleMap(JsonWriter, KeySerializer, JsonWriteDelegate, Map)},
+	 * This method is a specialization of {@link #writeSimpleMap(JsonWriter, KeySerializer, Delegate, Map)},
 	 * for maps with string keys.
 	 *
 	 * @param writer        the writer
@@ -115,7 +200,7 @@ public final class JsonWriteUtils {
 	 * @throws IOException if an I/O exception occurs.
 	 */
 	public static <V> void writeSimpleMap(@NotNull JsonWriter writer,
-			@NotNull JsonWriteDelegate<V> valueDelegate,
+			@NotNull Delegate<V> valueDelegate,
 			@NotNull Map<String, V> map)
 			throws IOException {
 		writer.beginObject();
@@ -150,7 +235,7 @@ public final class JsonWriteUtils {
 	 * @throws IOException if an I/O exception occurs.
 	 */
 	public static <K, V> void writeComplexMap(@NotNull JsonWriter writer,
-			@NotNull JsonWriteDelegate<K> keyDelegate, @NotNull JsonWriteDelegate<V> valueDelegate,
+			@NotNull Delegate<K> keyDelegate, @NotNull Delegate<V> valueDelegate,
 			@NotNull Map<K, V> map) throws IOException {
 		writer.beginArray();
 		for (var entry : map.entrySet()) {
@@ -162,29 +247,5 @@ public final class JsonWriteUtils {
 			writer.endObject();
 		}
 		writer.endArray();
-	}
-
-	public static <T> void writeNullable(@NotNull JsonWriter writer, @NotNull JsonWriteDelegate<T> delegate, @Nullable T value) throws IOException {
-		if (value == null) {
-			writer.nullValue();
-		} else {
-			delegate.write(writer, value);
-		}
-	}
-
-	public static void writeStringArray(@NotNull JsonWriter writer, String @NotNull [] values) throws IOException {
-		if (values.length == 1) {
-			writer.value(values[0]);
-		} else {
-			writer.beginArray();
-			for (var value : values) {
-				writer.value(value);
-			}
-			writer.endArray();
-		}
-	}
-
-	public static void writePath(@NotNull JsonWriter writer, @NotNull Path path) throws IOException {
-		writer.value(path.toUri().toString());
 	}
 }

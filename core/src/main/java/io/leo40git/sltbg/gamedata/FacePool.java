@@ -17,6 +17,8 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import io.leo40git.sltbg.json.JsonReadUtils;
+import io.leo40git.sltbg.json.JsonWriteUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -135,23 +137,12 @@ public final class FacePool {
 	@Contract("_, _ -> new")
 	public static @NotNull FacePool read(@NotNull JsonReader reader, @NotNull Path rootDir) throws IOException {
 		var pool = new FacePool();
-
-		reader.beginObject();
-		while (reader.hasNext()) {
-			pool.add(FaceCategory.read(reader, rootDir));
-		}
-		reader.endObject();
-
+		JsonReadUtils.readSimpleMap(reader, (readerx, name) -> FaceCategory.read(readerx, name, rootDir), pool::add);
 		return pool;
 	}
 
 	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
 		sortIfNeeded();
-
-		writer.beginObject();
-		for (var category : categories.values()) {
-			category.write(writer, rootDir);
-		}
-		writer.endObject();
+		JsonWriteUtils.writeObject(writer, (writerx, value) -> value.write(writerx, rootDir), categories.values());
 	}
 }

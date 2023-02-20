@@ -171,10 +171,8 @@ public final class Face implements Comparable<Face> {
 		return order - o.order;
 	}
 
-	@Contract("_, _ -> new")
-	public static @NotNull Face read(@NotNull JsonReader reader, @NotNull Path rootPath) throws IOException {
-		String name = reader.nextName();
-
+	@Contract("_, _, _ -> new")
+	public static @NotNull Face read(@NotNull JsonReader reader, @NotNull String name, @NotNull Path rootPath) throws IOException {
 		String imagePath = null;
 		boolean orderSet = false;
 		int order = 0;

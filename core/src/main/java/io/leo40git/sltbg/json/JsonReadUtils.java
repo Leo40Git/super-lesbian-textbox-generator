@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +35,44 @@ public final class JsonReadUtils {
 		throw new UnsupportedOperationException("JsonReadUtils only contains static declarations.");
 	}
 
-	public static <T> void readArray(@NotNull JsonReader reader, @NotNull JsonReadDelegate<T> delegate, @NotNull Consumer<T> consumer) throws IOException {
+	@FunctionalInterface
+	public interface Delegate<T> {
+		@Nullable T read(@NotNull JsonReader reader) throws IOException;
+	}
+
+	public static <T> @Nullable T readNullable(@NotNull JsonReader reader, @NotNull Delegate<T> delegate) throws IOException {
+		if (reader.peek() == JsonToken.NULL) {
+			reader.nextNull();
+			return null;
+		}
+		return delegate.read(reader);
+	}
+
+	public static URL readURL(@NotNull JsonReader reader) throws IOException {
+		String s = reader.nextString();
+		try {
+			return new URL(s);
+		} catch (MalformedURLException e) {
+			throw new MalformedJsonException(reader, "Failed to parse URL \"" + s + "\"");
+		}
+	}
+
+	public static Path readPath(@NotNull JsonReader reader) throws IOException {
+		String s = reader.nextString();
+		URI uri;
+		try {
+			uri = new URI(s);
+		} catch (URISyntaxException e) {
+			throw new MalformedJsonException(reader, "Failed to parse URI \"" + s + "\"", e);
+		}
+		try {
+			return Paths.get(uri);
+		} catch (IllegalArgumentException e) {
+			throw new MalformedJsonException(reader, "Invalid path URI \"" + uri + "\"", e);
+		}
+	}
+
+	public static <T> void readArray(@NotNull JsonReader reader, @NotNull Delegate<T> delegate, @NotNull Consumer<T> consumer) throws IOException {
 		if (reader.peek() == JsonToken.BEGIN_ARRAY) {
 			reader.beginArray();
 			while (reader.hasNext()) {
@@ -47,21 +85,38 @@ public final class JsonReadUtils {
 		}
 	}
 
-	public static <T> List<T> readArray(@NotNull JsonReader reader, @NotNull JsonReadDelegate<T> delegate) throws IOException {
+	private static final String[] DUMMY_STRING_ARRAY = new String[0];
+
+	public static String @NotNull [] readStringArray(@NotNull JsonReader reader) throws IOException {
+		if (reader.peek() == JsonToken.STRING) {
+			return new String[] { reader.nextString() };
+		} else {
+			return readArray(reader, JsonReader::nextString).toArray(DUMMY_STRING_ARRAY);
+		}
+	}
+
+	@Contract("_, _ -> new")
+	public static <T> @NotNull List<T> readArray(@NotNull JsonReader reader, @NotNull Delegate<T> delegate) throws IOException {
 		List<T> list = new ArrayList<>();
 		readArray(reader, delegate, list::add);
 		return list;
 	}
 
-	public static <T> List<T> readUniqueArray(@NotNull JsonReader reader, @NotNull JsonReadDelegate<T> delegate) throws IOException {
+	@Contract("_, _ -> new")
+	public static <T> @NotNull List<T> readUniqueArray(@NotNull JsonReader reader, @NotNull Delegate<T> delegate) throws IOException {
 		Set<T> set = new LinkedHashSet<>();
 		readArray(reader, delegate, set::add);
 		return new ArrayList<>(set);
 	}
 
 	@FunctionalInterface
-	public interface KeyDeserializer<N> {
-		@Nullable N deserialize(@NotNull String name) throws Exception;
+	public interface KeyDeserializer<K> {
+		@NotNull K deserialize(@NotNull String name) throws Exception;
+	}
+
+	@FunctionalInterface
+	public interface KeyAwareDelegate<K, V> {
+		@Nullable V read(@NotNull JsonReader reader, @NotNull K key) throws IOException;
 	}
 
 	/**
@@ -74,6 +129,8 @@ public final class JsonReadUtils {
 	 * </code></pre>
 	 *
 	 * As such, this method can only be used if the type of the key can be serialized as a string.
+	 * <p>
+	 * Note that this method does <em>not</em> allow {@code null} keys.
 	 *
 	 * @param reader          the reader
 	 * @param keyDeserializer a delegate to convert strings to key objects
@@ -84,7 +141,7 @@ public final class JsonReadUtils {
 	 * @throws IOException if an I/O exception occurs.
 	 */
 	public static <K, V> void readSimpleMap(@NotNull JsonReader reader,
-			@NotNull KeyDeserializer<K> keyDeserializer, @NotNull JsonReadDelegate<V> valueDelegate,
+			@NotNull KeyDeserializer<K> keyDeserializer, @NotNull KeyAwareDelegate<K, V> valueDelegate,
 			@NotNull BiConsumer<K, V> consumer) throws IOException {
 		reader.beginObject();
 		while (reader.hasNext()) {
@@ -95,7 +152,7 @@ public final class JsonReadUtils {
 			} catch (Exception e) {
 				throw new MalformedJsonException(reader, "Failed to deserialize key from \"" + name + "\"", e);
 			}
-			consumer.accept(key, valueDelegate.read(reader));
+			consumer.accept(key, valueDelegate.read(reader, key));
 		}
 		reader.endObject();
 	}
@@ -109,8 +166,64 @@ public final class JsonReadUtils {
 	 * }
 	 * </code></pre>
 	 *
-	 * This method is a specialization of {@link #readSimpleMap(JsonReader, KeyDeserializer, JsonReadDelegate, BiConsumer)},
+	 * As such, this method can only be used if the type of the key can be serialized as a string.
+	 * <p>
+	 * Note that this method does <em>not</em> allow {@code null} keys.
+	 *
+	 * @param reader          the reader
+	 * @param keyDeserializer a delegate to convert strings to key objects
+	 * @param valueDelegate   a delegate to read value objects
+	 * @param consumer        a consumer to accept every read entry
+	 * @param <K>             the type of the map's keys
+	 * @param <V>             the type of the map's values
+	 * @throws IOException if an I/O exception occurs.
+	 */
+	public static <K, V> void readSimpleMap(@NotNull JsonReader reader,
+			@NotNull KeyDeserializer<K> keyDeserializer, @NotNull KeyAwareDelegate<K, V> valueDelegate,
+			@NotNull Consumer<V> consumer) throws IOException {
+		readSimpleMap(reader, keyDeserializer, valueDelegate, (ignored, value) -> consumer.accept(value));
+	}
+
+	/**
+	 * Reads a map from JSON. This method uses the simple object format:
+	 * <pre><code>
+	 * {
+	 *   "key1": "value1",
+	 *   "key2": "value2"
+	 * }
+	 * </code></pre>
+	 *
+	 * As such, this method can only be used if the type of the key can be serialized as a string.
+	 * <p>
+	 * Note that this method does <em>not</em> allow {@code null} keys.
+	 *
+	 * @param reader          the reader
+	 * @param keyDeserializer a delegate to convert strings to key objects
+	 * @param valueDelegate   a delegate to read value objects
+	 * @param consumer        a consumer to accept every read entry
+	 * @param <K>             the type of the map's keys
+	 * @param <V>             the type of the map's values
+	 * @throws IOException if an I/O exception occurs.
+	 */
+	public static <K, V> void readSimpleMap(@NotNull JsonReader reader,
+			@NotNull KeyDeserializer<K> keyDeserializer, @NotNull Delegate<V> valueDelegate,
+			@NotNull BiConsumer<K, V> consumer) throws IOException {
+		readSimpleMap(reader, keyDeserializer, (readerx, ignored) -> valueDelegate.read(readerx), consumer);
+	}
+
+	/**
+	 * Reads a map from JSON. This method uses the simple object format:
+	 * <pre><code>
+	 * {
+	 *   "key1": "value1",
+	 *   "key2": "value2"
+	 * }
+	 * </code></pre>
+	 *
+	 * This method is a specialization of {@link #readSimpleMap(JsonReader, KeyDeserializer, KeyAwareDelegate, BiConsumer)},
 	 * for maps with string keys.
+	 * <p>
+	 * Note that this method does <em>not</em> allow {@code null} keys.
 	 *
 	 * @param reader        the reader
 	 * @param valueDelegate a delegate to read value objects
@@ -119,7 +232,71 @@ public final class JsonReadUtils {
 	 * @throws IOException if an I/O exception occurs.
 	 */
 	public static <V> void readSimpleMap(@NotNull JsonReader reader,
-			@NotNull JsonReadDelegate<V> valueDelegate,
+			@NotNull KeyAwareDelegate<String, V> valueDelegate,
+			@NotNull BiConsumer<String, V> consumer)
+			throws IOException {
+		reader.beginObject();
+		while (reader.hasNext()) {
+			String key = reader.nextName();
+			consumer.accept(key, valueDelegate.read(reader, key));
+		}
+		reader.endObject();
+	}
+
+	/**
+	 * Reads a map from JSON. This method uses the simple object format:
+	 * <pre><code>
+	 * {
+	 *   "key1": "value1",
+	 *   "key2": "value2"
+	 * }
+	 * </code></pre>
+	 *
+	 * This method is a specialization of {@link #readSimpleMap(JsonReader, KeyDeserializer, KeyAwareDelegate, Consumer)},
+	 * for maps with string keys.
+	 * <p>
+	 * Note that this method does <em>not</em> allow {@code null} keys.
+	 *
+	 * @param reader        the reader
+	 * @param valueDelegate a delegate to read value objects
+	 * @param consumer      a consumer to accept every read entry
+	 * @param <V>           the type of the map's values
+	 * @throws IOException if an I/O exception occurs.
+	 */
+	public static <V> void readSimpleMap(@NotNull JsonReader reader,
+			@NotNull KeyAwareDelegate<String, V> valueDelegate,
+			@NotNull Consumer<V> consumer)
+			throws IOException {
+		reader.beginObject();
+		while (reader.hasNext()) {
+			String key = reader.nextName();
+			consumer.accept(valueDelegate.read(reader, key));
+		}
+		reader.endObject();
+	}
+
+	/**
+	 * Reads a map from JSON. This method uses the simple object format:
+	 * <pre><code>
+	 * {
+	 *   "key1": "value1",
+	 *   "key2": "value2"
+	 * }
+	 * </code></pre>
+	 *
+	 * This method is a specialization of {@link #readSimpleMap(JsonReader, KeyDeserializer, Delegate, BiConsumer)},
+	 * for maps with string keys.
+	 * <p>
+	 * Note that this method does <em>not</em> allow {@code null} keys.
+	 *
+	 * @param reader        the reader
+	 * @param valueDelegate a delegate to read value objects
+	 * @param consumer      a consumer to accept every read entry
+	 * @param <V>           the type of the map's values
+	 * @throws IOException if an I/O exception occurs.
+	 */
+	public static <V> void readSimpleMap(@NotNull JsonReader reader,
+			@NotNull Delegate<V> valueDelegate,
 			@NotNull BiConsumer<String, V> consumer)
 			throws IOException {
 		reader.beginObject();
@@ -143,8 +320,8 @@ public final class JsonReadUtils {
 	 *   }
 	 * ]
 	 * </code></pre>
-	 *
-	 * Note that this method does not allow {@code null} keys.
+	 * <p>
+	 * Note that this method does <em>not</em> allow {@code null} keys.
 	 *
 	 * @param reader        the reader
 	 * @param keyDelegate   a delegate to read key objects
@@ -155,7 +332,7 @@ public final class JsonReadUtils {
 	 * @throws IOException if an I/O exception occurs.
 	 */
 	public static <K, V> void readComplexMap(@NotNull JsonReader reader,
-			@NotNull JsonReadDelegate<K> keyDelegate, @NotNull JsonReadDelegate<V> valueDelegate,
+			@NotNull Delegate<K> keyDelegate, @NotNull Delegate<V> valueDelegate,
 			@NotNull BiConsumer<K, V> consumer) throws IOException {
 		List<String> missingFields = new ArrayList<>();
 
@@ -192,47 +369,5 @@ public final class JsonReadUtils {
 			consumer.accept(key, value);
 		}
 		reader.endArray();
-	}
-
-	public static <T> @Nullable T readNullable(@NotNull JsonReader reader, @NotNull JsonReadDelegate<T> delegate) throws IOException {
-		if (reader.peek() == JsonToken.NULL) {
-			reader.nextNull();
-			return null;
-		}
-		return delegate.read(reader);
-	}
-
-	private static final String[] DUMMY_STRING_ARRAY = new String[0];
-
-	public static String[] readStringArray(@NotNull JsonReader reader) throws IOException {
-		if (reader.peek() == JsonToken.STRING) {
-			return new String[] { reader.nextString() };
-		} else {
-			return readArray(reader, JsonReader::nextString).toArray(DUMMY_STRING_ARRAY);
-		}
-	}
-
-	public static URL readURL(@NotNull JsonReader reader) throws IOException {
-		String s = reader.nextString();
-		try {
-			return new URL(s);
-		} catch (MalformedURLException e) {
-			throw new MalformedJsonException(reader, "Failed to parse URL \"" + s + "\"");
-		}
-	}
-
-	public static Path readPath(@NotNull JsonReader reader) throws IOException {
-		String s = reader.nextString();
-		URI uri;
-		try {
-			uri = new URI(s);
-		} catch (URISyntaxException e) {
-			throw new MalformedJsonException(reader, "Failed to parse URI \"" + s + "\"", e);
-		}
-		try {
-			return Paths.get(uri);
-		} catch (IllegalArgumentException e) {
-			throw new MalformedJsonException(reader, "Invalid path URI \"" + uri + "\"", e);
-		}
 	}
 }
