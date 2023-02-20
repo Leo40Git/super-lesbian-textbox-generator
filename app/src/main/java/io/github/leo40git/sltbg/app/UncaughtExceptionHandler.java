@@ -12,6 +12,7 @@ package io.github.leo40git.sltbg.app;
 import javax.swing.JOptionPane;
 
 import io.github.leo40git.sltbg.app.util.DialogUtils;
+import io.leo40git.sltbg.util.SwingUtils;
 
 public final class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
 	private static final String[] OPTIONS = { "Continue", "Abort" };
@@ -21,12 +22,12 @@ public final class UncaughtExceptionHandler implements Thread.UncaughtExceptionH
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
 		Main.logger().error("Uncaught exception in thread \"" + t.getName() + "\"", e);
-		var windowsThatNeedAOTSet = DialogUtils.saveAndResetAlwaysOnTopWindows();
+		var windowsThatNeedAOTSet = SwingUtils.saveAndResetAlwaysOnTopWindows();
 		int option = DialogUtils.showCustomConfirmDialog(null,
 				"An uncaught exception has occurred!\n" + DialogUtils.LOG_FILE_INSTRUCTION,
 				"Uncaught Exception!", OPTIONS, JOptionPane.ERROR_MESSAGE);
 		switch (option) {
-			case OPTION_CONTINUE -> DialogUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
+			case OPTION_CONTINUE -> SwingUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
 			case OPTION_ABORT -> System.exit(1);
 		}
 	}

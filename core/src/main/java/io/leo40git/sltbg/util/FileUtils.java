@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.assext.util;
+package io.leo40git.sltbg.util;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -19,8 +19,8 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class MoreFiles {
-	private MoreFiles() {
+public final class FileUtils {
+	private FileUtils() {
 		throw new UnsupportedOperationException("MoreFiles only contains static declarations.");
 	}
 

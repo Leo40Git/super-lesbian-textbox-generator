@@ -10,12 +10,9 @@
 package io.github.leo40git.sltbg.app.util;
 
 import java.awt.Component;
-import java.awt.Window;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
@@ -36,36 +33,6 @@ public final class DialogUtils {
 	}
 
 	public static final String LOG_FILE_INSTRUCTION = "See \"app.log\" for more details.";
-
-	public static void ensureNoAlwaysOnTopWindows() {
-		for (var window : Window.getWindows()) {
-			try {
-				window.setAlwaysOnTop(false);
-			} catch (Exception ignored) {}
-		}
-	}
-
-	public static @NotNull Set<Window> saveAndResetAlwaysOnTopWindows() {
-		var windowsThatNeedAOTSet = new HashSet<Window>();
-		for (var window : Window.getWindows()) {
-			try {
-				if (window.isAlwaysOnTop()) {
-					window.setAlwaysOnTop(false);
-					windowsThatNeedAOTSet.add(window);
-				}
-			} catch (Exception ignored) {}
-		}
-		return windowsThatNeedAOTSet;
-	}
-
-	public static void restoreAlwaysOnTopWindows(@NotNull Set<Window> windowsThatNeedAOTSet) {
-		for (var window : windowsThatNeedAOTSet) {
-			try {
-				window.setAlwaysOnTop(true);
-			} catch (Exception ignored) {}
-		}
-		windowsThatNeedAOTSet.clear();
-	}
 
 	public static void showErrorDialog(Component parent, String message, String title) {
 		JOptionPane.showMessageDialog(parent,

@@ -23,12 +23,12 @@ import javax.swing.JOptionPane;
 import io.github.leo40git.sltbg.assext.face.FaceCollector;
 import io.github.leo40git.sltbg.assext.face.FaceListParser;
 import io.github.leo40git.sltbg.assext.face.FacePoolWriter;
-import io.github.leo40git.sltbg.assext.util.MoreColors;
-import io.github.leo40git.sltbg.assext.util.MoreFiles;
 import io.github.leo40git.sltbg.assext.window.WindowBackground;
 import io.github.leo40git.sltbg.assext.window.WindowContext;
 import io.github.leo40git.sltbg.assext.window.WindowPalette;
 import io.github.leo40git.sltbg.assext.window.WindowTone;
+import io.leo40git.sltbg.util.ColorUtils;
+import io.leo40git.sltbg.util.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,7 +52,7 @@ public final class Main {
 
 		var outputDir = Paths.get("output").toAbsolutePath();
 		try {
-			MoreFiles.deleteDirectoryIfExists(outputDir);
+			FileUtils.deleteDirectoryIfExists(outputDir);
 			Files.createDirectories(outputDir);
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null,
@@ -92,7 +92,7 @@ public final class Main {
 		var image = new BufferedImage(textboxWidth, textboxHeight * 3, BufferedImage.TYPE_INT_ARGB);
 
 		var g = image.createGraphics();
-		g.setBackground(MoreColors.TRANSPARENT);
+		g.setBackground(ColorUtils.TRANSPARENT);
 		g.clearRect(0, 0, image.getWidth(), image.getHeight());
 
 		ctx.drawBackground(g,

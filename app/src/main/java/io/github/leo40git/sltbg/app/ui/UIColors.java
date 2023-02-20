@@ -13,7 +13,7 @@ import java.awt.Color;
 
 import javax.swing.UIManager;
 
-import io.github.leo40git.sltbg.app.util.MoreColors;
+import io.leo40git.sltbg.util.ColorUtils;
 
 public final class UIColors {
 	private UIColors() {
@@ -52,13 +52,13 @@ public final class UIColors {
 			foreground = getColor("List.foreground");
 			selectionBackground = getColor("List.selectionBackground", "List[Selected].textBackground");
 
-			hoveredOverlay = MoreColors.withAlpha(selectionBackground, 127);
-			disabledOverlay = MoreColors.withAlpha(foreground, 191);
-			alternateOverlay = MoreColors.withAlpha(foreground, 63);
+			hoveredOverlay = ColorUtils.withAlpha(selectionBackground, 127);
+			disabledOverlay = ColorUtils.withAlpha(foreground, 191);
+			alternateOverlay = ColorUtils.withAlpha(foreground, 63);
 
-			hoveredBackground = MoreColors.preMultiply(background, hoveredOverlay);
-			disabledBackground = MoreColors.preMultiply(background, disabledOverlay);
-			alternateBackground = MoreColors.preMultiply(background, alternateOverlay);
+			hoveredBackground = ColorUtils.preMultiply(background, hoveredOverlay);
+			disabledBackground = ColorUtils.preMultiply(background, disabledOverlay);
+			alternateBackground = ColorUtils.preMultiply(background, alternateOverlay);
 		}
 
 		public static Color getBackground() {

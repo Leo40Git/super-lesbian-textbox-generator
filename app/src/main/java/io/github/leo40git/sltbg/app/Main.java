@@ -11,9 +11,7 @@ package io.github.leo40git.sltbg.app;
 
 import java.io.IOException;
 
-import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
 import javax.swing.UIManager;
 
 import io.github.leo40git.sltbg.app.assets.AppAssets;
@@ -22,6 +20,7 @@ import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
 import io.github.leo40git.sltbg.app.ui.AppFrame;
 import io.github.leo40git.sltbg.app.ui.UIColors;
 import io.github.leo40git.sltbg.app.util.DialogUtils;
+import io.leo40git.sltbg.util.SwingUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -64,7 +63,7 @@ public final class Main {
 			Preferences.init();
 		} catch (IOException e) {
 			logger.error("Failed to initialize preferences!", e);
-			DialogUtils.ensureNoAlwaysOnTopWindows();
+			SwingUtils.ensureNoAlwaysOnTopWindows();
 			JOptionPane.showMessageDialog(null, "Failed to initialize preferences!\n"
 					+ DialogUtils.LOG_FILE_INSTRUCTION + "\n"
 					+ "The \"%s\" file may be corrupt. Try deleting it and restarting.".formatted(Preferences.PATH),
@@ -76,7 +75,7 @@ public final class Main {
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler());
 		Runtime.getRuntime().addShutdownHook(new Thread(Main::cleanup, "cleanup"));
 
-		fixSwing();
+		SwingUtils.fixSwing();
 
 		boolean useCrossPlatformLAF = false;
 		if (Boolean.getBoolean("sltbg.skipSystemLAF")) {
@@ -89,7 +88,7 @@ public final class Main {
 				logger.error("Failed to set system L&F \"" + cn + "\", falling back to cross-platform L&F", e);
 				useCrossPlatformLAF = true;
 
-				var windowsThatNeedAOTSet = DialogUtils.saveAndResetAlwaysOnTopWindows();
+				var windowsThatNeedAOTSet = SwingUtils.saveAndResetAlwaysOnTopWindows();
 				try {
 					JOptionPane.showMessageDialog(null,
 							"Failed to set Swing's Look & Feel to the system Look & Feel.\n"
@@ -99,7 +98,7 @@ public final class Main {
 									+ "If this issue persists, consider setting the \"sltbg.skipSystemLAF\" system property to \"true\".",
 							"Failed to set system Look & Feel", JOptionPane.ERROR_MESSAGE);
 				} finally {
-					DialogUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
+					SwingUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
 				}
 			}
 		}
@@ -111,7 +110,7 @@ public final class Main {
 			} catch (Exception e) {
 				logger.error("Failed to set cross-platform L&F " + cn, e);
 
-				DialogUtils.ensureNoAlwaysOnTopWindows();
+				SwingUtils.ensureNoAlwaysOnTopWindows();
 				DialogUtils.showErrorDialog(null,
 						"Failed to set Swing's Look & Feel to the cross platform Look & Feel.", "Failed to set Look & Feel");
 				System.exit(1);
@@ -128,7 +127,7 @@ public final class Main {
 			AppAssets.load();
 		} catch (IOException e) {
 			logger.error("Failed to load app assets?!", e);
-			DialogUtils.ensureNoAlwaysOnTopWindows();
+			SwingUtils.ensureNoAlwaysOnTopWindows();
 			DialogUtils.showErrorDialog(null, "Failed to load app assets!", "Failed to launch");
 			System.exit(1);
 			return;
@@ -138,7 +137,7 @@ public final class Main {
 			GameAssets.load();
 		} catch (IOException e) {
 			logger.error("Failed to load game assets!", e);
-			DialogUtils.ensureNoAlwaysOnTopWindows();
+			SwingUtils.ensureNoAlwaysOnTopWindows();
 			DialogUtils.showErrorDialog(null, "Failed to load game assets!", "Failed to launch");
 			System.exit(1);
 			return;
@@ -155,29 +154,5 @@ public final class Main {
 	// (hopefully) called by shutdown hook, so we're moments before the app dies
 	private static void cleanup() {
 		Preferences.flush();
-	}
-
-	/**
-	 * Original source is
-	 * <a href="https://git.sleeping.town/unascribed/unsup/src/commit/2b59ada1fc14415bc5618768d5865326221146d2/src/main/java/com/unascribed/sup/Util.java#L118">here</a>.
-	 * @author unascribed
-	 */
-	public static void fixSwing() {
-		// enable a bunch of nice things that are off by default for legacy compat
-		// use OpenGL or Direct3D where supported
-		System.setProperty("sun.java2d.opengl", "true");
-		System.setProperty("sun.java2d.d3d", "true");
-		// force font antialiasing
-		//System.setProperty("awt.useSystemAAFontSettings", "on"); // causes some text to look bold on Win11?
-		System.setProperty("swing.aatext", "true");
-		System.setProperty("swing.useSystemFontSettings", "true");
-		// only call invalidate as needed
-		System.setProperty("java.awt.smartInvalidate", "true");
-		// disable Metal's abuse of bold fonts
-		System.setProperty("swing.boldMetal", "false");
-		// always create native windows for popup menus (allows animations to play, etc)
-		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-		// no ImageIO, I don't want you to write tons of tiny files to the disk, to be quite honest
-		ImageIO.setUseCache(false);
 	}
 }

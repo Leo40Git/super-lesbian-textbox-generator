@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.app.util;
+package io.leo40git.sltbg.util;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -16,8 +16,8 @@ import java.awt.image.BufferedImage;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-public final class MoreColors {
-	private MoreColors() {
+public final class ColorUtils {
+	private ColorUtils() {
 		throw new UnsupportedOperationException("MoreColors only contains static declarations.");
 	}
 
