@@ -1,25 +1,10 @@
 plugins {
     id 'java'
-    id 'org.quiltmc.gradle.licenser' version '1.+'
 }
 
 group 'io.github.leo40git.sltbg'
 version '1.0-SNAPSHOT'
 
-repositories {
-    mavenCentral()
-    maven {
-        name 'QuiltMC'
-        url 'https://maven.quiltmc.org/repository/release'
-    }
-}
-
 dependencies {
     implementation project(':shared')
-}
-
-license {
-    rule rootProject.file("codeformat/HEADER")
-
-    include "**/*.java"
 }
