@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -117,6 +120,45 @@ public final class FacePool {
 		if (bigExc != null) {
 			throw bigExc;
 		}
+	}
+
+	public CompletableFuture<Void> loadAsync(@NotNull Path rootDir, @NotNull Executor executor) {
+		if (categories.isEmpty()) {
+			// nothing to do
+			return CompletableFuture.completedFuture(null);
+		}
+
+		sortIfNeeded();
+
+		final var excs = new ConcurrentLinkedQueue<FaceCategoryLoadException>();
+
+		var futures = new CompletableFuture[categories.size()];
+		int i = 0;
+		for (var category : categories.values()) {
+			futures[i++] = category.loadAsync(rootDir, executor)
+					.exceptionally(throwable -> {
+						if (throwable instanceof FaceCategoryLoadException e) {
+							excs.add(e);
+							return null;
+						} else {
+							throw new RuntimeException("Unexpected exception (was expecting FaceCategoryLoadException)", throwable);
+						}
+					});
+		}
+
+		return CompletableFuture.allOf(futures)
+				.thenCompose(unused -> {
+					if (excs.isEmpty()) {
+						return CompletableFuture.completedStage(null);
+					} else {
+						var bigExc = new FacePoolLoadException();
+						for (var exc : excs) {
+							bigExc.addSubException(exc);
+						}
+						bigExc.fillInStackTrace();
+						return CompletableFuture.failedStage(bigExc);
+					}
+				});
 	}
 
 	public void add(@NotNull FaceCategory category) {
