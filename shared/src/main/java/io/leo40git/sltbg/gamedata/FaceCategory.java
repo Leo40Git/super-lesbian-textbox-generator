@@ -9,7 +9,6 @@
 
 package io.leo40git.sltbg.gamedata;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,16 +16,10 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.leo40git.sltbg.json.JsonReadUtils;
-import io.leo40git.sltbg.json.JsonWriteUtils;
-import io.leo40git.sltbg.json.MissingFieldsException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
-
-import org.quiltmc.json5.JsonReader;
-import org.quiltmc.json5.JsonWriter;
 
 public final class FaceCategory implements Comparable<FaceCategory> {
 	private @Nullable FacePool pool;
@@ -85,7 +78,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		}
 	}
 
-	boolean isOrderSet() {
+	public boolean isOrderSet() {
 		return orderSet;
 	}
 
@@ -155,6 +148,27 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		return faces.get(name);
 	}
 
+	public void load(@NotNull Path rootDir) throws FaceCategoryLoadException {
+		sortIfNeeded();
+
+		FaceCategoryLoadException bigExc = null;
+
+		for (var face : faces.values()) {
+			try {
+				face.load(rootDir);
+			} catch (FaceLoadException e) {
+				if (bigExc == null) {
+					bigExc = new FaceCategoryLoadException(this);
+				}
+				bigExc.addSubException(e);
+			}
+		}
+
+		if (bigExc != null) {
+			throw bigExc;
+		}
+	}
+
 	public void add(@NotNull Face face) {
 		if (face.getCategory() != null) {
 			throw new IllegalArgumentException("Face is already part of other category: \"" + face.getCategory().getName() + "\"");
@@ -205,77 +219,5 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	@Override
 	public int compareTo(@NotNull FaceCategory o) {
 		return order - o.order;
-	}
-
-	@Contract("_, _ -> new")
-	public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
-		var category = new FaceCategory(name);
-
-		boolean gotFaces = false;
-
-		reader.beginObject();
-		while (reader.hasNext()) {
-			String field = reader.nextName();
-			switch (field) {
-				case FaceFields.FACES -> {
-					JsonReadUtils.readSimpleMap(reader, Face::read, category::add);
-					gotFaces = true;
-				}
-				case FaceFields.ORDER -> category.setOrder(reader.nextInt());
-				case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
-				default -> reader.skipValue();
-			}
-		}
-		reader.endObject();
-
-		if (!gotFaces) {
-			throw new MissingFieldsException("Category", FaceFields.FACES);
-		}
-
-		return category;
-	}
-
-	public void load(@NotNull Path rootDir) throws FaceCategoryLoadException {
-		sortIfNeeded();
-
-		FaceCategoryLoadException bigExc = null;
-
-		for (var face : faces.values()) {
-			try {
-				face.load(rootDir);
-			} catch (FaceLoadException e) {
-				if (bigExc == null) {
-					bigExc = new FaceCategoryLoadException(this);
-				}
-				bigExc.addSubException(e);
-			}
-		}
-
-		if (bigExc != null) {
-			throw bigExc;
-		}
-	}
-
-	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
-		sortIfNeeded();
-
-		writer.name(name);
-
-		writer.beginObject();
-
-		writer.name(FaceFields.FACES);
-		JsonWriteUtils.writeObject(writer, (writerx, value) -> value.write(writerx, rootDir), faces.values());
-
-		if (orderSet) {
-			writer.name(FaceFields.ORDER);
-			writer.value(order);
-		}
-
-		if (characterName != null) {
-			writer.name(FaceFields.CHARACTER_NAME);
-			writer.value(order);
-		}
-
-		writer.endObject();
 	}
 }

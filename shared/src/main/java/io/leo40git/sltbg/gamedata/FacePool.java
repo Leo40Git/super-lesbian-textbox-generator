@@ -9,7 +9,6 @@
 
 package io.leo40git.sltbg.gamedata;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,15 +16,9 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.leo40git.sltbg.json.JsonReadUtils;
-import io.leo40git.sltbg.json.JsonWriteUtils;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
-
-import org.quiltmc.json5.JsonReader;
-import org.quiltmc.json5.JsonWriter;
 
 public final class FacePool {
 	public static final int DEFAULT_ORDER_BASE = 1000;
@@ -105,6 +98,27 @@ public final class FacePool {
 		return category.getFace(path.substring(delIdx + 1));
 	}
 
+	public void load(@NotNull Path rootDir) throws FacePoolLoadException {
+		sortIfNeeded();
+
+		FacePoolLoadException bigExc = null;
+
+		for (var category : categories.values()) {
+			try {
+				category.load(rootDir);
+			} catch (FaceCategoryLoadException e) {
+				if (bigExc == null) {
+					bigExc = new FacePoolLoadException();
+				}
+				bigExc.addSubException(e);
+			}
+		}
+
+		if (bigExc != null) {
+			throw bigExc;
+		}
+	}
+
 	public void add(@NotNull FaceCategory category) {
 		if (category.getPool() != null) {
 			throw new IllegalArgumentException("Category is already part of other pool");
@@ -132,38 +146,5 @@ public final class FacePool {
 
 		categories.remove(category.getName(), category);
 		categories.put(newName, category);
-	}
-
-	@Contract("_ -> new")
-	public static @NotNull FacePool read(@NotNull JsonReader reader) throws IOException {
-		var pool = new FacePool();
-		JsonReadUtils.readSimpleMap(reader, FaceCategory::read, pool::add);
-		return pool;
-	}
-
-	public void load(@NotNull Path rootDir) throws FacePoolLoadException {
-		sortIfNeeded();
-
-		FacePoolLoadException bigExc = null;
-
-		for (var category : categories.values()) {
-			try {
-				category.load(rootDir);
-			} catch (FaceCategoryLoadException e) {
-				if (bigExc == null) {
-					bigExc = new FacePoolLoadException();
-				}
-				bigExc.addSubException(e);
-			}
-		}
-
-		if (bigExc != null) {
-			throw bigExc;
-		}
-	}
-
-	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
-		sortIfNeeded();
-		JsonWriteUtils.writeObject(writer, (writerx, value) -> value.write(writerx, rootDir), categories.values());
 	}
 }

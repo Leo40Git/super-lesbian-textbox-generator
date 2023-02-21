@@ -17,15 +17,9 @@ import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
-import io.leo40git.sltbg.json.MissingFieldsException;
-import io.leo40git.sltbg.util.ImageUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import org.quiltmc.json5.JsonReader;
-import org.quiltmc.json5.JsonToken;
-import org.quiltmc.json5.JsonWriter;
 
 public final class Face implements Comparable<Face> {
 	public static final String PATH_DELIMITER = "/";
@@ -117,7 +111,16 @@ public final class Face implements Comparable<Face> {
 		imageAsIcon = null;
 	}
 
-	boolean isOrderSet() {
+	public void load(@NotNull Path rootDir) throws FaceLoadException {
+		var imagePath = rootDir.resolve(this.imagePath);
+		try (var is = Files.newInputStream(imagePath)) {
+			setImage(ImageIO.read(is));
+		} catch (IOException e) {
+			throw new FaceLoadException(this, imagePath, e);
+		}
+	}
+
+	public boolean isOrderSet() {
 		return orderSet;
 	}
 
@@ -138,6 +141,10 @@ public final class Face implements Comparable<Face> {
 	public void clearOrder() {
 		order = 0;
 		orderSet = false;
+	}
+
+	public boolean isCharacterNameSet() {
+		return characterNameSet;
 	}
 
 	public @NotNull String getCharacterName() {
@@ -201,84 +208,5 @@ public final class Face implements Comparable<Face> {
 	@Override
 	public int compareTo(@NotNull Face o) {
 		return order - o.order;
-	}
-
-	@Contract("_, _ -> new")
-	public static @NotNull Face read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
-		String imagePath = null;
-		boolean orderSet = false;
-		int order = 0;
-		String charName = null;
-
-		if (reader.peek() == JsonToken.STRING) {
-			imagePath = reader.nextString();
-		} else {
-			reader.beginObject();
-			while (reader.hasNext()) {
-				String field = reader.nextName();
-				switch (field) {
-					case FaceFields.IMAGE_PATH -> imagePath = reader.nextString();
-					case FaceFields.ORDER -> {
-						order = reader.nextInt();
-						orderSet = true;
-					}
-					case FaceFields.CHARACTER_NAME -> charName = reader.nextName();
-					default -> reader.skipValue();
-				}
-			}
-			reader.endObject();
-
-			if (imagePath == null) {
-				throw new MissingFieldsException(reader, "Face", FaceFields.IMAGE_PATH);
-			}
-		}
-
-		var face = new Face(name, imagePath);
-		if (orderSet) {
-			face.setOrder(order);
-		}
-		if (charName != null) {
-			face.setCharacterName(charName);
-		}
-		return face;
-	}
-
-	public void load(@NotNull Path rootDir) throws FaceLoadException {
-		var imagePath = rootDir.resolve(this.imagePath);
-		try (var is = Files.newInputStream(imagePath)) {
-			setImage(ImageIO.read(is));
-		} catch (IOException e) {
-			throw new FaceLoadException(this, imagePath, e);
-		}
-	}
-
-	public void write(@NotNull JsonWriter writer, @NotNull Path rootDir) throws IOException {
-		if (image == null) {
-			throw new IOException("Can't write face because it has no image");
-		}
-
-		writer.name(name);
-		if (!orderSet && !characterNameSet) {
-			writer.value(imagePath);
-		} else {
-			writer.beginObject();
-			writer.name(FaceFields.IMAGE_PATH);
-			writer.value(imagePath);
-			if (orderSet) {
-				writer.name(FaceFields.ORDER);
-				writer.value(order);
-			}
-			if (characterNameSet) {
-				writer.name(FaceFields.CHARACTER_NAME);
-				writer.value(characterName);
-			}
-			writer.endObject();
-		}
-
-		try {
-			ImageUtils.writeImage(image, rootDir.resolve(imagePath));
-		} catch (IOException e) {
-			throw new IOException("Failed to write face image", e);
-		}
 	}
 }
