@@ -33,8 +33,15 @@ public final class FacePoolIO {
 		return pool;
 	}
 
-	public static void write(@NotNull JsonWriter writer, @NotNull FacePool pool, @NotNull Path rootDir) throws IOException {
+	public static void write(@NotNull JsonWriter writer, @NotNull FacePool pool) throws IOException {
 		pool.sortIfNeeded();
-		JsonWriteUtils.writeObject(writer, (writerx, value) -> FaceCategoryIO.write(writerx, value, rootDir), pool.getCategories().values());
+		JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories().values());
+	}
+
+	public static void writeImages(@NotNull FacePool pool, @NotNull Path rootDir) throws IOException {
+		pool.sortIfNeeded();
+		for (var category : pool.getCategories().values()) {
+			FaceCategoryIO.writeImages(category, rootDir);
+		}
 	}
 }

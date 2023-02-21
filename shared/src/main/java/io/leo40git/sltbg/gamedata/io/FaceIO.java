@@ -67,11 +67,7 @@ public final class FaceIO {
 		return face;
 	}
 
-	public static void write(@NotNull JsonWriter writer, @NotNull Face face, @NotNull Path rootDir) throws IOException {
-		if (!face.hasImage()) {
-			throw new IOException("Can't write face because it has no image");
-		}
-
+	public static void write(@NotNull JsonWriter writer, @NotNull Face face) throws IOException {
 		writer.name(face.getName());
 		if (!face.isOrderSet() && !face.isCharacterNameSet()) {
 			writer.value(face.getImagePath());
@@ -88,6 +84,12 @@ public final class FaceIO {
 				writer.value(face.getCharacterName());
 			}
 			writer.endObject();
+		}
+	}
+
+	public static void writeImage(@NotNull Face face, @NotNull Path rootDir) throws IOException {
+		if (!face.hasImage()) {
+			throw new IOException("Face does not have an image");
 		}
 
 		try {

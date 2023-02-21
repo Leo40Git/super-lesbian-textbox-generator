@@ -55,7 +55,7 @@ public final class FaceCategoryIO {
 		return category;
 	}
 
-	public static void write(@NotNull JsonWriter writer, @NotNull FaceCategory category, @NotNull Path rootDir) throws IOException {
+	public static void write(@NotNull JsonWriter writer, @NotNull FaceCategory category) throws IOException {
 		category.sortIfNeeded();
 
 		writer.name(category.getName());
@@ -73,8 +73,15 @@ public final class FaceCategoryIO {
 		}
 
 		writer.name(FaceFields.FACES);
-		JsonWriteUtils.writeObject(writer, (writerx, face) -> FaceIO.write(writerx, face, rootDir), category.getFaces().values());
+		JsonWriteUtils.writeObject(writer, FaceIO::write, category.getFaces().values());
 
 		writer.endObject();
+	}
+
+	public static void writeImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws IOException {
+		category.sortIfNeeded();
+		for (var face : category.getFaces().values()) {
+			FaceIO.writeImage(face, rootDir);
+		}
 	}
 }
