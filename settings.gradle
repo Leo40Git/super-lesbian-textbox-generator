@@ -9,6 +9,6 @@ pluginManagement {
 }
 
 rootProject.name = 'super-lesbian-textbox-generator'
-include 'core'
+include 'shared'
 include 'asset-extractor'
 include 'app'
