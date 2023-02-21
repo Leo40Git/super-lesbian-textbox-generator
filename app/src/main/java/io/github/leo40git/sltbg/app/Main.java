@@ -20,7 +20,8 @@ import io.github.leo40git.sltbg.app.text.parse.ControlElementRegistry;
 import io.github.leo40git.sltbg.app.ui.AppFrame;
 import io.github.leo40git.sltbg.app.ui.UIColors;
 import io.github.leo40git.sltbg.app.util.DialogUtils;
-import io.leo40git.sltbg.util.SwingUtils;
+import io.leo40git.sltbg.swing.util.UnaSwingFixes;
+import io.leo40git.sltbg.swing.util.WindowUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -63,7 +64,7 @@ public final class Main {
 			Preferences.init();
 		} catch (IOException e) {
 			logger.error("Failed to initialize preferences!", e);
-			SwingUtils.ensureNoAlwaysOnTopWindows();
+			WindowUtils.ensureNoAlwaysOnTopWindows();
 			JOptionPane.showMessageDialog(null, "Failed to initialize preferences!\n"
 					+ DialogUtils.LOG_FILE_INSTRUCTION + "\n"
 					+ "The \"%s\" file may be corrupt. Try deleting it and restarting.".formatted(Preferences.PATH),
@@ -75,7 +76,7 @@ public final class Main {
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler());
 		Runtime.getRuntime().addShutdownHook(new Thread(Main::cleanup, "cleanup"));
 
-		SwingUtils.fixSwing();
+		UnaSwingFixes.apply();
 
 		boolean useCrossPlatformLAF = false;
 		if (Boolean.getBoolean("sltbg.skipSystemLAF")) {
@@ -88,7 +89,7 @@ public final class Main {
 				logger.error("Failed to set system L&F \"" + cn + "\", falling back to cross-platform L&F", e);
 				useCrossPlatformLAF = true;
 
-				var windowsThatNeedAOTSet = SwingUtils.saveAndResetAlwaysOnTopWindows();
+				var windowsThatNeedAOTSet = WindowUtils.saveAndResetAlwaysOnTopWindows();
 				try {
 					JOptionPane.showMessageDialog(null,
 							"Failed to set Swing's Look & Feel to the system Look & Feel.\n"
@@ -98,7 +99,7 @@ public final class Main {
 									+ "If this issue persists, consider setting the \"sltbg.skipSystemLAF\" system property to \"true\".",
 							"Failed to set system Look & Feel", JOptionPane.ERROR_MESSAGE);
 				} finally {
-					SwingUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
+					WindowUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
 				}
 			}
 		}
@@ -110,7 +111,7 @@ public final class Main {
 			} catch (Exception e) {
 				logger.error("Failed to set cross-platform L&F " + cn, e);
 
-				SwingUtils.ensureNoAlwaysOnTopWindows();
+				WindowUtils.ensureNoAlwaysOnTopWindows();
 				DialogUtils.showErrorDialog(null,
 						"Failed to set Swing's Look & Feel to the cross platform Look & Feel.", "Failed to set Look & Feel");
 				System.exit(1);
@@ -127,7 +128,7 @@ public final class Main {
 			AppAssets.load();
 		} catch (IOException e) {
 			logger.error("Failed to load app assets?!", e);
-			SwingUtils.ensureNoAlwaysOnTopWindows();
+			WindowUtils.ensureNoAlwaysOnTopWindows();
 			DialogUtils.showErrorDialog(null, "Failed to load app assets!", "Failed to launch");
 			System.exit(1);
 			return;
@@ -137,7 +138,7 @@ public final class Main {
 			GameAssets.load();
 		} catch (IOException e) {
 			logger.error("Failed to load game assets!", e);
-			SwingUtils.ensureNoAlwaysOnTopWindows();
+			WindowUtils.ensureNoAlwaysOnTopWindows();
 			DialogUtils.showErrorDialog(null, "Failed to load game assets!", "Failed to launch");
 			System.exit(1);
 			return;
