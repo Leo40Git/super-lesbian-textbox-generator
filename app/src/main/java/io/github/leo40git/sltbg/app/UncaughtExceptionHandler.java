@@ -22,13 +22,14 @@ public final class UncaughtExceptionHandler implements Thread.UncaughtExceptionH
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
 		Main.logger().error("Uncaught exception in thread \"" + t.getName() + "\"", e);
-		var windowsThatNeedAOTSet = WindowUtils.saveAndResetAlwaysOnTopWindows();
-		int option = DialogUtils.showCustomConfirmDialog(null,
-				"An uncaught exception has occurred!\n" + DialogUtils.LOG_FILE_INSTRUCTION,
-				"Uncaught Exception!", OPTIONS, JOptionPane.ERROR_MESSAGE);
-		switch (option) {
-			case OPTION_CONTINUE -> WindowUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
-			case OPTION_ABORT -> System.exit(1);
+		try (var ignored = WindowUtils.ensureNoWindowsAlwaysOnTop()) {
+			int option = DialogUtils.showCustomConfirmDialog(null,
+					"An uncaught exception has occurred!\n" + DialogUtils.LOG_FILE_INSTRUCTION,
+					"Uncaught Exception!", OPTIONS, JOptionPane.ERROR_MESSAGE);
+			if (option == OPTION_ABORT) {
+				System.exit(1);
+			}
 		}
+
 	}
 }

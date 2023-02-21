@@ -11,8 +11,8 @@ package io.leo40git.sltbg.swing.util;
 
 import java.awt.Window;
 import java.util.HashSet;
-import java.util.Set;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public final class WindowUtils {
@@ -20,7 +20,7 @@ public final class WindowUtils {
 		throw new UnsupportedOperationException("WindowUtils only contains static declarations.");
 	}
 
-	public static void ensureNoAlwaysOnTopWindows() {
+	public static void ensureNoWindowsAlwaysOnTopNoRestore() {
 		for (var window : Window.getWindows()) {
 			try {
 				window.setAlwaysOnTop(false);
@@ -28,25 +28,49 @@ public final class WindowUtils {
 		}
 	}
 
-	public static @NotNull Set<Window> saveAndResetAlwaysOnTopWindows() {
-		var windowsThatNeedAOTSet = new HashSet<Window>();
+	@Contract(" -> new")
+	public static @NotNull AlwaysOnTopWindowRestorer ensureNoWindowsAlwaysOnTop() {
+		final var windows = new HashSet<Window>();
 		for (var window : Window.getWindows()) {
 			try {
 				if (window.isAlwaysOnTop()) {
 					window.setAlwaysOnTop(false);
-					windowsThatNeedAOTSet.add(window);
+					windows.add(window);
 				}
 			} catch (Exception ignored) {}
 		}
-		return windowsThatNeedAOTSet;
+		return new AlwaysOnTopWindowRestorer(windows);
 	}
 
-	public static void restoreAlwaysOnTopWindows(@NotNull Set<Window> windowsThatNeedAOTSet) {
-		for (var window : windowsThatNeedAOTSet) {
-			try {
-				window.setAlwaysOnTop(true);
-			} catch (Exception ignored) {}
+	public static final class AlwaysOnTopWindowRestorer implements AutoCloseable {
+		private HashSet<Window> windows;
+
+		private AlwaysOnTopWindowRestorer(HashSet<Window> windows) {
+			this.windows = windows;
 		}
-		windowsThatNeedAOTSet.clear();
+
+		private void addWindow(@NotNull Window window) {
+			if (windows == null) {
+				throw new IllegalStateException("Already closed!");
+			}
+
+			windows.add(window);
+		}
+
+		@Override
+		public void close() {
+			if (windows == null) {
+				throw new IllegalStateException("Already closed!");
+			}
+
+			for (var window : windows) {
+				try {
+					window.setAlwaysOnTop(true);
+				} catch (Exception ignored) {}
+			}
+
+			windows.clear();
+			windows = null;
+		}
 	}
 }

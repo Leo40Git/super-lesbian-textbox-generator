@@ -64,7 +64,7 @@ public final class Main {
 			Preferences.init();
 		} catch (IOException e) {
 			logger.error("Failed to initialize preferences!", e);
-			WindowUtils.ensureNoAlwaysOnTopWindows();
+			WindowUtils.ensureNoWindowsAlwaysOnTopNoRestore();
 			JOptionPane.showMessageDialog(null, "Failed to initialize preferences!\n"
 					+ DialogUtils.LOG_FILE_INSTRUCTION + "\n"
 					+ "The \"%s\" file may be corrupt. Try deleting it and restarting.".formatted(Preferences.PATH),
@@ -89,8 +89,7 @@ public final class Main {
 				logger.error("Failed to set system L&F \"" + cn + "\", falling back to cross-platform L&F", e);
 				useCrossPlatformLAF = true;
 
-				var windowsThatNeedAOTSet = WindowUtils.saveAndResetAlwaysOnTopWindows();
-				try {
+				try (var ignored = WindowUtils.ensureNoWindowsAlwaysOnTop()) {
 					JOptionPane.showMessageDialog(null,
 							"Failed to set Swing's Look & Feel to the system Look & Feel.\n"
 									+ DialogUtils.LOG_FILE_INSTRUCTION + "\n\n"
@@ -98,8 +97,6 @@ public final class Main {
 									+ "(the application will *not* look \"native\"!)\n\n"
 									+ "If this issue persists, consider setting the \"sltbg.skipSystemLAF\" system property to \"true\".",
 							"Failed to set system Look & Feel", JOptionPane.ERROR_MESSAGE);
-				} finally {
-					WindowUtils.restoreAlwaysOnTopWindows(windowsThatNeedAOTSet);
 				}
 			}
 		}
@@ -111,7 +108,7 @@ public final class Main {
 			} catch (Exception e) {
 				logger.error("Failed to set cross-platform L&F " + cn, e);
 
-				WindowUtils.ensureNoAlwaysOnTopWindows();
+				WindowUtils.ensureNoWindowsAlwaysOnTopNoRestore();
 				DialogUtils.showErrorDialog(null,
 						"Failed to set Swing's Look & Feel to the cross platform Look & Feel.", "Failed to set Look & Feel");
 				System.exit(1);
@@ -128,7 +125,7 @@ public final class Main {
 			AppAssets.load();
 		} catch (IOException e) {
 			logger.error("Failed to load app assets?!", e);
-			WindowUtils.ensureNoAlwaysOnTopWindows();
+			WindowUtils.ensureNoWindowsAlwaysOnTopNoRestore();
 			DialogUtils.showErrorDialog(null, "Failed to load app assets!", "Failed to launch");
 			System.exit(1);
 			return;
@@ -138,7 +135,7 @@ public final class Main {
 			GameAssets.load();
 		} catch (IOException e) {
 			logger.error("Failed to load game assets!", e);
-			WindowUtils.ensureNoAlwaysOnTopWindows();
+			WindowUtils.ensureNoWindowsAlwaysOnTopNoRestore();
 			DialogUtils.showErrorDialog(null, "Failed to load game assets!", "Failed to launch");
 			System.exit(1);
 			return;
