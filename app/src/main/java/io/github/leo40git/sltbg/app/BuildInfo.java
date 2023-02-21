@@ -15,7 +15,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-import de.skuzzle.semantic.Version;
+import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.SemverException;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.MalformedJsonException;
 import io.leo40git.sltbg.json.MissingFieldsException;
@@ -32,7 +33,7 @@ public final class BuildInfo {
 
 	private static boolean loaded = false;
 	private static boolean isDevelopment = false;
-	private static Version version;
+	private static Semver version;
 	private static @Nullable URL updateJsonUrl, homepageUrl, issuesUrl, sourceUrl;
 	private static String[] credits;
 
@@ -76,14 +77,14 @@ public final class BuildInfo {
 
 		if ("${version}".equals(verStr)) {
 			if (isDevelopment) {
-				version = Version.ZERO.withPreRelease("dev");
+				version = new Semver("0.0.0-DEV");
 			} else {
 				throw new IOException("Version placeholder wasn't filled in?!");
 			}
 		} else {
 			try {
-				version = Version.parseVersion(verStr, true);
-			} catch (Version.VersionFormatException e) {
+				version = new Semver(verStr);
+			} catch (SemverException e) {
 				throw new IOException("Version is invalid", e);
 			}
 		}
@@ -129,7 +130,7 @@ public final class BuildInfo {
 		return isDevelopment;
 	}
 
-	public static Version version() {
+	public static Semver version() {
 		assertLoaded();
 		return version;
 	}

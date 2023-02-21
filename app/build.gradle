@@ -31,7 +31,7 @@ sourceSets {
 dependencies {
     implementation project(':shared')
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
-    implementation 'de.skuzzle:semantic-version:2.1.1'
+    implementation 'com.vdurmont:semver4j:3.1.0'
 
     devRuntimeOnly 'org.fusesource.jansi:jansi:2.4.0'
 
