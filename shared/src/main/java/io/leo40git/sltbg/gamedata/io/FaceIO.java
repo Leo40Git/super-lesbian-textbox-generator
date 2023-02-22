@@ -31,7 +31,7 @@ public final class FaceIO {
 	public static @NotNull Face read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
 		String imagePath = null;
 		boolean orderSet = false;
-		int order = 0;
+		long order = 0;
 		String charName = null;
 
 		if (reader.peek() == JsonToken.STRING) {
@@ -43,7 +43,7 @@ public final class FaceIO {
 				switch (field) {
 					case FaceFields.IMAGE_PATH -> imagePath = reader.nextString();
 					case FaceFields.ORDER -> {
-						order = reader.nextInt();
+						order = reader.nextLong();
 						orderSet = true;
 					}
 					case FaceFields.CHARACTER_NAME -> charName = reader.nextName();

@@ -29,7 +29,7 @@ public final class Face implements Comparable<Face> {
 	private @NotNull String name;
 	private @NotNull String imagePath;
 	private @Nullable BufferedImage image;
-	private int order;
+	private long order;
 	private boolean orderSet;
 	private @Nullable String characterName;
 	private boolean characterNameSet;
@@ -124,11 +124,11 @@ public final class Face implements Comparable<Face> {
 		return orderSet;
 	}
 
-	public int getOrder() {
+	public long getOrder() {
 		return order;
 	}
 
-	public void setOrder(int order) {
+	public void setOrder(long order) {
 		if (!orderSet || this.order != order) {
 			this.order = order;
 			orderSet = true;
@@ -207,6 +207,6 @@ public final class Face implements Comparable<Face> {
 
 	@Override
 	public int compareTo(@NotNull Face o) {
-		return order - o.order;
+		return Long.compare(order, o.order);
 	}
 }

@@ -24,11 +24,11 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 public final class FacePool {
-	public static final int DEFAULT_ORDER_BASE = 1000;
+	public static final long DEFAULT_ORDER_BASE = 1000;
 
-	public static int getNextOrder(int order) {
+	public static long getNextOrder(long order) {
 		order += DEFAULT_ORDER_BASE;
-		int rem = order % DEFAULT_ORDER_BASE;
+		long rem = order % DEFAULT_ORDER_BASE;
 		if (rem > 0) {
 			order += DEFAULT_ORDER_BASE - rem;
 		}

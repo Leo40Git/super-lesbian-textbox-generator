@@ -41,7 +41,7 @@ public final class FaceCategoryIO {
 					JsonReadUtils.readSimpleMap(reader, FaceIO::read, category::add);
 					gotFaces = true;
 				}
-				case FaceFields.ORDER -> category.setOrder(reader.nextInt());
+				case FaceFields.ORDER -> category.setOrder(reader.nextLong());
 				case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
 				default -> reader.skipValue();
 			}

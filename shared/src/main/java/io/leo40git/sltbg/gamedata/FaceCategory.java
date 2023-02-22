@@ -29,7 +29,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	final @NotNull LinkedHashMap<String, Face> faces;
 	private @NotNull String name;
 	private boolean orderSet;
-	private int order;
+	private long order;
 	private @Nullable String characterName;
 
 	private @Nullable Face iconFace, lastFace;
@@ -85,13 +85,18 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		return orderSet;
 	}
 
-	public int getOrder() {
+	public long getOrder() {
 		return order;
 	}
 
-	public void setOrder(int order) {
-		this.order = order;
-		orderSet = true;
+	public void setOrder(long order) {
+		if (!orderSet || this.order != order) {
+			this.order = order;
+			orderSet = true;
+			if (pool != null) {
+				pool.markDirty();
+			}
+		}
 	}
 
 	public void clearOrder() {
@@ -258,6 +263,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 	@Override
 	public int compareTo(@NotNull FaceCategory o) {
-		return order - o.order;
+		return Long.compare(order, o.order);
 	}
 }
