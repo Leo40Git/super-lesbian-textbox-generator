@@ -30,10 +30,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 
+import io.leo40git.sltbg.operation.OperationNodeStatus;
 import io.leo40git.sltbg.swing.components.ConfirmFileChooser;
+import io.leo40git.sltbg.swing.operation.SwingOperationNode;
+import io.leo40git.sltbg.swing.util.ComponentUtils;
 import io.leo40git.sltbg.swing.util.UnaSwingFixes;
 
 public final class Main extends JFrame {
@@ -59,14 +60,16 @@ public final class Main extends JFrame {
 		pack();
 	}
 	
-	private static final class ContentPane extends JPanel implements ActionListener, FocusListener {
+	public static final class ContentPane extends JPanel implements ActionListener, FocusListener {
 		private final ConfirmFileChooser fcBrowseFolder;
 
+		public final JPanel pnlControl;
 		private final JTextField tfGameDataFolder, tfOutputFolder;
 		private final JButton btnBrowseGameDataFolder, btnBrowseOutputFolder;
 		private final JButton btnStart;
+
 		private final JTree treeStatus;
-		private final DefaultMutableTreeNode treeStatusRoot;
+		private final SwingOperationNode treeStatusRoot;
 
 		private Path dirGameData, dirOutput;
 		private String tfGameDataFolder_TextOnFocus, tfOutputFolder_TextOnFocus;
@@ -94,8 +97,8 @@ public final class Main extends JFrame {
 			btnStart.setEnabled(false);
 			btnStart.setAlignmentX(LEFT_ALIGNMENT);
 
-			treeStatusRoot = new DefaultMutableTreeNode("(root)");
-			treeStatus = new JTree(new DefaultTreeModel(treeStatusRoot));
+			treeStatus = new JTree();
+			treeStatusRoot = SwingOperationNode.setup(treeStatus, "Operations");
 
 			var lblGameDataFolder = new JLabel("Game Data Folder:");
 
@@ -104,7 +107,7 @@ public final class Main extends JFrame {
 			final var gbc = new GridBagConstraints();
 			gbc.fill = GridBagConstraints.BOTH;
 
-			var pnlControl = new JPanel(new GridBagLayout());
+			pnlControl = new JPanel(new GridBagLayout());
 			gbc.gridx = gbc.gridy = 0;
 			gbc.weightx = 1;
 			gbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -178,7 +181,12 @@ public final class Main extends JFrame {
 					return;
 				}
 
-				JOptionPane.showMessageDialog(this, "TODO");
+				treeStatusRoot.removeAllChildren();
+				treeStatusRoot.setStatus(OperationNodeStatus.PENDING);
+
+				ComponentUtils.setEnabledRecursive(pnlControl, false);
+				// TODO explicitly cancel via close confirmation
+				new ExportWorker(this, dirGameData, dirOutput, treeStatusRoot).execute();
 			}
 		}
 

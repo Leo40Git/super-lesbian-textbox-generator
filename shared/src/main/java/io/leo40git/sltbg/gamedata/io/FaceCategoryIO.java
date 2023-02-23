@@ -19,6 +19,8 @@ import io.leo40git.sltbg.gamedata.FaceCategory;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MissingFieldsException;
+import io.leo40git.sltbg.operation.OperationNode;
+import io.leo40git.sltbg.operation.OperationNodeStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -112,6 +114,49 @@ public final class FaceCategoryIO {
 				});
 	}
 
+	public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor,
+			@NotNull OperationNode node) {
+		var faces = category.getFaces();
+		if (faces.isEmpty()) {
+			// nothing to do
+			return CompletableFuture.completedFuture(null);
+		}
+
+		final var exceptions = new ConcurrentLinkedQueue<FaceIOException>();
+
+		node.setStatus(OperationNodeStatus.IN_PROGRESS);
+
+		var futures = new CompletableFuture[faces.size()];
+		int futureI = 0;
+		for (var face : faces.values()) {
+			final var child = node.createChild(face.getName(), OperationNodeStatus.PENDING);
+			futures[futureI] = CompletableFuture.runAsync(() -> {
+				child.setStatus(OperationNodeStatus.IN_PROGRESS);
+				try {
+					FaceIO.readImage(face, rootDir);
+					child.setStatus(OperationNodeStatus.SUCCEEDED);
+				} catch (FaceIOException e) {
+					exceptions.add(e);
+					child.setFailed(e, true);
+				}
+			}, executor);
+			futureI++;
+		}
+
+		return CompletableFuture.allOf(futures)
+				.thenCompose(unused -> {
+					if (exceptions.isEmpty()) {
+						node.setStatus(OperationNodeStatus.SUCCEEDED);
+						return CompletableFuture.completedStage(null);
+					} else {
+						var e = new FaceCategoryIOException(category, "Failed to read all face images", exceptions);
+						e.fillInStackTrace();
+						node.setStatus(OperationNodeStatus.FAILED);
+						return CompletableFuture.failedStage(e);
+					}
+				});
+	}
+
 	public static void write(@NotNull FaceCategory category, @NotNull JsonWriter writer) throws IOException {
 		category.sortIfNeeded();
 
@@ -183,6 +228,49 @@ public final class FaceCategoryIO {
 					} else {
 						var e = new FaceCategoryIOException(category, "Failed to write all face images", exceptions);
 						e.fillInStackTrace();
+						return CompletableFuture.failedStage(e);
+					}
+				});
+	}
+
+	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor,
+			@NotNull OperationNode node) {
+		var faces = category.getFaces();
+		if (faces.isEmpty()) {
+			// nothing to do
+			return CompletableFuture.completedFuture(null);
+		}
+
+		final var exceptions = new ConcurrentLinkedQueue<FaceIOException>();
+
+		node.setStatus(OperationNodeStatus.IN_PROGRESS);
+
+		var futures = new CompletableFuture[faces.size()];
+		int futureI = 0;
+		for (var face : faces.values()) {
+			final var child = node.createChild(face.getName(), OperationNodeStatus.PENDING);
+			futures[futureI] = CompletableFuture.runAsync(() -> {
+				child.setStatus(OperationNodeStatus.IN_PROGRESS);
+				try {
+					FaceIO.writeImage(face, rootDir);
+					child.setStatus(OperationNodeStatus.SUCCEEDED);
+				} catch (FaceIOException e) {
+					exceptions.add(e);
+					child.setFailed(e, true);
+				}
+			}, executor);
+			futureI++;
+		}
+
+		return CompletableFuture.allOf(futures)
+				.thenCompose(unused -> {
+					if (exceptions.isEmpty()) {
+						node.setStatus(OperationNodeStatus.SUCCEEDED);
+						return CompletableFuture.completedStage(null);
+					} else {
+						var e = new FaceCategoryIOException(category, "Failed to write all face images", exceptions);
+						e.fillInStackTrace();
+						node.setStatus(OperationNodeStatus.FAILED);
 						return CompletableFuture.failedStage(e);
 					}
 				});
