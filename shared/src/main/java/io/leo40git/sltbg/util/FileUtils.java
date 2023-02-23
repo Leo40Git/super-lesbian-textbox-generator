@@ -57,4 +57,10 @@ public final class FileUtils {
 		}
 		return false;
 	}
+
+	public static boolean isEmptyDirectory(@NotNull Path dir) throws IOException {
+		try (var ds = Files.newDirectoryStream(dir)) {
+			return !ds.iterator().hasNext();
+		}
+	}
 }
