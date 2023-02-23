@@ -10,11 +10,7 @@
 package io.leo40git.sltbg.gamedata;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import org.jetbrains.annotations.Contract;
@@ -109,15 +105,6 @@ public final class Face implements Comparable<Face> {
 	public void clearImage() {
 		image = null;
 		imageAsIcon = null;
-	}
-
-	public void load(@NotNull Path rootDir) throws FaceLoadException {
-		var imagePath = rootDir.resolve(this.imagePath);
-		try (var is = Files.newInputStream(imagePath)) {
-			setImage(ImageIO.read(is));
-		} catch (IOException e) {
-			throw new FaceLoadException(this, imagePath, e);
-		}
 	}
 
 	public boolean isOrderSet() {

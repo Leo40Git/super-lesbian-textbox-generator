@@ -7,21 +7,24 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.gamedata;
+package io.leo40git.sltbg.gamedata.io;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
+import io.leo40git.sltbg.gamedata.Face;
 import org.jetbrains.annotations.NotNull;
 
-public final class FaceLoadException extends Exception {
+public class FaceIOException extends Exception {
 	private final @NotNull Face face;
-	private final @NotNull Path imagePath;
 
-	public FaceLoadException(@NotNull Face face, @NotNull Path imagePath, @NotNull IOException cause) {
-		super("Failed to load image \"%s\" for face \"%s\"".formatted(imagePath, face), cause);
+	public FaceIOException(@NotNull Face face, String message, IOException cause) {
+		super(message, cause);
 		this.face = face;
-		this.imagePath = imagePath;
+	}
+
+	public FaceIOException(@NotNull Face face, String message) {
+		super(message);
+		this.face = face;
 	}
 
 	@Override
@@ -31,9 +34,5 @@ public final class FaceLoadException extends Exception {
 
 	public @NotNull Face getFace() {
 		return face;
-	}
-
-	public @NotNull Path getImagePath() {
-		return imagePath;
 	}
 }

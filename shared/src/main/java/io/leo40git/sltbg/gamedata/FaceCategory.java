@@ -9,15 +9,11 @@
 
 package io.leo40git.sltbg.gamedata;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executor;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -149,64 +145,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 	public @Nullable Face getFace(@NotNull String name) {
 		return faces.get(name);
-	}
-
-	public void load(@NotNull Path rootDir) throws FaceCategoryLoadException {
-		sortIfNeeded();
-
-		FaceCategoryLoadException bigExc = null;
-
-		for (var face : faces.values()) {
-			try {
-				face.load(rootDir);
-			} catch (FaceLoadException e) {
-				if (bigExc == null) {
-					bigExc = new FaceCategoryLoadException(this);
-				}
-				bigExc.addSubException(e);
-			}
-		}
-
-		if (bigExc != null) {
-			throw bigExc;
-		}
-	}
-
-	public @NotNull CompletableFuture<Void> loadAsync(@NotNull Path rootDir, @NotNull Executor executor) {
-		if (faces.isEmpty()) {
-			// nothing to do
-			return CompletableFuture.completedFuture(null);
-		}
-
-		sortIfNeeded();
-
-		final var excs = new ConcurrentLinkedQueue<FaceLoadException>();
-
-		var futures = new CompletableFuture[faces.size()];
-		int i = 0;
-		for (var face : faces.values()) {
-			futures[i++] = CompletableFuture.runAsync(() -> {
-				try {
-					face.load(rootDir);
-				} catch (FaceLoadException e) {
-					excs.add(e);
-				}
-			}, executor);
-		}
-
-		return CompletableFuture.allOf(futures)
-				.thenCompose(unused -> {
-					if (excs.isEmpty()) {
-						return CompletableFuture.completedStage(null);
-					} else {
-						var bigExc = new FaceCategoryLoadException(this);
-						for (var exc : excs) {
-							bigExc.addSubException(exc);
-						}
-						bigExc.fillInStackTrace();
-						return CompletableFuture.failedStage(bigExc);
-					}
-				});
 	}
 
 	public void add(@NotNull Face face) {

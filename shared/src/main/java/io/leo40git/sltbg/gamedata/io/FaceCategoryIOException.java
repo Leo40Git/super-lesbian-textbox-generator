@@ -7,27 +7,38 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.gamedata;
+package io.leo40git.sltbg.gamedata.io;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import io.leo40git.sltbg.gamedata.FaceCategory;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
-public final class FaceCategoryLoadException extends Exception {
+public final class FaceCategoryIOException extends Exception {
 	private final @NotNull FaceCategory category;
-	private final @NotNull ArrayList<FaceLoadException> subExceptions;
+	private final @NotNull List<FaceIOException> subExceptions;
 
-	public FaceCategoryLoadException(@NotNull FaceCategory category) {
-		super("Failed to load face images for category \"" + category.getName() + "\"");
+	public FaceCategoryIOException(@NotNull FaceCategory category, String message) {
+		super(message);
 		this.category = category;
 		subExceptions = new ArrayList<>();
 	}
 
-	public void addSubException(@NotNull FaceLoadException e) {
+	public FaceCategoryIOException(@NotNull FaceCategory category, String message, @NotNull Collection<FaceIOException> subExceptions) {
+		super(message);
+		this.category = category;
+		this.subExceptions = new ArrayList<>(subExceptions);
+		for (var e : subExceptions) {
+			addSuppressed(e);
+		}
+	}
+
+	public void addSubException(@NotNull FaceIOException e) {
 		subExceptions.add(e);
 		addSuppressed(e);
 	}
@@ -37,7 +48,7 @@ public final class FaceCategoryLoadException extends Exception {
 	}
 
 	@Contract(pure = true)
-	public @NotNull @UnmodifiableView List<FaceLoadException> getSubExceptions() {
+	public @NotNull @UnmodifiableView List<FaceIOException> getSubExceptions() {
 		return Collections.unmodifiableList(subExceptions);
 	}
 }

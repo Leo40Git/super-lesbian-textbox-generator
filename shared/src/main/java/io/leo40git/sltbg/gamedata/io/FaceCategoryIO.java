@@ -11,6 +11,9 @@ package io.leo40git.sltbg.gamedata.io;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 
 import io.leo40git.sltbg.gamedata.FaceCategory;
 import io.leo40git.sltbg.json.JsonReadUtils;
@@ -53,6 +56,59 @@ public final class FaceCategoryIO {
 		}
 
 		return category;
+	}
+
+	public static void readImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws FaceCategoryIOException {
+		FaceCategoryIOException bigExc = null;
+
+		for (var face : category.getFaces().values()) {
+			try {
+				FaceIO.readImage(face, rootDir);
+			} catch (FaceIOException e) {
+				if (bigExc == null) {
+					bigExc = new FaceCategoryIOException(category, "Failed to read all face images");
+				}
+				bigExc.addSubException(e);
+			}
+		}
+
+		if (bigExc != null) {
+			throw bigExc;
+		}
+	}
+
+	public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor) {
+		var faces = category.getFaces();
+		if (faces.isEmpty()) {
+			// nothing to do
+			return CompletableFuture.completedFuture(null);
+		}
+
+		final var exceptions = new ConcurrentLinkedQueue<FaceIOException>();
+
+		var futures = new CompletableFuture[faces.size()];
+		int futureI = 0;
+		for (var face : faces.values()) {
+			futures[futureI] = CompletableFuture.runAsync(() -> {
+				try {
+					FaceIO.readImage(face, rootDir);
+				} catch (FaceIOException e) {
+					exceptions.add(e);
+				}
+			}, executor);
+			futureI++;
+		}
+
+		return CompletableFuture.allOf(futures)
+				.thenCompose(unused -> {
+					if (exceptions.isEmpty()) {
+						return CompletableFuture.completedStage(null);
+					} else {
+						var e = new FaceCategoryIOException(category, "Failed to read all face images", exceptions);
+						e.fillInStackTrace();
+						return CompletableFuture.failedStage(e);
+					}
+				});
 	}
 
 	public static void write(@NotNull JsonWriter writer, @NotNull FaceCategory category) throws IOException {

@@ -9,8 +9,12 @@
 
 package io.leo40git.sltbg.gamedata.io;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+
+import javax.imageio.ImageIO;
 
 import io.leo40git.sltbg.gamedata.Face;
 import io.leo40git.sltbg.json.MissingFieldsException;
@@ -65,6 +69,20 @@ public final class FaceIO {
 			face.setCharacterName(charName);
 		}
 		return face;
+	}
+
+	public static void readImage(@NotNull Face face, @NotNull Path rootDir) throws FaceIOException {
+		face.clearImage();
+
+		final var imagePath = rootDir.resolve(face.getImagePath());
+		BufferedImage image;
+		try (var is = Files.newInputStream(imagePath)) {
+			image = ImageIO.read(is);
+		} catch (IOException e) {
+			throw new FaceIOException(face, "Failed to read image from \"" + imagePath + "\"", e);
+		}
+
+		face.setImage(image);
 	}
 
 	public static void write(@NotNull JsonWriter writer, @NotNull Face face) throws IOException {
