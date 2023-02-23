@@ -97,10 +97,59 @@ public final class FacePoolIO {
 		JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories().values());
 	}
 
-	public static void writeImages(@NotNull FacePool pool, @NotNull Path rootDir) throws IOException {
-		pool.sortIfNeeded();
+	public static void writeImages(@NotNull FacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
+		FacePoolIOException bigExc = null;
+
 		for (var category : pool.getCategories().values()) {
-			FaceCategoryIO.writeImages(category, rootDir);
+			try {
+				FaceCategoryIO.writeImages(category, rootDir);
+			} catch (FaceCategoryIOException e) {
+				if (bigExc == null) {
+					bigExc = new FacePoolIOException(pool, "Failed to write all face images");
+				}
+				bigExc.addSubException(e);
+			}
 		}
+
+		if (bigExc != null) {
+			throw bigExc;
+		}
+	}
+
+	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull FacePool pool, @NotNull Path rootDir, @NotNull Executor executor) {
+		var categories = pool.getCategories();
+		if (categories.isEmpty()) {
+			// nothing to do
+			return CompletableFuture.completedFuture(null);
+		}
+
+		final var exceptions = new ConcurrentLinkedQueue<FaceCategoryIOException>();
+
+		var futures = new CompletableFuture[categories.size()];
+		int futureI = 0;
+
+		for (var category : categories.values()) {
+			futures[futureI] = FaceCategoryIO.writeImagesAsync(category, rootDir, executor)
+					.exceptionallyCompose(ex -> {
+						if (ex instanceof FaceCategoryIOException fcioe) {
+							exceptions.add(fcioe);
+							return CompletableFuture.completedStage(null);
+						} else {
+							return CompletableFuture.failedStage(ex);
+						}
+					});
+			futureI++;
+		}
+
+		return CompletableFuture.allOf(futures)
+				.thenCompose(unused -> {
+					if (exceptions.isEmpty()) {
+						return CompletableFuture.completedStage(null);
+					} else {
+						var e = new FacePoolIOException(pool, "Failed to write all face images", exceptions);
+						e.fillInStackTrace();
+						return CompletableFuture.failedStage(e);
+					}
+				});
 	}
 }

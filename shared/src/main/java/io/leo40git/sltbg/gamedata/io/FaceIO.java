@@ -79,7 +79,7 @@ public final class FaceIO {
 		try (var is = Files.newInputStream(imagePath)) {
 			image = ImageIO.read(is);
 		} catch (IOException e) {
-			throw new FaceIOException(face, "Failed to read image from \"" + imagePath + "\"", e);
+			throw new FaceIOException(face, "Failed to read face image from \"" + imagePath + "\"", e);
 		}
 
 		face.setImage(image);
@@ -105,15 +105,16 @@ public final class FaceIO {
 		}
 	}
 
-	public static void writeImage(@NotNull Face face, @NotNull Path rootDir) throws IOException {
+	public static void writeImage(@NotNull Face face, @NotNull Path rootDir) throws FaceIOException {
 		if (!face.hasImage()) {
-			throw new IOException("Face does not have an image");
+			throw new FaceIOException(face, "Face doesn't have an image to write");
 		}
 
+		final var imagePath = rootDir.resolve(face.getImagePath());
 		try {
-			ImageUtils.writeImage(face.getImage(), rootDir.resolve(face.getImagePath()));
+			ImageUtils.writeImage(face.getImage(), imagePath);
 		} catch (IOException e) {
-			throw new IOException("Failed to write face image", e);
+			throw new FaceIOException(face, "Failed to write face image to \"" + imagePath + "\"", e);
 		}
 	}
 }

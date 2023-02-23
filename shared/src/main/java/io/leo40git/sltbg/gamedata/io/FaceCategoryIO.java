@@ -134,10 +134,56 @@ public final class FaceCategoryIO {
 		writer.endObject();
 	}
 
-	public static void writeImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws IOException {
-		category.sortIfNeeded();
+	public static void writeImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws FaceCategoryIOException {
+		FaceCategoryIOException bigExc = null;
+
 		for (var face : category.getFaces().values()) {
-			FaceIO.writeImage(face, rootDir);
+			try {
+				FaceIO.writeImage(face, rootDir);
+			} catch (FaceIOException e) {
+				if (bigExc == null) {
+					bigExc = new FaceCategoryIOException(category, "Failed to write all face images");
+				}
+				bigExc.addSubException(e);
+			}
 		}
+
+		if (bigExc != null) {
+			throw bigExc;
+		}
+	}
+
+	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor) {
+		var faces = category.getFaces();
+		if (faces.isEmpty()) {
+			// nothing to do
+			return CompletableFuture.completedFuture(null);
+		}
+
+		final var exceptions = new ConcurrentLinkedQueue<FaceIOException>();
+
+		var futures = new CompletableFuture[faces.size()];
+		int futureI = 0;
+		for (var face : faces.values()) {
+			futures[futureI] = CompletableFuture.runAsync(() -> {
+				try {
+					FaceIO.writeImage(face, rootDir);
+				} catch (FaceIOException e) {
+					exceptions.add(e);
+				}
+			}, executor);
+			futureI++;
+		}
+
+		return CompletableFuture.allOf(futures)
+				.thenCompose(unused -> {
+					if (exceptions.isEmpty()) {
+						return CompletableFuture.completedStage(null);
+					} else {
+						var e = new FaceCategoryIOException(category, "Failed to write all face images", exceptions);
+						e.fillInStackTrace();
+						return CompletableFuture.failedStage(e);
+					}
+				});
 	}
 }
