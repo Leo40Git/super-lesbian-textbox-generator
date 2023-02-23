@@ -57,7 +57,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		return pool;
 	}
 
-	void setPool(@NotNull FacePool pool) {
+	void setPool(@Nullable FacePool pool) {
 		this.pool = pool;
 	}
 
@@ -240,6 +240,32 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 		faces.remove(face.getName(), face);
 		faces.put(newName, face);
+	}
+
+	public @Nullable Face remove(@NotNull String name) {
+		var face = faces.remove(name);
+		if (face == null) {
+			return null;
+		}
+
+		face.setCategory(null);
+		if (lastFace == face) {
+			for (var anFace : faces.values()) {
+				lastFace = anFace;
+			}
+		}
+		needsSort = true;
+		return face;
+	}
+
+	public void clear() {
+		for (var face : faces.values()) {
+			face.setCategory(null);
+		}
+
+		faces.clear();
+		lastFace = null;
+		needsSort = false;
 	}
 
 	@Contract(" -> new")

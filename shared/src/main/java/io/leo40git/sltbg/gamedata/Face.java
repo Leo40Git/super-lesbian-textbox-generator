@@ -54,7 +54,7 @@ public final class Face implements Comparable<Face> {
 		return category;
 	}
 
-	void setCategory(@NotNull FaceCategory category) {
+	void setCategory(@Nullable FaceCategory category) {
 		this.category = category;
 
 		if (imageAsIcon != null) {

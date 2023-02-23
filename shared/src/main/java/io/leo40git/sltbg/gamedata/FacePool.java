@@ -189,4 +189,30 @@ public final class FacePool {
 		categories.remove(category.getName(), category);
 		categories.put(newName, category);
 	}
+
+	public @Nullable FaceCategory remove(@NotNull String category) {
+		var catObj = categories.remove(category);
+		if (catObj == null) {
+			return null;
+		}
+
+		catObj.setPool(null);
+		if (lastCategory == catObj) {
+			for (var anCat : categories.values()) {
+				lastCategory = anCat;
+			}
+		}
+		needsSort = true;
+		return catObj;
+	}
+
+	public void clear() {
+		for (var category : categories.values()) {
+			category.setPool(null);
+		}
+
+		categories.clear();
+		lastCategory = null;
+		needsSort = false;
+	}
 }
