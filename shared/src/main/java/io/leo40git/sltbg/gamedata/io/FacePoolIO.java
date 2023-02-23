@@ -33,6 +33,7 @@ public final class FacePoolIO {
 	public static @NotNull FacePool read(@NotNull JsonReader reader) throws IOException {
 		var pool = new FacePool();
 		JsonReadUtils.readSimpleMap(reader, FaceCategoryIO::read, pool::add);
+		pool.sortIfNeeded();
 		return pool;
 	}
 
@@ -93,7 +94,6 @@ public final class FacePoolIO {
 	}
 
 	public static void write(@NotNull FacePool pool, @NotNull JsonWriter writer) throws IOException {
-		pool.sortIfNeeded();
 		JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories().values());
 	}
 

@@ -55,6 +55,7 @@ public final class FaceCategoryIO {
 			throw new MissingFieldsException("Category", FaceFields.FACES);
 		}
 
+		category.sortIfNeeded();
 		return category;
 	}
 
