@@ -85,7 +85,7 @@ public final class FaceIO {
 		face.setImage(image);
 	}
 
-	public static void write(@NotNull JsonWriter writer, @NotNull Face face) throws IOException {
+	public static void write(@NotNull Face face, @NotNull JsonWriter writer) throws IOException {
 		writer.name(face.getName());
 		if (!face.isOrderSet() && !face.isCharacterNameSet()) {
 			writer.value(face.getImagePath());

@@ -92,7 +92,7 @@ public final class FacePoolIO {
 				});
 	}
 
-	public static void write(@NotNull JsonWriter writer, @NotNull FacePool pool) throws IOException {
+	public static void write(@NotNull FacePool pool, @NotNull JsonWriter writer) throws IOException {
 		pool.sortIfNeeded();
 		JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories().values());
 	}

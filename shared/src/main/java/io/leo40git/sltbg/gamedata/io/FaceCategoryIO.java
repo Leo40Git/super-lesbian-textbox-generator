@@ -111,7 +111,7 @@ public final class FaceCategoryIO {
 				});
 	}
 
-	public static void write(@NotNull JsonWriter writer, @NotNull FaceCategory category) throws IOException {
+	public static void write(@NotNull FaceCategory category, @NotNull JsonWriter writer) throws IOException {
 		category.sortIfNeeded();
 
 		writer.name(category.getName());

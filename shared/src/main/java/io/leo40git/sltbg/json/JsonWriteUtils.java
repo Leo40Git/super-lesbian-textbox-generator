@@ -26,14 +26,14 @@ public final class JsonWriteUtils {
 
 	@FunctionalInterface
 	public interface Delegate<T> {
-		void write(@NotNull JsonWriter writer, @NotNull T value) throws IOException;
+		void write(@NotNull T value, @NotNull JsonWriter writer) throws IOException;
 	}
 
 	public static <T> void writeNullable(@NotNull JsonWriter writer, @NotNull Delegate<T> delegate, @Nullable T value) throws IOException {
 		if (value == null) {
 			writer.nullValue();
 		} else {
-			delegate.write(writer, value);
+			delegate.write(value, writer);
 		}
 	}
 
@@ -56,14 +56,14 @@ public final class JsonWriteUtils {
 		var first = it.next();
 		if (!it.hasNext()) {
 			// write one value
-			delegate.write(writer, first);
+			delegate.write(first, writer);
 			return;
 		}
 
 		writer.beginArray();
-		delegate.write(writer, first);
+		delegate.write(first, writer);
 		while (it.hasNext()) {
-			delegate.write(writer, it.next());
+			delegate.write(it.next(), writer);
 		}
 		writer.endArray();
 	}
@@ -71,11 +71,11 @@ public final class JsonWriteUtils {
 	@SafeVarargs
 	public static <T> void writeArray(@NotNull JsonWriter writer, @NotNull Delegate<T> delegate, T @NotNull ... values) throws IOException {
 		if (values.length == 1) {
-			delegate.write(writer, values[0]);
+			delegate.write(values[0], writer);
 		} else {
 			writer.beginArray();
 			for (var value : values) {
-				delegate.write(writer, value);
+				delegate.write(value, writer);
 			}
 			writer.endArray();
 		}
@@ -110,7 +110,7 @@ public final class JsonWriteUtils {
 		writer.beginObject();
 
 		for (var value : values) {
-			delegate.write(writer, value);
+			delegate.write(value, writer);
 		}
 
 		writer.endObject();
@@ -134,7 +134,7 @@ public final class JsonWriteUtils {
 		writer.beginObject();
 
 		for (var value : values) {
-			delegate.write(writer, value);
+			delegate.write(value, writer);
 		}
 
 		writer.endObject();
@@ -176,7 +176,7 @@ public final class JsonWriteUtils {
 				throw new IOException("Failed to serialize key", e);
 			}
 			writer.name(name);
-			valueDelegate.write(writer, entry.getValue());
+			valueDelegate.write(entry.getValue(), writer);
 		}
 		writer.endObject();
 	}
@@ -206,7 +206,7 @@ public final class JsonWriteUtils {
 		writer.beginObject();
 		for (var entry : map.entrySet()) {
 			writer.name(entry.getKey());
-			valueDelegate.write(writer, entry.getValue());
+			valueDelegate.write(entry.getValue(), writer);
 		}
 		writer.endObject();
 	}
@@ -241,9 +241,9 @@ public final class JsonWriteUtils {
 		for (var entry : map.entrySet()) {
 			writer.beginObject();
 			writer.name("key");
-			keyDelegate.write(writer, entry.getKey());
+			keyDelegate.write(entry.getKey(), writer);
 			writer.name("value");
-			valueDelegate.write(writer, entry.getValue());
+			valueDelegate.write(entry.getValue(), writer);
 			writer.endObject();
 		}
 		writer.endArray();
