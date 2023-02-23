@@ -138,11 +138,6 @@ public final class Face implements Comparable<Face> {
 		}
 	}
 
-	public void clearOrder() {
-		order = 0;
-		orderSet = false;
-	}
-
 	public boolean isCharacterNameSet() {
 		return characterNameSet;
 	}

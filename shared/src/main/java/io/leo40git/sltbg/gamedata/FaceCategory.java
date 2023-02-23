@@ -99,11 +99,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		}
 	}
 
-	public void clearOrder() {
-		order = 0;
-		orderSet = false;
-	}
-
 	public @Nullable String getCharacterName() {
 		return characterName;
 	}
