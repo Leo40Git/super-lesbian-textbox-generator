@@ -19,8 +19,8 @@ import io.leo40git.sltbg.gamedata.FaceCategory;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MissingFieldsException;
-import io.leo40git.sltbg.operation.OperationNode;
-import io.leo40git.sltbg.operation.OperationNodeStatus;
+import io.leo40git.sltbg.status.StatusTreeNode;
+import io.leo40git.sltbg.status.StatusTreeNodeIcon;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -115,7 +115,7 @@ public final class FaceCategoryIO {
 	}
 
 	public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor,
-			@NotNull OperationNode node) {
+			@NotNull StatusTreeNode node) {
 		var faces = category.getFaces();
 		if (faces.isEmpty()) {
 			// nothing to do
@@ -124,20 +124,21 @@ public final class FaceCategoryIO {
 
 		final var exceptions = new ConcurrentLinkedQueue<FaceIOException>();
 
-		node.setStatus(OperationNodeStatus.IN_PROGRESS);
+		node.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
 
 		var futures = new CompletableFuture[faces.size()];
 		int futureI = 0;
 		for (var face : faces.values()) {
-			final var child = node.createChild(face.getName(), OperationNodeStatus.PENDING);
+			final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, face.getName());
 			futures[futureI] = CompletableFuture.runAsync(() -> {
-				child.setStatus(OperationNodeStatus.IN_PROGRESS);
+				child.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
 				try {
 					FaceIO.readImage(face, rootDir);
-					child.setStatus(OperationNodeStatus.SUCCEEDED);
+					child.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
 				} catch (FaceIOException e) {
 					exceptions.add(e);
-					child.setFailed(e, true);
+					child.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
+					child.addException(e);
 				}
 			}, executor);
 			futureI++;
@@ -146,12 +147,12 @@ public final class FaceCategoryIO {
 		return CompletableFuture.allOf(futures)
 				.thenCompose(unused -> {
 					if (exceptions.isEmpty()) {
-						node.setStatus(OperationNodeStatus.SUCCEEDED);
+						node.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
 						return CompletableFuture.completedStage(null);
 					} else {
 						var e = new FaceCategoryIOException(category, "Failed to read all face images", exceptions);
 						e.fillInStackTrace();
-						node.setStatus(OperationNodeStatus.FAILED);
+						node.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
 						return CompletableFuture.failedStage(e);
 					}
 				});
@@ -234,7 +235,7 @@ public final class FaceCategoryIO {
 	}
 
 	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor,
-			@NotNull OperationNode node) {
+			@NotNull StatusTreeNode node) {
 		var faces = category.getFaces();
 		if (faces.isEmpty()) {
 			// nothing to do
@@ -243,20 +244,21 @@ public final class FaceCategoryIO {
 
 		final var exceptions = new ConcurrentLinkedQueue<FaceIOException>();
 
-		node.setStatus(OperationNodeStatus.IN_PROGRESS);
+		node.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
 
 		var futures = new CompletableFuture[faces.size()];
 		int futureI = 0;
 		for (var face : faces.values()) {
-			final var child = node.createChild(face.getName(), OperationNodeStatus.PENDING);
+			final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, face.getName());
 			futures[futureI] = CompletableFuture.runAsync(() -> {
-				child.setStatus(OperationNodeStatus.IN_PROGRESS);
+				child.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
 				try {
 					FaceIO.writeImage(face, rootDir);
-					child.setStatus(OperationNodeStatus.SUCCEEDED);
+					child.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
 				} catch (FaceIOException e) {
 					exceptions.add(e);
-					child.setFailed(e, true);
+					child.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
+					child.addException(e);
 				}
 			}, executor);
 			futureI++;
@@ -265,12 +267,12 @@ public final class FaceCategoryIO {
 		return CompletableFuture.allOf(futures)
 				.thenCompose(unused -> {
 					if (exceptions.isEmpty()) {
-						node.setStatus(OperationNodeStatus.SUCCEEDED);
+						node.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
 						return CompletableFuture.completedStage(null);
 					} else {
 						var e = new FaceCategoryIOException(category, "Failed to write all face images", exceptions);
 						e.fillInStackTrace();
-						node.setStatus(OperationNodeStatus.FAILED);
+						node.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
 						return CompletableFuture.failedStage(e);
 					}
 				});

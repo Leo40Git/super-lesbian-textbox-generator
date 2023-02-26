@@ -31,9 +31,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 
-import io.leo40git.sltbg.operation.OperationNodeStatus;
+import io.leo40git.sltbg.status.StatusTreeNodeIcon;
 import io.leo40git.sltbg.swing.components.ConfirmFileChooser;
-import io.leo40git.sltbg.swing.operation.SwingOperationNode;
+import io.leo40git.sltbg.swing.status.SwingStatusTreeModel;
 import io.leo40git.sltbg.swing.util.ComponentUtils;
 import io.leo40git.sltbg.swing.util.UnaSwingFixes;
 
@@ -68,8 +68,7 @@ public final class Main extends JFrame {
 		private final JButton btnBrowseGameDataFolder, btnBrowseOutputFolder;
 		private final JButton btnStart;
 
-		private final JTree treeStatus;
-		private final SwingOperationNode treeStatusRoot;
+		private final SwingStatusTreeModel treeStatusModel;
 
 		private Path dirGameData, dirOutput;
 		private String tfGameDataFolder_TextOnFocus, tfOutputFolder_TextOnFocus;
@@ -97,8 +96,8 @@ public final class Main extends JFrame {
 			btnStart.setEnabled(false);
 			btnStart.setAlignmentX(LEFT_ALIGNMENT);
 
-			treeStatus = new JTree();
-			treeStatusRoot = SwingOperationNode.setup(treeStatus, "Operations");
+			var treeStatus = new JTree();
+			treeStatusModel = new SwingStatusTreeModel(treeStatus, StatusTreeNodeIcon.OPERATION_INITIAL, "Operations");
 
 			var lblGameDataFolder = new JLabel("Game Data Folder:");
 
@@ -181,8 +180,9 @@ public final class Main extends JFrame {
 					return;
 				}
 
+				var treeStatusRoot = treeStatusModel.getStatusRoot();
 				treeStatusRoot.removeAllChildren();
-				treeStatusRoot.setStatus(OperationNodeStatus.PENDING);
+				treeStatusRoot.setIcon(StatusTreeNodeIcon.OPERATION_PENDING);
 
 				ComponentUtils.setEnabledRecursive(pnlControl, false);
 				// TODO explicitly cancel via close confirmation

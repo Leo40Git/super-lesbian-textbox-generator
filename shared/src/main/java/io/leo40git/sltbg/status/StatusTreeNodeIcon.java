@@ -7,13 +7,16 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.operation;
+package io.leo40git.sltbg.status;
 
-public enum OperationNodeStatus {
-	INITIAL,
-	PENDING,
-	IN_PROGRESS,
-	CANCELLED,
-	SUCCEEDED,
-	FAILED
+public enum StatusTreeNodeIcon {
+	MESSAGE_INFORMATION,
+	MESSAGE_WARNING,
+	MESSAGE_ERROR,
+	OPERATION_INITIAL,
+	OPERATION_PENDING,
+	OPERATION_IN_PROGRESS,
+	OPERATION_FINISHED,
+	OPERATION_FINISHED_WITH_WARNINGS,
+	OPERATION_CANCELLED,
 }

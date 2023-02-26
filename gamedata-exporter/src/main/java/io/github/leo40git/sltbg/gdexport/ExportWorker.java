@@ -19,27 +19,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 
-import io.leo40git.sltbg.operation.OperationNode;
-import io.leo40git.sltbg.operation.OperationNodeStatus;
+import io.leo40git.sltbg.status.StatusTreeNode;
+import io.leo40git.sltbg.status.StatusTreeNodeIcon;
 import io.leo40git.sltbg.swing.util.ComponentUtils;
 import org.jetbrains.annotations.NotNull;
 
 public final class ExportWorker extends SwingWorker<Void, Void> {
 	private final @NotNull Main.ContentPane contentPane;
 	private final @NotNull Path dirGameData, dirOutput;
-	private final @NotNull OperationNode rootNode;
+	private final @NotNull StatusTreeNode treeStatusRoot;
 	private final @NotNull AtomicBoolean anyFailed;
 
-	public ExportWorker(@NotNull Main.ContentPane contentPane, @NotNull Path dirGameData, @NotNull Path dirOutput, @NotNull OperationNode rootNode) {
+	public ExportWorker(@NotNull Main.ContentPane contentPane, @NotNull Path dirGameData, @NotNull Path dirOutput, @NotNull StatusTreeNode treeStatusRoot) {
 		this.contentPane = contentPane;
 		this.dirGameData = dirGameData;
 		this.dirOutput = dirOutput;
-		this.rootNode = rootNode;
+		this.treeStatusRoot = treeStatusRoot;
 		anyFailed = new AtomicBoolean(false);
 	}
 
 	@Override
 	protected Void doInBackground() {
+		treeStatusRoot.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
+
 		var rnd = new Random();
 		int futureCount = rnd.nextInt(4, 16);
 
@@ -48,18 +50,19 @@ public final class ExportWorker extends SwingWorker<Void, Void> {
 		anyFailed.set(false);
 
 		for (int i = 0; i < futureCount; i++) {
-			final var child = rootNode.createChild("Operation " + (i + 1), OperationNodeStatus.PENDING);
+			final var child = treeStatusRoot.addChild(StatusTreeNodeIcon.OPERATION_PENDING, "Operation " + (i + 1));
 			final long delay = TimeUnit.SECONDS.toMillis(rnd.nextLong(5, 20));
 			futures[i] = CompletableFuture.runAsync(() -> {
-				child.setStatus(OperationNodeStatus.IN_PROGRESS);
+				child.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
 				try {
 					Thread.sleep(delay);
 				} catch (InterruptedException e) {
-					child.setFailed(e, true);
+					child.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
+					child.addException(e, true);
 					anyFailed.lazySet(true);
 					return;
 				}
-				child.setStatus(OperationNodeStatus.SUCCEEDED);
+				child.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
 			}, executor);
 		}
 
@@ -83,12 +86,12 @@ public final class ExportWorker extends SwingWorker<Void, Void> {
 	@Override
 	protected void done() {
 		if (anyFailed.get()) {
-			rootNode.setStatus(OperationNodeStatus.FAILED);
+			treeStatusRoot.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
 			JOptionPane.showMessageDialog(contentPane,
 					"Some operations failed...",
 					"Done", JOptionPane.ERROR_MESSAGE);
 		} else {
-			rootNode.setStatus(OperationNodeStatus.SUCCEEDED);
+			treeStatusRoot.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
 			JOptionPane.showMessageDialog(contentPane,
 					"Finished all operations!",
 					"Done", JOptionPane.INFORMATION_MESSAGE);
