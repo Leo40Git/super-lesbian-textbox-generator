@@ -25,10 +25,6 @@ public final class IconSet {
 	private final int iconsPerRow, maximumIconIndex;
 
 	public IconSet(@NotNull BufferedImage sheet) {
-		if (sheet.getWidth() % ICON_SIZE != 0) {
-			throw new IllegalArgumentException("sheet's width (%d) is not divisible by icon size (%d)".formatted(sheet.getWidth(), ICON_SIZE));
-		}
-
 		if (sheet.getWidth() % ICON_SIZE != 0 || sheet.getHeight() % ICON_SIZE != 0) {
 			throw new IllegalArgumentException("sheet's dimensions (%d x %d) are not divisible by icon size (%d)"
 					.formatted(sheet.getWidth(), sheet.getHeight(), ICON_SIZE));
