@@ -82,7 +82,11 @@ public final class FaceIO {
 			throw new FaceIOException(face, "Failed to read face image from \"" + imagePath + "\"", e);
 		}
 
-		face.setImage(image);
+		try {
+			face.setImage(image);
+		} catch (IllegalArgumentException e) {
+			throw new FaceIOException(face, "Face image at \"" + imagePath + "\" is invalid", e);
+		}
 	}
 
 	public static void write(@NotNull Face face, @NotNull JsonWriter writer) throws IOException {

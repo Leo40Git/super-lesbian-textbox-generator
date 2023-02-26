@@ -9,27 +9,20 @@
 
 package io.leo40git.sltbg.gamedata.io;
 
-import java.io.IOException;
-
 import io.leo40git.sltbg.gamedata.Face;
 import org.jetbrains.annotations.NotNull;
 
 public final class FaceIOException extends Exception {
 	private final @NotNull Face face;
 
-	public FaceIOException(@NotNull Face face, String message, IOException cause) {
-		super(message, cause);
-		this.face = face;
-	}
-
 	public FaceIOException(@NotNull Face face, String message) {
 		super(message);
 		this.face = face;
 	}
 
-	@Override
-	public synchronized IOException getCause() {
-		return (IOException) super.getCause();
+	public FaceIOException(@NotNull Face face, String message, Throwable cause) {
+		super(message, cause);
+		this.face = face;
 	}
 
 	public @NotNull Face getFace() {
