@@ -55,11 +55,14 @@ public final class ImageUtils {
 			throw new IOException("Can't write image to \"" + path + "\": couldn't find ImageWriter for file extension \"." + fileSuffix + "\"");
 		}
 
-		try (var out = Files.newOutputStream(path)) {
+		writer.reset();
+		try (var os = Files.newOutputStream(path);
+			 var out = ImageIO.createImageOutputStream(os)) {
 			writer.setOutput(out);
 			writer.write(image);
 		} finally {
 			writer.dispose();
+			writer.reset();
 		}
 	}
 }
