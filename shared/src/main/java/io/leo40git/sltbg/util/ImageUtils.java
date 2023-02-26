@@ -58,6 +58,8 @@ public final class ImageUtils {
 		try (var out = Files.newOutputStream(path)) {
 			writer.setOutput(out);
 			writer.write(image);
+		} finally {
+			writer.dispose();
 		}
 	}
 }
