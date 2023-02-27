@@ -22,6 +22,7 @@ public final class Face implements Comparable<Face> {
 	public static final int IMAGE_SIZE = 96;
 	public static final String PATH_DELIMITER = "/";
 
+	private @Nullable FacePool sourcePool, pool;
 	private @Nullable FaceCategory category;
 	@SuppressWarnings("FieldMayBeFinal")
 	private @NotNull String name;
@@ -39,6 +40,8 @@ public final class Face implements Comparable<Face> {
 		this.name = name;
 		this.imagePath = imagePath;
 
+		sourcePool = null;
+		pool = null;
 		category = null;
 		image = null;
 		order = 0;
@@ -50,11 +53,23 @@ public final class Face implements Comparable<Face> {
 		imageAsIcon = null;
 	}
 
+	public @Nullable FacePool getSourcePool() {
+		return sourcePool;
+	}
+
+	public @Nullable FacePool getPool() {
+		return pool;
+	}
+
 	public @Nullable FaceCategory getCategory() {
 		return category;
 	}
 
-	void setCategory(@Nullable FaceCategory category) {
+	void setContainers(@Nullable FacePool pool, @Nullable FaceCategory category) {
+		if (sourcePool == null) {
+			sourcePool = pool;
+		}
+		this.pool = pool;
 		this.category = category;
 
 		if (imageAsIcon != null) {
@@ -196,6 +211,7 @@ public final class Face implements Comparable<Face> {
 	@Contract(" -> new")
 	public @NotNull Face copy() {
 		var clone = new Face(name, imagePath);
+		clone.sourcePool = sourcePool;
 		clone.image = image;
 		clone.order = order;
 		clone.orderSet = orderSet;

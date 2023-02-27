@@ -55,6 +55,9 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 	void setPool(@Nullable FacePool pool) {
 		this.pool = pool;
+		for (var face : faces.values()) {
+			face.setContainers(pool, this);
+		}
 	}
 
 	public @NotNull String getName() {
@@ -72,7 +75,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 			}
 			this.name = name;
 			for (var face : faces.values()) {
-				face.setCategory(this);
+				face.setContainers(pool, this);
 			}
 		}
 	}
@@ -157,7 +160,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		}
 
 		faces.put(face.getName(), face);
-		face.setCategory(this);
+		face.setContainers(pool, this);
 
 		if (iconFace == null) {
 			iconFace = face;
@@ -186,7 +189,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 			return null;
 		}
 
-		face.setCategory(null);
+		face.setContainers(null, null);
 		if (lastFace == face) {
 			for (var anFace : faces.values()) {
 				lastFace = anFace;
@@ -198,7 +201,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 	public void clear() {
 		for (var face : faces.values()) {
-			face.setCategory(null);
+			face.setContainers(null, null);
 		}
 
 		faces.clear();
