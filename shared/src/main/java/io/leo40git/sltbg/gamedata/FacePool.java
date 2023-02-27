@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -31,15 +32,44 @@ public final class FacePool {
 		return order;
 	}
 
+	private @NotNull String name;
+	private String @NotNull [] description, credits;
 	final @NotNull LinkedHashMap<String, FaceCategory> categories;
 	private @Nullable FaceCategory lastCategory;
 	private boolean needsSort;
 
-	public FacePool() {
+	public FacePool(@NotNull String name) {
+		this.name = name;
 		categories = new LinkedHashMap<>();
+		description = ArrayUtils.EMPTY_STRING_ARRAY;
+		credits = ArrayUtils.EMPTY_STRING_ARRAY;
 
 		lastCategory = null;
 		needsSort = false;
+	}
+
+	public @NotNull String getName() {
+		return name;
+	}
+
+	public void setName(@NotNull String name) {
+		this.name = name;
+	}
+
+	public String @NotNull [] getDescription() {
+		return ArrayUtils.clone(description);
+	}
+
+	public void setDescription(String @NotNull [] description) {
+		this.description = ArrayUtils.clone(description);
+	}
+
+	public String @NotNull [] getCredits() {
+		return ArrayUtils.clone(credits);
+	}
+
+	public void setCredits(String @NotNull [] credits) {
+		this.credits = ArrayUtils.clone(credits);
 	}
 
 	private static final ThreadLocal<ArrayList<FaceCategory>> TL_SORT_BUF = new ThreadLocal<>();

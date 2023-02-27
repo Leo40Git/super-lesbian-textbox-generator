@@ -32,8 +32,8 @@ public final class FaceCategoryIO {
 		throw new UnsupportedOperationException("FaceCategoryIO only contains static declarations.");
 	}
 
-	@Contract("_, _ -> new")
-	public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
+	@Contract("_, _, _ -> new")
+	public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name, boolean sort) throws IOException {
 		var category = new FaceCategory(name);
 
 		boolean gotFaces = false;
@@ -57,8 +57,15 @@ public final class FaceCategoryIO {
 			throw new MissingFieldsException("Category", FaceFields.FACES);
 		}
 
-		category.sortIfNeeded();
+		if (sort) {
+			category.sortIfNeeded();
+		}
 		return category;
+	}
+
+	@Contract("_, _ -> new")
+	public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
+		return read(reader, name, true);
 	}
 
 	public static void readImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws FaceCategoryIOException {

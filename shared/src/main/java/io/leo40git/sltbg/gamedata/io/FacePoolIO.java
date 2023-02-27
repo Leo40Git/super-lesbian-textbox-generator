@@ -11,15 +11,21 @@ package io.leo40git.sltbg.gamedata.io;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 
+import io.leo40git.sltbg.gamedata.FaceCategory;
 import io.leo40git.sltbg.gamedata.FacePool;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
+import io.leo40git.sltbg.json.MalformedJsonException;
+import io.leo40git.sltbg.json.MissingFieldsException;
 import io.leo40git.sltbg.status.StatusTreeNode;
 import io.leo40git.sltbg.status.StatusTreeNodeIcon;
+import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,12 +37,67 @@ public final class FacePoolIO {
 		throw new UnsupportedOperationException("FacePoolIO only contains static declarations.");
 	}
 
+	@Contract("_, _ -> new")
+	public static @NotNull FacePool read(@NotNull JsonReader reader, boolean sort) throws IOException {
+		String name = null;
+		String[] description = ArrayUtils.EMPTY_STRING_ARRAY, credits = ArrayUtils.EMPTY_STRING_ARRAY;
+		HashSet<String> categoryNames = null;
+		ArrayList<FaceCategory> categories = null;
+
+		reader.beginObject();
+		while (reader.hasNext()) {
+			String field = reader.nextName();
+			switch (field) {
+				case FaceFields.NAME -> name = reader.nextString();
+				case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
+				case FaceFields.CREDITS -> credits = JsonReadUtils.readStringArray(reader);
+				case FaceFields.CATEGORIES -> {
+					if (categories == null) {
+						categories = new ArrayList<>();
+						categoryNames = new HashSet<>();
+					}
+
+					reader.beginObject();
+					while (reader.hasNext()) {
+						String categoryName = reader.nextName();
+						if (!categoryNames.add(categoryName)) {
+							throw new MalformedJsonException(reader, "Category with name \"" + categoryName + "\" defined twice");
+						}
+						categories.add(FaceCategoryIO.read(reader, categoryName, false));
+					}
+					reader.endObject();
+				}
+				default -> reader.skipValue();
+			}
+		}
+		reader.endObject();
+
+		if (name == null || categories == null) {
+			var missingFields = new ArrayList<String>();
+			if (name == null) {
+				missingFields.add(FaceFields.NAME);
+			}
+			if (categories == null) {
+				missingFields.add(FaceFields.CATEGORIES);
+			}
+			throw new MissingFieldsException(reader, "Face pool", missingFields);
+		}
+
+		var pool = new FacePool(name);
+		pool.setDescription(description);
+		pool.setCredits(credits);
+		for (var category : categories) {
+			pool.add(category);
+		}
+		if (sort) {
+			pool.sortIfNeeded();
+		}
+		return pool;
+	}
+
 	@Contract("_ -> new")
 	public static @NotNull FacePool read(@NotNull JsonReader reader) throws IOException {
-		var pool = new FacePool();
-		JsonReadUtils.readSimpleMap(reader, FaceCategoryIO::read, pool::add);
-		pool.sortIfNeeded();
-		return pool;
+		return read(reader, true);
 	}
 
 	public static void readImages(@NotNull FacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
@@ -137,7 +198,19 @@ public final class FacePoolIO {
 	}
 
 	public static void write(@NotNull FacePool pool, @NotNull JsonWriter writer) throws IOException {
+		writer.beginObject();
+		writer.name(FaceFields.NAME);
+		writer.value(pool.getName());
+		if (pool.getDescription().length > 0) {
+			writer.name(FaceFields.NAME);
+			JsonWriteUtils.writeStringArray(writer, pool.getDescription());
+		}
+		if (pool.getCredits().length > 0) {
+			JsonWriteUtils.writeStringArray(writer, pool.getCredits());
+		}
+		writer.name(FaceFields.CATEGORIES);
 		JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories().values());
+		writer.endObject();
 	}
 
 	public static void writeImages(@NotNull FacePool pool, @NotNull Path rootDir) throws FacePoolIOException {

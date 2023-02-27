@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.ImageIcon;
 
+import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,6 +31,7 @@ public final class Face implements Comparable<Face> {
 	private boolean orderSet;
 	private @Nullable String characterName;
 	private boolean characterNameSet;
+	private String @NotNull [] description;
 
 	private @Nullable ImageIcon imageAsIcon;
 
@@ -43,6 +45,7 @@ public final class Face implements Comparable<Face> {
 		orderSet = false;
 		characterName = null;
 		characterNameSet = false;
+		description = ArrayUtils.EMPTY_STRING_ARRAY;
 
 		imageAsIcon = null;
 	}
@@ -162,6 +165,14 @@ public final class Face implements Comparable<Face> {
 		characterNameSet = false;
 	}
 
+	public String @NotNull [] getDescription() {
+		return ArrayUtils.clone(description);
+	}
+
+	public void setDescription(String @NotNull [] description) {
+		this.description = ArrayUtils.clone(description);
+	}
+
 	public @Nullable ImageIcon getImageAsIcon() {
 		if (image == null) {
 			return null;
@@ -190,6 +201,7 @@ public final class Face implements Comparable<Face> {
 		clone.orderSet = orderSet;
 		clone.characterName = characterName;
 		clone.characterNameSet = characterNameSet;
+		clone.description = ArrayUtils.clone(description);
 		return clone;
 	}
 

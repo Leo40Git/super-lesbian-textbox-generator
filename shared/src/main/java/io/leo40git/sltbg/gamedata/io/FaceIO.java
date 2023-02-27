@@ -17,7 +17,10 @@ import java.nio.file.Path;
 import javax.imageio.ImageIO;
 
 import io.leo40git.sltbg.gamedata.Face;
+import io.leo40git.sltbg.json.JsonReadUtils;
+import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MissingFieldsException;
+import io.leo40git.sltbg.util.ArrayUtils;
 import io.leo40git.sltbg.util.ImageUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +39,8 @@ public final class FaceIO {
 		String imagePath = null;
 		boolean orderSet = false;
 		long order = 0;
-		String charName = null;
+		String characterName = null;
+		String[] description = ArrayUtils.EMPTY_STRING_ARRAY;
 
 		if (reader.peek() == JsonToken.STRING) {
 			imagePath = reader.nextString();
@@ -50,7 +54,8 @@ public final class FaceIO {
 						order = reader.nextLong();
 						orderSet = true;
 					}
-					case FaceFields.CHARACTER_NAME -> charName = reader.nextName();
+					case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
+					case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
 					default -> reader.skipValue();
 				}
 			}
@@ -65,9 +70,10 @@ public final class FaceIO {
 		if (orderSet) {
 			face.setOrder(order);
 		}
-		if (charName != null) {
-			face.setCharacterName(charName);
+		if (characterName != null) {
+			face.setCharacterName(characterName);
 		}
+		face.setDescription(description);
 		return face;
 	}
 
@@ -104,6 +110,10 @@ public final class FaceIO {
 			if (face.isCharacterNameSet()) {
 				writer.name(FaceFields.CHARACTER_NAME);
 				writer.value(face.getCharacterName());
+			}
+			if (face.getDescription().length > 0) {
+				writer.name(FaceFields.DESCRIPTION);
+				JsonWriteUtils.writeStringArray(writer, face.getDescription());
 			}
 			writer.endObject();
 		}
