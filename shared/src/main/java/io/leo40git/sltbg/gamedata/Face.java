@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.ImageIcon;
 
+import io.leo40git.sltbg.swing.util.ImageUtils;
 import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class Face implements Comparable<Face> {
 	public static final int IMAGE_SIZE = 96;
+	public static final int ICON_SIZE = IMAGE_SIZE / 2;
 	public static final String PATH_DELIMITER = "/";
 
 	private @Nullable FacePool sourcePool, pool;
@@ -34,7 +36,7 @@ public final class Face implements Comparable<Face> {
 	private boolean characterNameSet;
 	private String @NotNull [] description;
 
-	private @Nullable ImageIcon imageAsIcon;
+	private @Nullable ImageIcon icon;
 
 	public Face(@NotNull String name, @NotNull String imagePath) {
 		this.name = name;
@@ -50,7 +52,7 @@ public final class Face implements Comparable<Face> {
 		characterNameSet = false;
 		description = ArrayUtils.EMPTY_STRING_ARRAY;
 
-		imageAsIcon = null;
+		icon = null;
 	}
 
 	public @Nullable FacePool getSourcePool() {
@@ -72,8 +74,8 @@ public final class Face implements Comparable<Face> {
 		this.pool = pool;
 		this.category = category;
 
-		if (imageAsIcon != null) {
-			imageAsIcon.setDescription(createImageAsIconDescription());
+		if (icon != null) {
+			icon.setDescription(createIconDescription());
 		}
 	}
 
@@ -90,8 +92,8 @@ public final class Face implements Comparable<Face> {
 			if (!characterNameSet) {
 				characterName = null;
 			}
-			if (imageAsIcon != null) {
-				imageAsIcon.setDescription(createImageAsIconDescription());
+			if (icon != null) {
+				icon.setDescription(createIconDescription());
 			}
 		}
 	}
@@ -123,12 +125,12 @@ public final class Face implements Comparable<Face> {
 		}
 
 		this.image = image;
-		imageAsIcon = null;
+		icon = null;
 	}
 
 	public void clearImage() {
 		image = null;
-		imageAsIcon = null;
+		icon = null;
 	}
 
 	public boolean isOrderSet() {
@@ -188,19 +190,19 @@ public final class Face implements Comparable<Face> {
 		this.description = ArrayUtils.clone(description);
 	}
 
-	public @Nullable ImageIcon getImageAsIcon() {
+	public @Nullable ImageIcon getIcon() {
 		if (image == null) {
 			return null;
 		}
 
-		if (imageAsIcon == null) {
-			imageAsIcon = new ImageIcon(image, createImageAsIconDescription());
+		if (icon == null) {
+			icon = new ImageIcon(ImageUtils.scaleImage(image, ICON_SIZE, ICON_SIZE), createIconDescription());
 		}
 
-		return imageAsIcon;
+		return icon;
 	}
 
-	private @NotNull String createImageAsIconDescription() {
+	private @NotNull String createIconDescription() {
 		if (category == null) {
 			return name;
 		} else {

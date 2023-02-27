@@ -9,6 +9,8 @@
 
 package io.leo40git.sltbg.swing.util;
 
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +25,17 @@ import org.jetbrains.annotations.NotNull;
 public final class ImageUtils {
 	private ImageUtils() {
 		throw new UnsupportedOperationException("ImageUtils only contains static declarations.");
+	}
+
+	public static @NotNull BufferedImage scaleImage(@NotNull BufferedImage image, int newWidth, int newHeight) {
+		var scaled = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+		var g = scaled.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		g.setBackground(ColorUtils.TRANSPARENT);
+		g.clearRect(0, 0, newWidth, newHeight);
+		g.drawImage(image, 0, 0, newWidth, newHeight, null);
+		g.dispose();
+		return scaled;
 	}
 
 	public static void writeImage(@NotNull RenderedImage image, @NotNull Path path) throws IOException {

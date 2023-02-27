@@ -15,6 +15,8 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.swing.ImageIcon;
+
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -106,8 +108,12 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		this.characterName = characterName;
 	}
 
-	public @Nullable Face getIconFace() {
-		return iconFace;
+	public @Nullable ImageIcon getIcon() {
+		if (iconFace == null) {
+			return null;
+		} else {
+			return iconFace.getIcon();
+		}
 	}
 
 	private static final ThreadLocal<ArrayList<Face>> TL_SORT_BUF = new ThreadLocal<>();
