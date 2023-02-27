@@ -27,7 +27,7 @@ import io.github.leo40git.sltbg.assext.window.WindowBackground;
 import io.github.leo40git.sltbg.assext.window.WindowContext;
 import io.github.leo40git.sltbg.assext.window.WindowPalette;
 import io.github.leo40git.sltbg.assext.window.WindowTone;
-import io.leo40git.sltbg.util.ColorUtils;
+import io.leo40git.sltbg.swing.util.ColorUtils;
 import io.leo40git.sltbg.util.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.util;
+package io.leo40git.sltbg.swing.util;
 
 import java.awt.image.RenderedImage;
 import java.io.IOException;

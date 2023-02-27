@@ -20,8 +20,8 @@ import io.leo40git.sltbg.gamedata.Face;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MissingFieldsException;
+import io.leo40git.sltbg.swing.util.ImageUtils;
 import io.leo40git.sltbg.util.ArrayUtils;
-import io.leo40git.sltbg.util.ImageUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 

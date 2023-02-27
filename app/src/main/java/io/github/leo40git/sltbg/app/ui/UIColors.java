@@ -13,7 +13,7 @@ import java.awt.Color;
 
 import javax.swing.UIManager;
 
-import io.leo40git.sltbg.util.ColorUtils;
+import io.leo40git.sltbg.swing.util.ColorUtils;
 
 public final class UIColors {
 	private UIColors() {
