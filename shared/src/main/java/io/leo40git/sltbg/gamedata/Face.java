@@ -119,9 +119,9 @@ public final class Face implements Comparable<Face> {
 	}
 
 	public void setImage(@NotNull BufferedImage image) {
-		if (image.getWidth() != Face.IMAGE_SIZE || image.getHeight() != Face.IMAGE_SIZE) {
+		if (image.getWidth() != IMAGE_SIZE || image.getHeight() != IMAGE_SIZE) {
 			throw new IllegalArgumentException("image has incorrect dimensions: expected %1$d x %1$d, got %2$d x %3$d"
-					.formatted(Face.IMAGE_SIZE, image.getWidth(), image.getHeight()));
+					.formatted(IMAGE_SIZE, image.getWidth(), image.getHeight()));
 		}
 
 		this.image = image;
