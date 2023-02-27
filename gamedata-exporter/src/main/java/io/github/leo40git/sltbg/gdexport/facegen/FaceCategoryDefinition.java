@@ -7,18 +7,18 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.gdexport.facelist;
+package io.github.leo40git.sltbg.gdexport.facegen;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("ClassCanBeRecord")
-public final class PendingFaceCategory {
+public final class FaceCategoryDefinition {
 	private final @NotNull String name;
 	private final long order;
 	private final @Nullable String characterName;
 
-	public PendingFaceCategory(@NotNull String name, long order, @Nullable String characterName) {
+	public FaceCategoryDefinition(@NotNull String name, long order, @Nullable String characterName) {
 		this.name = name;
 		this.order = order;
 		this.characterName = characterName;

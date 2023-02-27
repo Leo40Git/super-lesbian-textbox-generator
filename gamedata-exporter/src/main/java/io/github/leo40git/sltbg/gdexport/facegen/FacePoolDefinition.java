@@ -1,0 +1,76 @@
+/*
+ * To the extent possible under law, the author(s) have dedicated all copyright
+ * and related and neighboring rights to this software to the public domain worldwide.
+ * This software is distributed without any warranty.
+ *
+ * A copy of the Unlicense should have been supplied as LICENSE in this repository.
+ * Alternatively, you can find it at <https://unlicense.org/>.
+ */
+
+package io.github.leo40git.sltbg.gdexport.facegen;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+import io.leo40git.sltbg.gamedata.FacePool;
+import io.leo40git.sltbg.util.CollectionUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
+
+@SuppressWarnings("ClassCanBeRecord")
+public final class FacePoolDefinition {
+	private final @NotNull @Unmodifiable Map<String, FaceCategoryDefinition> categories;
+	private final @NotNull @Unmodifiable List<FaceSheet> sheets;
+	private final @NotNull @Unmodifiable List<String> description, credits;
+
+	public FacePoolDefinition(@NotNull Map<String, FaceCategoryDefinition> categories, @NotNull List<FaceSheet> sheets,
+			@Nullable List<String> description, @Nullable List<String> credits) {
+		this.categories = CollectionUtils.copyOf(categories);
+		this.sheets = CollectionUtils.copyOf(sheets);
+		this.description = CollectionUtils.copyOrEmpty(description);
+		this.credits = CollectionUtils.copyOrEmpty(credits);
+	}
+
+	public @NotNull @Unmodifiable Map<String, FaceCategoryDefinition> getCategories() {
+		return categories;
+	}
+
+	public @NotNull @Unmodifiable List<FaceSheet> getSheets() {
+		return sheets;
+	}
+
+	public @NotNull @Unmodifiable List<String> getDescription() {
+		return description;
+	}
+
+	public @NotNull @Unmodifiable List<String> getCredits() {
+		return credits;
+	}
+
+	public @NotNull FacePool build(@NotNull String name) throws IOException {
+		// TODO
+		return new FacePool(name);
+	}
+	
+	public @NotNull CompletableFuture<FacePool> buildAsync(@NotNull Executor executor, @NotNull String name) {
+		return CompletableFuture.supplyAsync(() -> {
+			try {
+				return build(name);
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}, executor)
+				.exceptionallyCompose(ex -> {
+					if (ex instanceof UncheckedIOException ucioe) {
+						return CompletableFuture.failedStage(ucioe.getCause());
+					} else {
+						return CompletableFuture.failedStage(ex);
+					}
+				});
+	}
+}

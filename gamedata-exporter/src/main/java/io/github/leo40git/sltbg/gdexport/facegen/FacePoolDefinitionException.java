@@ -7,19 +7,19 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.github.leo40git.sltbg.gdexport.facelist;
+package io.github.leo40git.sltbg.gdexport.facegen;
 
 import java.io.IOException;
 
-public final class FaceListException extends IOException {
+public final class FacePoolDefinitionException extends IOException {
 	private final int lineNumber;
 
-	public FaceListException(String message, int lineNumber) {
+	public FacePoolDefinitionException(String message, int lineNumber) {
 		super(message);
 		this.lineNumber = lineNumber;
 	}
 
-	public FaceListException(String message, int lineNumber, Throwable cause) {
+	public FacePoolDefinitionException(String message, int lineNumber, Throwable cause) {
 		super(message, cause);
 		this.lineNumber = lineNumber;
 	}
