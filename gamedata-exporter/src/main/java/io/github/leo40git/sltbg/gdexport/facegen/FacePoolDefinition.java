@@ -10,11 +10,9 @@
 package io.github.leo40git.sltbg.gdexport.facegen;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 import io.leo40git.sltbg.gamedata.FacePool;
 import io.leo40git.sltbg.util.CollectionUtils;
@@ -52,25 +50,18 @@ public final class FacePoolDefinition {
 		return credits;
 	}
 
-	public @NotNull FacePool build(@NotNull String name) throws IOException {
-		// TODO
-		return new FacePool(name);
-	}
-	
-	public @NotNull CompletableFuture<FacePool> buildAsync(@NotNull Executor executor, @NotNull String name) {
-		return CompletableFuture.supplyAsync(() -> {
-			try {
-				return build(name);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
+	public @NotNull FacePool build(@NotNull String name, @NotNull Path inputDir) throws IOException {
+		var pool = new FacePool(name);
+		for (var sheet : sheets) {
+			var pairs = sheet.split(inputDir);
+			for (var pair : pairs) {
+				if (!pool.contains(pair.left())) {
+					var category = categories.get(pair.left());
+					assert category != null : "Undefined category \"" + pair.left() + "\" referenced (should've been caught at parse time!)";
+					// TODO
+				}
 			}
-		}, executor)
-				.exceptionallyCompose(ex -> {
-					if (ex instanceof UncheckedIOException ucioe) {
-						return CompletableFuture.failedStage(ucioe.getCause());
-					} else {
-						return CompletableFuture.failedStage(ex);
-					}
-				});
+		}
+		return pool;
 	}
 }

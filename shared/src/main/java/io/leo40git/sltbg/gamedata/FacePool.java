@@ -156,6 +156,10 @@ public final class FacePool {
 		categories.put(newName, category);
 	}
 
+	public boolean contains(@NotNull String category) {
+		return categories.containsKey(category);
+	}
+
 	public @Nullable FaceCategory remove(@NotNull String category) {
 		var catObj = categories.remove(category);
 		if (catObj == null) {

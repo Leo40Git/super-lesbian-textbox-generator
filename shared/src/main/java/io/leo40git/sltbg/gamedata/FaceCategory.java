@@ -189,6 +189,10 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		faces.put(newName, face);
 	}
 
+	public boolean contains(@NotNull String name) {
+		return faces.containsKey(name);
+	}
+
 	public @Nullable Face remove(@NotNull String name) {
 		var face = faces.remove(name);
 		if (face == null) {

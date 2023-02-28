@@ -13,10 +13,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import io.leo40git.sltbg.gamedata.Face;
 import org.jetbrains.annotations.Contract;
@@ -73,8 +75,10 @@ public final class FacePoolDefinitionParser {
 		};
 	}
 
+	private record FaceRecord(@NotNull String category, @NotNull String name, int lineNumber) {}
+
 	private HashMap<String, FaceCategoryDefinition> categories;
-	private HashMap<String, String> faceNames;
+	private HashMap<String, FaceRecord> faceRecords;
 	private ArrayList<FaceSheet> sheets;
 	private ArrayList<String> poolDescription, poolCredits;
 
@@ -115,7 +119,7 @@ public final class FacePoolDefinitionParser {
 
 	private FacePoolDefinitionParser() {
 		categories = null;
-		faceNames = null;
+		faceRecords = null;
 		sheets = null;
 		poolDescription = null;
 		poolCredits = null;
@@ -315,10 +319,15 @@ public final class FacePoolDefinitionParser {
 				}
 				String name = scn.next();
 
-				if (faceNames == null) {
-					faceNames = new HashMap<>();
-				} else if (faceNames.put(category, name) != null) {
-					throw new FacePoolDefinitionException("Face \"" + category + Face.PATH_DELIMITER + name + "\" defined twice", lineNumber);
+				if (faceRecords == null) {
+					faceRecords = new HashMap<>();
+				} else {
+					String fullName = category + Face.PATH_DELIMITER + name;
+					var oldRecord = faceRecords.put(fullName, new FaceRecord(category, name, lineNumber));
+					if (oldRecord != null) {
+						throw new FacePoolDefinitionException("Face \"" + fullName + "\" defined twice",
+								"(defined previously at line " + oldRecord.lineNumber() + ")", lineNumber);
+					}
 				}
 
 				if (!scn.hasNextLong()) {
@@ -385,6 +394,42 @@ public final class FacePoolDefinitionParser {
 				msg = "Missing at least one %s section".formatted(SCN_SHEET);
 			}
 			throw new FacePoolDefinitionException(msg, lineNumber);
+		}
+
+		if (faceRecords != null) {
+			LinkedHashMap<String, ArrayList<Integer>> undefinedCategoryRefs = null;
+			for (var faceRecord : faceRecords.values()) {
+				if (!categories.containsKey(faceRecord.category())) {
+					if (undefinedCategoryRefs == null) {
+						undefinedCategoryRefs = new LinkedHashMap<>();
+					}
+					undefinedCategoryRefs.computeIfAbsent(faceRecord.category(), ignored -> new ArrayList<>())
+							.add(faceRecord.lineNumber());
+				}
+			}
+
+			if (undefinedCategoryRefs != null && !undefinedCategoryRefs.isEmpty()) {
+				var sb = new StringBuilder();
+				boolean needLine = false;
+				for (var entry : undefinedCategoryRefs.entrySet()) {
+					if (entry.getValue().isEmpty()) {
+						continue;
+					}
+
+					if (needLine) {
+						sb.append(System.lineSeparator());
+					}
+					needLine = true;
+
+					sb.append(" - \"").append(entry.getKey()).append("\" at line");
+					if (entry.getValue().size() == 1) {
+						sb.append(' ').append(entry.getValue().get(0));
+					} else {
+						sb.append("s ").append(entry.getValue().stream().map(Object::toString).collect(Collectors.joining(", ")));
+					}
+				}
+				throw new FacePoolDefinitionException("Found references to undefined categories", sb.toString(), lineNumber);
+			}
 		}
 
 		return new FacePoolDefinition(categories, sheets, poolDescription, poolCredits);
