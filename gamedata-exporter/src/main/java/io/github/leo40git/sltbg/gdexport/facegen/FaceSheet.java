@@ -77,6 +77,7 @@ public final class FaceSheet {
 			var image = sheet.getSubimage(x, y, IMAGE_SIZE, IMAGE_SIZE);
 			var face = new Face(entry.getImagePath(), entry.getName());
 			face.setImage(image);
+			face.setOrder(entry.getOrder());
 			if (entry.getCharacterName() != null) {
 				face.setCharacterName(entry.getCharacterName());
 			}
