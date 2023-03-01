@@ -214,6 +214,10 @@ public final class Face implements Comparable<Face> {
 		this.description = ArrayUtils.clone(description);
 	}
 
+	public void clearDescription() {
+		description = ArrayUtils.EMPTY_STRING_ARRAY;
+	}
+
 	public @Nullable ImageIcon getIcon() {
 		if (image == null) {
 			return null;

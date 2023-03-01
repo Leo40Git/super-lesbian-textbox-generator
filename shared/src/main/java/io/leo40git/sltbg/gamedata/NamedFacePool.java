@@ -43,6 +43,10 @@ public final class NamedFacePool extends FacePool {
 		this.description = ArrayUtils.clone(description);
 	}
 
+	public void clearDescription() {
+		description = ArrayUtils.EMPTY_STRING_ARRAY;
+	}
+
 	public boolean hasCredits() {
 		return credits.length > 0;
 	}
@@ -53,6 +57,10 @@ public final class NamedFacePool extends FacePool {
 
 	public void setCredits(String @NotNull [] credits) {
 		this.credits = ArrayUtils.clone(credits);
+	}
+
+	public void clearCredits() {
+		credits = ArrayUtils.EMPTY_STRING_ARRAY;
 	}
 
 }
