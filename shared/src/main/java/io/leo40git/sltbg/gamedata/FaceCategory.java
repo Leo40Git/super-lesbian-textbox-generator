@@ -183,8 +183,12 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 			iconFace = face;
 		}
 
-		if (!face.isOrderSet() && lastFace != null) {
-			face.setOrder(FacePool.getNextOrder(lastFace.getOrder()));
+		if (!face.isOrderSet()) {
+			if (lastFace != null) {
+				face.setOrder(FacePool.getNextOrder(lastFace.getOrder()));
+			} else {
+				face.setOrder(FacePool.DEFAULT_ORDER_BASE);
+			}
 		}
 		lastFace = face;
 

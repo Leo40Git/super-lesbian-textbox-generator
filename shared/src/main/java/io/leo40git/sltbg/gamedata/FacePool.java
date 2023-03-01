@@ -107,8 +107,12 @@ public sealed class FacePool permits NamedFacePool {
 		categories.put(category.getName(), category);
 		category.onAddedToPool(this);
 
-		if (!category.isOrderSet() && lastCategory != null) {
-			category.setOrder(FacePool.getNextOrder(lastCategory.getOrder()));
+		if (!category.isOrderSet()) {
+			if (lastCategory != null) {
+				category.setOrder(FacePool.getNextOrder(lastCategory.getOrder()));
+			} else {
+				category.setOrder(FacePool.DEFAULT_ORDER_BASE);
+			}
 		}
 		lastCategory = category;
 
