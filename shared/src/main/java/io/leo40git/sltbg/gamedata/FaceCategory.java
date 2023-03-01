@@ -215,12 +215,22 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		}
 
 		face.onRemovedFromCategory();
+
+		if (iconFace == face) {
+			if (!faces.isEmpty()) {
+				iconFace = faces.values().iterator().next();
+			} else {
+				iconFace = null;
+			}
+		}
+
 		if (lastFace == face) {
 			lastFace = null;
 			for (var anFace : faces.values()) {
 				lastFace = anFace;
 			}
 		}
+
 		markDirty();
 		return face;
 	}
