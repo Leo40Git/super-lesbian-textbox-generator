@@ -144,7 +144,7 @@ public final class FacePool {
 		}
 		lastCategory = category;
 
-		needsSort = true;
+		markDirty();
 	}
 
 	void rename(@NotNull FaceCategory category, @NotNull String newName) {
@@ -168,11 +168,12 @@ public final class FacePool {
 
 		catObj.setPool(null);
 		if (lastCategory == catObj) {
+			lastCategory = null;
 			for (var anCat : categories.values()) {
 				lastCategory = anCat;
 			}
 		}
-		needsSort = true;
+		markDirty();
 		return catObj;
 	}
 

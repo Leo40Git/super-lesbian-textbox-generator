@@ -177,7 +177,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		}
 		lastFace = face;
 
-		needsSort = true;
+		markDirty();
 	}
 
 	void rename(@NotNull Face face, @NotNull String newName) {
@@ -201,11 +201,12 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 		face.setContainers(null, null);
 		if (lastFace == face) {
+			lastFace = null;
 			for (var anFace : faces.values()) {
 				lastFace = anFace;
 			}
 		}
-		needsSort = true;
+		markDirty();
 		return face;
 	}
 
