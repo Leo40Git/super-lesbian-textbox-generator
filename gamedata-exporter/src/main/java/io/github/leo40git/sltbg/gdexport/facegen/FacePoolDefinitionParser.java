@@ -78,6 +78,7 @@ public final class FacePoolDefinitionParser {
 	private record FaceRecord(@NotNull String category, @NotNull String name, int lineNumber) {}
 
 	private HashMap<String, FaceCategoryDefinition> categories;
+	private HashMap<String, Integer> categoryLines;
 	private HashMap<String, FaceRecord> faceRecords;
 	private ArrayList<FaceSheet> sheets;
 	private ArrayList<String> poolDescription, poolCredits;
@@ -86,6 +87,26 @@ public final class FacePoolDefinitionParser {
 	private String currentSectionName;
 
 	private ArrayList<String> targetLines;
+
+	private static final class FaceCategoryDefinitionBuilder {
+		private final @NotNull String name;
+		private final long order;
+		private final @Nullable String characterName;
+		public @Nullable ArrayList<String> description;
+
+		public FaceCategoryDefinitionBuilder(@NotNull String name, long order, @Nullable String characterName) {
+			this.name = name;
+			this.order = order;
+			this.characterName = characterName;
+		}
+
+		@Contract(" -> new")
+		public @NotNull FaceCategoryDefinition build() {
+			return new FaceCategoryDefinition(name, order, characterName, description);
+		}
+	}
+
+	private FaceCategoryDefinitionBuilder currentCategoryBuilder;
 
 	private static final class FaceSheetEntryBuilder {
 		private final @NotNull String imagePath, category, name;
@@ -106,19 +127,20 @@ public final class FacePoolDefinitionParser {
 		}
 
 		@Contract(" -> new")
-		public @NotNull FaceSheet.Entry finish() {
+		public @NotNull FaceSheet.Entry build() {
 			return new FaceSheet.Entry(imagePath, category, name, order, characterName, description, advance);
 		}
 	}
 
 	private String sheetInputPath;
 	private int sheetOffset;
-	private FaceSheetEntryBuilder sheetEntryBuilder;
-	private boolean canDescribeSheetEntry;
+	private FaceSheetEntryBuilder currentSheetEntryBuilder;
+	private boolean canDescribeCurrentSheetEntry;
 	private ArrayList<FaceSheet.Entry> pendingSheetEntries;
 
 	private FacePoolDefinitionParser() {
 		categories = null;
+		categoryLines = null;
 		faceRecords = null;
 		sheets = null;
 		poolDescription = null;
@@ -129,10 +151,12 @@ public final class FacePoolDefinitionParser {
 
 		targetLines = null;
 
+		currentCategoryBuilder = null;
+
 		sheetInputPath = null;
 		sheetOffset = 0;
-		sheetEntryBuilder = null;
-		canDescribeSheetEntry = false;
+		currentSheetEntryBuilder = null;
+		canDescribeCurrentSheetEntry = false;
 		pendingSheetEntries = null;
 	}
 
@@ -165,10 +189,6 @@ public final class FacePoolDefinitionParser {
 	}
 
 	private boolean endSection() {
-		if (currentSectionID == SCNID_SHEET) {
-			flushSheet();
-		}
-
 		currentSectionID = SCNID_ROOT;
 		currentSectionName = null;
 
@@ -232,21 +252,43 @@ public final class FacePoolDefinitionParser {
 		};
 	}
 
+	private void flushCategory() {
+		if (currentCategoryBuilder == null) {
+			return;
+		}
+
+		if (categories == null) {
+			categories = new HashMap<>();
+		}
+
+		categories.put(currentCategoryBuilder.name, currentCategoryBuilder.build());
+		currentCategoryBuilder = null;
+	}
+
 	private boolean parseLineCats(@NotNull Scanner scn, int lineNumber) throws FacePoolDefinitionException {
 		String cmd = scn.next();
 		return switch (cmd) {
 			case CMD_BEGIN -> throwNestedSectionException(lineNumber);
-			case CMD_END -> endSection();
+			case CMD_END -> {
+				flushCategory();
+				endSection();
+				yield true;
+			}
 			case CMD_ADD, CMD_ADD_S -> {
+				flushCategory();
+
 				if (!scn.hasNext()) {
 					throw new FacePoolDefinitionException(CMD_ADD + " command missing category name parameter", lineNumber);
 				}
 				String name = scn.next();
 
-				if (categories == null) {
-					categories = new HashMap<>();
-				} else if (categories.containsKey(name)) {
-					throw new FacePoolDefinitionException("Category with name \"" + name + "\" defined twice", lineNumber);
+				if (categoryLines == null) {
+					categoryLines = new HashMap<>();
+				}
+				var oldLine = categoryLines.put(name, lineNumber);
+				if (oldLine != null) {
+					throw new FacePoolDefinitionException("Category \"" + name + "\" defined twice",
+							"(defined previously at line " + oldLine + ")", lineNumber);
 				}
 
 				if (!scn.hasNextLong()) {
@@ -259,7 +301,24 @@ public final class FacePoolDefinitionParser {
 					characterName = scn.next();
 				}
 
-				categories.put(name, new FaceCategoryDefinition(name, order, characterName));
+				currentCategoryBuilder = new FaceCategoryDefinitionBuilder(name, order, characterName);
+				yield true;
+			}
+			case CMD_DESC, CMD_DESC_S -> {
+				if (currentCategoryBuilder == null) {
+					throw new FacePoolDefinitionException(
+							CMD_DESC + " command not following " + CMD_ADD + " command or other " + CMD_DESC + " command", lineNumber);
+				}
+
+				if (!scn.hasNext()) {
+					yield true;
+				}
+
+				if (currentCategoryBuilder.description == null) {
+					currentCategoryBuilder.description = new ArrayList<>();
+				}
+
+				currentCategoryBuilder.description.add(scn.next());
 				yield true;
 			}
 			default -> false;
@@ -267,7 +326,7 @@ public final class FacePoolDefinitionParser {
 	}
 
 	private void flushSheetEntry() {
-		if (sheetEntryBuilder == null) {
+		if (currentSheetEntryBuilder == null) {
 			return;
 		}
 
@@ -275,8 +334,8 @@ public final class FacePoolDefinitionParser {
 			pendingSheetEntries = new ArrayList<>();
 		}
 
-		pendingSheetEntries.add(sheetEntryBuilder.finish());
-		sheetEntryBuilder = null;
+		pendingSheetEntries.add(currentSheetEntryBuilder.build());
+		currentSheetEntryBuilder = null;
 	}
 
 	private void flushSheet() {
@@ -300,7 +359,11 @@ public final class FacePoolDefinitionParser {
 		String cmd = scn.next();
 		return switch (cmd) {
 			case CMD_BEGIN -> throwNestedSectionException(lineNumber);
-			case CMD_END -> endSection();
+			case CMD_END -> {
+				flushSheet();
+				endSection();
+				yield true;
+			}
 			case CMD_ADD, CMD_ADD_S -> {
 				flushSheetEntry();
 
@@ -321,13 +384,12 @@ public final class FacePoolDefinitionParser {
 
 				if (faceRecords == null) {
 					faceRecords = new HashMap<>();
-				} else {
-					String fullName = category + Face.PATH_DELIMITER + name;
-					var oldRecord = faceRecords.put(fullName, new FaceRecord(category, name, lineNumber));
-					if (oldRecord != null) {
-						throw new FacePoolDefinitionException("Face \"" + fullName + "\" defined twice",
-								"(defined previously at line " + oldRecord.lineNumber() + ")", lineNumber);
-					}
+				}
+				String fullName = category + Face.PATH_DELIMITER + name;
+				var oldRecord = faceRecords.put(fullName, new FaceRecord(category, name, lineNumber));
+				if (oldRecord != null) {
+					throw new FacePoolDefinitionException("Face \"" + fullName + "\" defined twice",
+							"(defined previously at line " + oldRecord.lineNumber() + ")", lineNumber);
 				}
 
 				if (!scn.hasNextLong()) {
@@ -340,12 +402,12 @@ public final class FacePoolDefinitionParser {
 					characterName = scn.next();
 				}
 
-				sheetEntryBuilder = new FaceSheetEntryBuilder(imagePath, category, name, order, characterName);
-				canDescribeSheetEntry = true;
+				currentSheetEntryBuilder = new FaceSheetEntryBuilder(imagePath, category, name, order, characterName);
+				canDescribeCurrentSheetEntry = true;
 				yield true;
 			}
 			case CMD_DESC, CMD_DESC_S -> {
-				if (sheetEntryBuilder == null || !canDescribeSheetEntry) {
+				if (currentSheetEntryBuilder == null || !canDescribeCurrentSheetEntry) {
 					throw new FacePoolDefinitionException(
 							CMD_DESC + " command not following " + CMD_ADD + " command or other " + CMD_DESC + " command", lineNumber);
 				}
@@ -354,11 +416,11 @@ public final class FacePoolDefinitionParser {
 					yield true;
 				}
 
-				if (sheetEntryBuilder.description == null) {
-					sheetEntryBuilder.description = new ArrayList<>();
+				if (currentSheetEntryBuilder.description == null) {
+					currentSheetEntryBuilder.description = new ArrayList<>();
 				}
 
-				sheetEntryBuilder.description.add(scn.next());
+				currentSheetEntryBuilder.description.add(scn.next());
 				yield true;
 			}
 			case CMD_SKIP, CMD_SKIP_S -> {
@@ -367,11 +429,11 @@ public final class FacePoolDefinitionParser {
 					advance = scn.nextInt();
 				}
 
-				canDescribeSheetEntry = false;
-				if (sheetEntryBuilder == null) {
+				canDescribeCurrentSheetEntry = false;
+				if (currentSheetEntryBuilder == null) {
 					sheetOffset += advance;
 				} else {
-					sheetEntryBuilder.advance += advance;
+					currentSheetEntryBuilder.advance += advance;
 				}
 				yield true;
 			}

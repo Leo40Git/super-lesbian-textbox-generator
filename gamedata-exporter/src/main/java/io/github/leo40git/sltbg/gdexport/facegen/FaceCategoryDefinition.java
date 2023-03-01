@@ -9,19 +9,26 @@
 
 package io.github.leo40git.sltbg.gdexport.facegen;
 
+import java.util.List;
+
+import io.leo40git.sltbg.util.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 @SuppressWarnings("ClassCanBeRecord")
 public final class FaceCategoryDefinition {
 	private final @NotNull String name;
 	private final long order;
 	private final @Nullable String characterName;
+	private final @NotNull @Unmodifiable List<String> description;
 
-	public FaceCategoryDefinition(@NotNull String name, long order, @Nullable String characterName) {
+	public FaceCategoryDefinition(@NotNull String name, long order, @Nullable String characterName,
+			@Nullable List<String> description) {
 		this.name = name;
 		this.order = order;
 		this.characterName = characterName;
+		this.description = CollectionUtils.copyOrEmpty(description);
 	}
 
 	public @NotNull String getName() {
@@ -34,5 +41,9 @@ public final class FaceCategoryDefinition {
 
 	public @Nullable String getCharacterName() {
 		return characterName;
+	}
+
+	public @NotNull @Unmodifiable List<String> getDescription() {
+		return description;
 	}
 }

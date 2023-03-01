@@ -199,17 +199,22 @@ public final class FacePoolIO {
 
 	public static void write(@NotNull NamedFacePool pool, @NotNull JsonWriter writer) throws IOException {
 		writer.beginObject();
+
 		writer.name(FaceFields.NAME);
 		writer.value(pool.getName());
+
 		if (pool.getDescription().length > 0) {
-			writer.name(FaceFields.NAME);
+			writer.name(FaceFields.DESCRIPTION);
 			JsonWriteUtils.writeStringArray(writer, pool.getDescription());
 		}
+
 		if (pool.getCredits().length > 0) {
 			JsonWriteUtils.writeStringArray(writer, pool.getCredits());
 		}
+
 		writer.name(FaceFields.CATEGORIES);
 		JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories().values());
+
 		writer.endObject();
 	}
 

@@ -17,6 +17,7 @@ import java.util.Map;
 
 import javax.swing.ImageIcon;
 
+import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +30,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	private boolean orderSet;
 	private long order;
 	private @Nullable String characterName;
+	private String @NotNull [] description;
 
 	private @Nullable Face iconFace, lastFace;
 	private boolean needsSort;
@@ -42,6 +44,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		orderSet = false;
 		order = 0;
 		characterName = null;
+		description = ArrayUtils.EMPTY_STRING_ARRAY;
 
 		iconFace = null;
 		lastFace = null;
@@ -117,6 +120,14 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 	public void setCharacterName(@Nullable String characterName) {
 		this.characterName = characterName;
+	}
+
+	public String @NotNull [] getDescription() {
+		return ArrayUtils.clone(description);
+	}
+
+	public void setDescription(String @NotNull [] description) {
+		this.description = ArrayUtils.clone(description);
 	}
 
 	public @Nullable ImageIcon getIcon() {
@@ -256,6 +267,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		clone.order = order;
 		clone.orderSet = orderSet;
 		clone.characterName = characterName;
+		clone.description = ArrayUtils.clone(description);
 		return clone;
 	}
 

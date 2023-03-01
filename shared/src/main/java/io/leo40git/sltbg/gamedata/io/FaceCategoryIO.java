@@ -42,12 +42,13 @@ public final class FaceCategoryIO {
 		while (reader.hasNext()) {
 			String field = reader.nextName();
 			switch (field) {
+				case FaceFields.ORDER -> category.setOrder(reader.nextLong());
+				case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
+				case FaceFields.DESCRIPTION -> category.setDescription(JsonReadUtils.readStringArray(reader));
 				case FaceFields.FACES -> {
 					JsonReadUtils.readSimpleMap(reader, FaceIO::read, category::add);
 					gotFaces = true;
 				}
-				case FaceFields.ORDER -> category.setOrder(reader.nextLong());
-				case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
 				default -> reader.skipValue();
 			}
 		}
@@ -180,6 +181,11 @@ public final class FaceCategoryIO {
 		if (category.getCharacterName() != null) {
 			writer.name(FaceFields.CHARACTER_NAME);
 			writer.value(category.getCharacterName());
+		}
+
+		if (category.getDescription().length > 0) {
+			writer.name(FaceFields.DESCRIPTION);
+			JsonWriteUtils.writeStringArray(writer, category.getDescription());
 		}
 
 		writer.name(FaceFields.FACES);
