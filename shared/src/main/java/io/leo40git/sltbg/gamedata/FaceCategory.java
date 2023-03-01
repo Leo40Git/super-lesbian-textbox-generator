@@ -247,6 +247,10 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 	@Override
 	public int compareTo(@NotNull FaceCategory o) {
-		return Long.compare(order, o.order);
+		if (order != o.order) {
+			return Long.compare(order, o.getOrder());
+		} else {
+			return name.compareTo(o.getName());
+		}
 	}
 }
