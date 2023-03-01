@@ -203,12 +203,12 @@ public final class FacePoolIO {
 		writer.name(FaceFields.NAME);
 		writer.value(pool.getName());
 
-		if (pool.getDescription().length > 0) {
+		if (pool.hasDescription()) {
 			writer.name(FaceFields.DESCRIPTION);
 			JsonWriteUtils.writeStringArray(writer, pool.getDescription());
 		}
 
-		if (pool.getCredits().length > 0) {
+		if (pool.hasCredits()) {
 			JsonWriteUtils.writeStringArray(writer, pool.getCredits());
 		}
 

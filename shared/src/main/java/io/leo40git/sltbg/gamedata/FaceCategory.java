@@ -122,6 +122,10 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		this.characterName = characterName;
 	}
 
+	public boolean hasDescription() {
+		return description.length > 0;
+	}
+
 	public String @NotNull [] getDescription() {
 		return ArrayUtils.clone(description);
 	}

@@ -202,6 +202,10 @@ public final class Face implements Comparable<Face> {
 		characterNameSet = false;
 	}
 
+	public boolean hasDescription() {
+		return description.length > 0;
+	}
+
 	public String @NotNull [] getDescription() {
 		return ArrayUtils.clone(description);
 	}

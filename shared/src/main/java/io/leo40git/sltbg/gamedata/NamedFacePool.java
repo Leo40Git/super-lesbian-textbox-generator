@@ -31,12 +31,20 @@ public final class NamedFacePool extends FacePool {
 		this.name = name;
 	}
 
+	public boolean hasDescription() {
+		return description.length > 0;
+	}
+
 	public String @NotNull [] getDescription() {
 		return ArrayUtils.clone(description);
 	}
 
 	public void setDescription(String @NotNull [] description) {
 		this.description = ArrayUtils.clone(description);
+	}
+
+	public boolean hasCredits() {
+		return credits.length > 0;
 	}
 
 	public String @NotNull [] getCredits() {

@@ -111,7 +111,7 @@ public final class FaceIO {
 				writer.name(FaceFields.CHARACTER_NAME);
 				writer.value(face.getCharacterName());
 			}
-			if (face.getDescription().length > 0) {
+			if (face.hasDescription()) {
 				writer.name(FaceFields.DESCRIPTION);
 				JsonWriteUtils.writeStringArray(writer, face.getDescription());
 			}

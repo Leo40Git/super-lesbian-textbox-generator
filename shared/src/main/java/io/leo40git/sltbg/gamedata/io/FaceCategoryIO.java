@@ -183,7 +183,7 @@ public final class FaceCategoryIO {
 			writer.value(category.getCharacterName());
 		}
 
-		if (category.getDescription().length > 0) {
+		if (category.hasDescription()) {
 			writer.name(FaceFields.DESCRIPTION);
 			JsonWriteUtils.writeStringArray(writer, category.getDescription());
 		}
