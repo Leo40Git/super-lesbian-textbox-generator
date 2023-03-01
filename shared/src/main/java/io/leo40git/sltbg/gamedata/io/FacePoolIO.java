@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 
 import io.leo40git.sltbg.gamedata.FaceCategory;
-import io.leo40git.sltbg.gamedata.FacePool;
+import io.leo40git.sltbg.gamedata.NamedFacePool;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MalformedJsonException;
@@ -38,7 +38,7 @@ public final class FacePoolIO {
 	}
 
 	@Contract("_, _ -> new")
-	public static @NotNull FacePool read(@NotNull JsonReader reader, boolean sort) throws IOException {
+	public static @NotNull NamedFacePool read(@NotNull JsonReader reader, boolean sort) throws IOException {
 		String name = null;
 		String[] description = ArrayUtils.EMPTY_STRING_ARRAY, credits = ArrayUtils.EMPTY_STRING_ARRAY;
 		HashSet<String> categoryNames = null;
@@ -83,7 +83,7 @@ public final class FacePoolIO {
 			throw new MissingFieldsException(reader, "Face pool", missingFields);
 		}
 
-		var pool = new FacePool(name);
+		var pool = new NamedFacePool(name);
 		pool.setDescription(description);
 		pool.setCredits(credits);
 		for (var category : categories) {
@@ -96,11 +96,11 @@ public final class FacePoolIO {
 	}
 
 	@Contract("_ -> new")
-	public static @NotNull FacePool read(@NotNull JsonReader reader) throws IOException {
+	public static @NotNull NamedFacePool read(@NotNull JsonReader reader) throws IOException {
 		return read(reader, true);
 	}
 
-	public static void readImages(@NotNull FacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
+	public static void readImages(@NotNull NamedFacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
 		FacePoolIOException bigExc = null;
 
 		for (var category : pool.getCategories().values()) {
@@ -119,7 +119,7 @@ public final class FacePoolIO {
 		}
 	}
 
-	public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull FacePool pool, @NotNull Path rootDir, @NotNull Executor executor) {
+	public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor) {
 		var categories = pool.getCategories();
 		if (categories.isEmpty()) {
 			// nothing to do
@@ -155,7 +155,7 @@ public final class FacePoolIO {
 				});
 	}
 
-	public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull FacePool pool, @NotNull Path rootDir, @NotNull Executor executor,
+	public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor,
 			@NotNull StatusTreeNode node) {
 		var categories = pool.getCategories();
 		if (categories.isEmpty()) {
@@ -197,7 +197,7 @@ public final class FacePoolIO {
 				});
 	}
 
-	public static void write(@NotNull FacePool pool, @NotNull JsonWriter writer) throws IOException {
+	public static void write(@NotNull NamedFacePool pool, @NotNull JsonWriter writer) throws IOException {
 		writer.beginObject();
 		writer.name(FaceFields.NAME);
 		writer.value(pool.getName());
@@ -213,7 +213,7 @@ public final class FacePoolIO {
 		writer.endObject();
 	}
 
-	public static void writeImages(@NotNull FacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
+	public static void writeImages(@NotNull NamedFacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
 		FacePoolIOException bigExc = null;
 
 		for (var category : pool.getCategories().values()) {
@@ -232,7 +232,7 @@ public final class FacePoolIO {
 		}
 	}
 
-	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull FacePool pool, @NotNull Path rootDir, @NotNull Executor executor) {
+	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor) {
 		var categories = pool.getCategories();
 		if (categories.isEmpty()) {
 			// nothing to do
@@ -268,7 +268,7 @@ public final class FacePoolIO {
 				});
 	}
 
-	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull FacePool pool, @NotNull Path rootDir, @NotNull Executor executor,
+	public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor,
 			@NotNull StatusTreeNode node) {
 		var categories = pool.getCategories();
 		if (categories.isEmpty()) {

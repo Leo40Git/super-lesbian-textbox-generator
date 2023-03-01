@@ -15,12 +15,11 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-public final class FacePool {
+public sealed class FacePool permits NamedFacePool {
 	public static final long DEFAULT_ORDER_BASE = 1000;
 
 	public static long getNextOrder(long order) {
@@ -32,47 +31,16 @@ public final class FacePool {
 		return order;
 	}
 
-	private @NotNull String name;
-	private String @NotNull [] description, credits;
-	final @NotNull LinkedHashMap<String, FaceCategory> categories;
+	private static final ThreadLocal<ArrayList<FaceCategory>> TL_SORT_BUF = new ThreadLocal<>();
+	private final @NotNull LinkedHashMap<String, FaceCategory> categories;
 	private @Nullable FaceCategory lastCategory;
 	private boolean needsSort;
 
-	public FacePool(@NotNull String name) {
-		this.name = name;
+	public FacePool() {
 		categories = new LinkedHashMap<>();
-		description = ArrayUtils.EMPTY_STRING_ARRAY;
-		credits = ArrayUtils.EMPTY_STRING_ARRAY;
-
 		lastCategory = null;
 		needsSort = false;
 	}
-
-	public @NotNull String getName() {
-		return name;
-	}
-
-	public void setName(@NotNull String name) {
-		this.name = name;
-	}
-
-	public String @NotNull [] getDescription() {
-		return ArrayUtils.clone(description);
-	}
-
-	public void setDescription(String @NotNull [] description) {
-		this.description = ArrayUtils.clone(description);
-	}
-
-	public String @NotNull [] getCredits() {
-		return ArrayUtils.clone(credits);
-	}
-
-	public void setCredits(String @NotNull [] credits) {
-		this.credits = ArrayUtils.clone(credits);
-	}
-
-	private static final ThreadLocal<ArrayList<FaceCategory>> TL_SORT_BUF = new ThreadLocal<>();
 
 	void markDirty() {
 		needsSort = true;
@@ -137,17 +105,17 @@ public final class FacePool {
 		}
 
 		categories.put(category.getName(), category);
-		category.setPool(this);
+		category.onAddedToPool(this);
 
 		if (!category.isOrderSet() && lastCategory != null) {
-			category.setOrder(getNextOrder(lastCategory.getOrder()));
+			category.setOrder(FacePool.getNextOrder(lastCategory.getOrder()));
 		}
 		lastCategory = category;
 
 		markDirty();
 	}
 
-	void rename(@NotNull FaceCategory category, @NotNull String newName) {
+	void renameCategory(@NotNull FaceCategory category, @NotNull String newName) {
 		if (categories.containsKey(newName)) {
 			throw new IllegalArgumentException("Category with name \"" + newName + "\" already exists in this pool");
 		}
@@ -166,7 +134,7 @@ public final class FacePool {
 			return null;
 		}
 
-		catObj.setPool(null);
+		catObj.onRemovedFromPool();
 		if (lastCategory == catObj) {
 			lastCategory = null;
 			for (var anCat : categories.values()) {
@@ -179,7 +147,7 @@ public final class FacePool {
 
 	public void clear() {
 		for (var category : categories.values()) {
-			category.setPool(null);
+			category.onRemovedFromPool();
 		}
 
 		categories.clear();

@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import io.leo40git.sltbg.gamedata.FacePool;
+import io.leo40git.sltbg.gamedata.NamedFacePool;
 import io.leo40git.sltbg.util.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,8 +50,8 @@ public final class FacePoolDefinition {
 		return credits;
 	}
 
-	public @NotNull FacePool build(@NotNull String name, @NotNull Path inputDir) throws IOException {
-		var pool = new FacePool(name);
+	public @NotNull NamedFacePool build(@NotNull String name, @NotNull Path inputDir) throws IOException {
+		var pool = new NamedFacePool(name);
 		for (var sheet : sheets) {
 			var pairs = sheet.split(inputDir);
 			for (var pair : pairs) {

@@ -34,6 +34,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 	private boolean needsSort;
 
 	private FaceCategory(@NotNull String name, @NotNull LinkedHashMap<String, Face> faces) {
+		validateName(name);
 		this.name = name;
 		this.faces = faces;
 
@@ -55,10 +56,17 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		return pool;
 	}
 
-	void setPool(@Nullable FacePool pool) {
+	void onAddedToPool(@NotNull FacePool pool) {
 		this.pool = pool;
 		for (var face : faces.values()) {
-			face.setContainers(pool, this);
+			face.onAddedToPool(pool);
+		}
+	}
+
+	void onRemovedFromPool() {
+		pool = null;
+		for (var face : faces.values()) {
+			face.onRemovedFromPool();
 		}
 	}
 
@@ -66,19 +74,22 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		return name;
 	}
 
-	public void setName(@NotNull String name) {
-		if (!name.contains(Face.PATH_DELIMITER)) {
+	private static void validateName(@NotNull String name) {
+		if (name.contains(Face.PATH_DELIMITER)) {
 			throw new IllegalArgumentException("Name \"%s\" contains path delimiter '%s'".formatted(name, Face.PATH_DELIMITER));
 		}
+	}
 
-		if (!this.name.equals(name)) {
-			if (pool != null) {
-				pool.rename(this, name);
-			}
-			this.name = name;
-			for (var face : faces.values()) {
-				face.setContainers(pool, this);
-			}
+	public void setName(@NotNull String name) {
+		validateName(name);
+
+		if (pool != null) {
+			pool.renameCategory(this, name);
+		}
+
+		this.name = name;
+		for (var face : faces.values()) {
+			face.onCategoryRenamed();
 		}
 	}
 
@@ -166,7 +177,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		}
 
 		faces.put(face.getName(), face);
-		face.setContainers(pool, this);
+		face.onAddedToCategory(this);
 
 		if (iconFace == null) {
 			iconFace = face;
@@ -180,7 +191,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 		markDirty();
 	}
 
-	void rename(@NotNull Face face, @NotNull String newName) {
+	void renameFace(@NotNull Face face, @NotNull String newName) {
 		if (faces.containsKey(newName)) {
 			throw new IllegalArgumentException("Face with name \"" + newName + "\" already exists in this category");
 		}
@@ -199,7 +210,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 			return null;
 		}
 
-		face.setContainers(null, null);
+		face.onRemovedFromCategory();
 		if (lastFace == face) {
 			lastFace = null;
 			for (var anFace : faces.values()) {
@@ -212,7 +223,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
 	public void clear() {
 		for (var face : faces.values()) {
-			face.setContainers(null, null);
+			face.onRemovedFromCategory();
 		}
 
 		faces.clear();

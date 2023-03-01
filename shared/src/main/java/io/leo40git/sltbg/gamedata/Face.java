@@ -24,7 +24,8 @@ public final class Face implements Comparable<Face> {
 	public static final int ICON_SIZE = IMAGE_SIZE / 2;
 	public static final String PATH_DELIMITER = "/";
 
-	private @Nullable FacePool sourcePool, pool;
+	private @Nullable NamedFacePool sourcePool;
+	private @Nullable FacePool pool;
 	private @Nullable FaceCategory category;
 	@SuppressWarnings("FieldMayBeFinal")
 	private @NotNull String name;
@@ -55,7 +56,7 @@ public final class Face implements Comparable<Face> {
 		icon = null;
 	}
 
-	public @Nullable FacePool getSourcePool() {
+	public @Nullable NamedFacePool getSourcePool() {
 		return sourcePool;
 	}
 
@@ -67,16 +68,37 @@ public final class Face implements Comparable<Face> {
 		return category;
 	}
 
-	void setContainers(@Nullable FacePool pool, @Nullable FaceCategory category) {
-		if (sourcePool == null) {
-			sourcePool = pool;
-		}
-		this.pool = pool;
-		this.category = category;
-
+	void onCategoryRenamed() {
 		if (icon != null) {
 			icon.setDescription(createIconDescription());
 		}
+	}
+
+	void onAddedToPool(@NotNull FacePool pool) {
+		if (pool instanceof NamedFacePool namedPool) {
+			this.sourcePool = namedPool;
+		}
+		this.pool = pool;
+	}
+
+	void onAddedToCategory(@NotNull FaceCategory category) {
+		if (category.getPool() != null) {
+			onAddedToPool(category.getPool());
+		}
+		this.category = category;
+		onCategoryRenamed();
+	}
+
+	void onRemovedFromPool() {
+		if (sourcePool == pool) {
+			sourcePool = null;
+		}
+		pool = null;
+	}
+
+	void onRemovedFromCategory() {
+		onRemovedFromPool();
+		category = null;
 	}
 
 	public @NotNull String getName() {
@@ -84,17 +106,15 @@ public final class Face implements Comparable<Face> {
 	}
 
 	public void setName(@NotNull String name) {
-		if (!this.name.equals(name)) {
-			if (category != null) {
-				category.rename(this, name);
-			}
-			
-			if (!characterNameSet) {
-				characterName = null;
-			}
-			if (icon != null) {
-				icon.setDescription(createIconDescription());
-			}
+		if (category != null) {
+			category.renameFace(this, name);
+		}
+
+		if (!characterNameSet) {
+			characterName = null;
+		}
+		if (icon != null) {
+			icon.setDescription(createIconDescription());
 		}
 	}
 
