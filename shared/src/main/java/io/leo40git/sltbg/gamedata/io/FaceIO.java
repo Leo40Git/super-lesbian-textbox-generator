@@ -119,12 +119,25 @@ public final class FaceIO {
 		}
 	}
 
+	private static void createImageDirectories0(@NotNull Face face, @NotNull Path parentPath) throws FaceIOException {
+		try {
+			Files.createDirectories(parentPath);
+		} catch (IOException e) {
+			throw new FaceIOException(face, "Failed to create directory \"" + parentPath + "\"", e);
+		}
+	}
+
+	public static void createImageDirectories(@NotNull Face face, @NotNull Path rootDir) throws FaceIOException {
+		createImageDirectories0(face, rootDir.resolve(face.getImagePath()).getParent());
+	}
+
 	public static void writeImage(@NotNull Face face, @NotNull Path rootDir) throws FaceIOException {
 		if (!face.hasImage()) {
 			throw new FaceIOException(face, "Face doesn't have an image to write");
 		}
 
 		final var imagePath = rootDir.resolve(face.getImagePath());
+		createImageDirectories0(face, imagePath.getParent());
 		try {
 			ImageUtils.writeImage(face.getImage(), imagePath);
 		} catch (IOException e) {
