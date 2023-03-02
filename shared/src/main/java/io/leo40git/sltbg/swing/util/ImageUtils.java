@@ -18,7 +18,9 @@ import java.nio.file.Path;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageTypeSpecifier;
-import javax.imageio.ImageWriter;
+import javax.imageio.spi.IIORegistry;
+import javax.imageio.spi.ImageWriterSpi;
+import javax.imageio.spi.ServiceRegistry;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,8 +40,36 @@ public final class ImageUtils {
 		return scaled;
 	}
 
+	@SuppressWarnings("ClassCanBeRecord")
+	private static final class CanEncodeImageAndSuffixFilter implements ServiceRegistry.Filter {
+		private final @NotNull ImageTypeSpecifier type;
+		private final @NotNull String fileSuffix;
+
+		public CanEncodeImageAndSuffixFilter(@NotNull ImageTypeSpecifier type, @NotNull String fileSuffix) {
+			this.type = type;
+			this.fileSuffix = fileSuffix;
+		}
+
+		@Override
+		public boolean filter(Object provider) {
+			var iws = (ImageWriterSpi) provider;
+			if (!iws.canEncodeImage(type)) {
+				return false;
+			}
+			var fileSuffixes = iws.getFileSuffixes();
+			if (fileSuffixes != null) {
+				for (String candidate : fileSuffixes) {
+					if (fileSuffix.equalsIgnoreCase(candidate)) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+	}
+
 	public static void writeImage(@NotNull RenderedImage image, @NotNull Path path) throws IOException {
-		String fileName = path.getName(path.getNameCount() - 1).toString();
+		String fileName = path.getFileName().toString();
 
 		String fileSuffix = "";
 		int dotIdx = fileName.lastIndexOf('.');
@@ -51,31 +81,21 @@ public final class ImageUtils {
 			throw new IOException("Can't write image to \"" + path + "\": no file extension");
 		}
 
-		var writerIt = ImageIO.getImageWritersBySuffix(fileSuffix);
-
-		ImageWriter writer = null;
-		var imgType = ImageTypeSpecifier.createFromRenderedImage(image);
-		while (writerIt.hasNext()) {
-			var candidate = writerIt.next();
-			if (!candidate.getOriginatingProvider().canEncodeImage(imgType)) {
-				continue;
-			}
-			writer = candidate;
-			break;
+		var it = IIORegistry.getDefaultInstance().getServiceProviders(ImageWriterSpi.class,
+				new CanEncodeImageAndSuffixFilter(ImageTypeSpecifier.createFromRenderedImage(image), fileSuffix),
+				true);
+		if (!it.hasNext()) {
+			throw new IOException("Can't write image to \"" + path + "\": couldn't find ImageWriter for file extension \"." + fileSuffix + "\"\n"
+					+ "(or image type cannot be encoded with this extension)");
 		}
 
-		if (writer == null) {
-			throw new IOException("Can't write image to \"" + path + "\": couldn't find ImageWriter for file extension \"." + fileSuffix + "\"");
-		}
-
-		writer.reset();
+		var writer = it.next().createWriterInstance();
 		try (var os = Files.newOutputStream(path);
-			 var out = ImageIO.createImageOutputStream(os)) {
+				var out = ImageIO.createImageOutputStream(os)) {
 			writer.setOutput(out);
 			writer.write(image);
 		} finally {
 			writer.dispose();
-			writer.reset();
 		}
 	}
 }
