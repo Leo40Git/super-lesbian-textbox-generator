@@ -24,6 +24,7 @@ import java.util.concurrent.Executor;
 import javax.imageio.ImageIO;
 
 import io.leo40git.sltbg.gamedata.Face;
+import io.leo40git.sltbg.swing.util.ImageUtils;
 import io.leo40git.sltbg.util.ArrayUtils;
 import io.leo40git.sltbg.util.CollectionUtils;
 import io.leo40git.sltbg.util.Pair;
@@ -63,7 +64,7 @@ public final class FaceSheet {
         return entries;
     }
 
-    public @NotNull List<Pair<String, Face>> split(@NotNull Path inputDir) throws IOException {
+    public @NotNull List<Pair<String, Face>> split(@NotNull Path inputDir, @Nullable AsyncFaceImageFlusher imageFlusher) throws IOException {
         var inputPath = inputDir.resolve(sheetPath);
         BufferedImage sheet;
         try (var is = Files.newInputStream(inputPath)) {
@@ -82,6 +83,8 @@ public final class FaceSheet {
                     .formatted(maxIndex, rows * cols));
         }
 
+        sheet = ImageUtils.changeImageType(sheet, BufferedImage.TYPE_INT_ARGB);
+
         var faces = new ArrayList<Pair<String, Face>>(entries.size());
         int index = offset;
         for (var entry : entries) {
@@ -97,6 +100,13 @@ public final class FaceSheet {
             if (!entry.getDescription().isEmpty()) {
                 face.setDescription(entry.getDescription().toArray(ArrayUtils.EMPTY_STRING_ARRAY));
             }
+
+            if (imageFlusher != null) {
+                if (!imageFlusher.queue(face)) {
+                    break;
+                }
+            }
+
             faces.add(new Pair<>(entry.getCategory(), face));
 
             index += entry.getAdvance();
@@ -104,10 +114,11 @@ public final class FaceSheet {
         return faces;
     }
 
-    public @NotNull CompletableFuture<List<Pair<String, Face>>> splitAsync(@NotNull Executor executor, @NotNull Path inputDir) {
+    public @NotNull CompletableFuture<List<Pair<String, Face>>> splitAsync(@NotNull Executor executor,
+                                                                           @NotNull Path inputDir, @Nullable AsyncFaceImageFlusher imageFlusher) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return split(inputDir);
+                return split(inputDir, imageFlusher);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

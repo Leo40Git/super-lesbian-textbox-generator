@@ -24,6 +24,19 @@ public final class FileUtils {
         throw new UnsupportedOperationException("MoreFiles only contains static declarations.");
     }
 
+    public static @NotNull String getFileSuffix(@NotNull String fileName) {
+        String fileSuffix = "";
+        int dotIdx = fileName.lastIndexOf('.');
+        if (dotIdx >= 0) {
+            fileSuffix = fileName.substring(dotIdx + 1);
+        }
+        return fileSuffix;
+    }
+
+    public static @NotNull String getFileSuffix(@NotNull Path path) {
+        return getFileSuffix(path.getFileName().toString());
+    }
+
     private static final class DirectoryDeleter extends SimpleFileVisitor<Path> {
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {

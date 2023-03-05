@@ -15,18 +15,34 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Iterator;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriter;
 import javax.imageio.spi.IIORegistry;
 import javax.imageio.spi.ImageWriterSpi;
 import javax.imageio.spi.ServiceRegistry;
 
+import io.leo40git.sltbg.util.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
 public final class ImageUtils {
     private ImageUtils() {
         throw new UnsupportedOperationException("ImageUtils only contains static declarations.");
+    }
+
+    public static @NotNull BufferedImage changeImageType(@NotNull BufferedImage original, int newType) {
+        if (original.getType() == newType) {
+            return original;
+        }
+
+        var newImage = new BufferedImage(original.getWidth(), original.getHeight(), newType);
+        var g = newImage.createGraphics();
+        g.drawImage(original, 0, 0, null);
+        g.dispose();
+        return newImage;
     }
 
     public static @NotNull BufferedImage scaleImage(@NotNull BufferedImage image, int newWidth, int newHeight) {
@@ -68,28 +84,61 @@ public final class ImageUtils {
         }
     }
 
+    @SuppressWarnings("ClassCanBeRecord")
+    private static class ImageWriterIterator implements Iterator<ImageWriter> {
+        private final @NotNull IIORegistry registry;
+        private final @NotNull Iterator<ImageWriterSpi> it;
+
+        public ImageWriterIterator(@NotNull IIORegistry registry, @NotNull Iterator<ImageWriterSpi> it) {
+            this.registry = registry;
+            this.it = it;
+        }
+
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        public ImageWriter next() {
+            ImageWriterSpi spi = null;
+            try {
+                spi = it.next();
+                return spi.createWriterInstance();
+            } catch (IOException e) {
+                registry.deregisterServiceProvider(spi, ImageWriterSpi.class);
+            }
+            return null;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public static @NotNull Iterator<ImageWriter> getImageWritersByTypeAndFileSuffix(
+            @NotNull ImageTypeSpecifier type, @NotNull String fileSuffix) {
+        var registry = IIORegistry.getDefaultInstance();
+        Iterator<ImageWriterSpi> it;
+        try {
+            it = registry.getServiceProviders(ImageWriterSpi.class,
+                    new CanEncodeImageAndSuffixFilter(type, fileSuffix),
+                    true);
+        } catch (IllegalArgumentException ignored) {
+            return Collections.emptyIterator();
+        }
+
+        return new ImageWriterIterator(registry, it);
+    }
+
     public static void writeImage(@NotNull RenderedImage image, @NotNull Path path) throws IOException {
-        String fileName = path.getFileName().toString();
+        String fileSuffix = FileUtils.getFileSuffix(path);
 
-        String fileSuffix = "";
-        int dotIdx = fileName.lastIndexOf('.');
-        if (dotIdx >= 0) {
-            fileSuffix = fileName.substring(dotIdx + 1);
-        }
-
-        if (fileSuffix.isEmpty()) {
-            throw new IOException("Can't write image to \"" + path + "\": no file extension");
-        }
-
-        var it = IIORegistry.getDefaultInstance().getServiceProviders(ImageWriterSpi.class,
-                new CanEncodeImageAndSuffixFilter(ImageTypeSpecifier.createFromRenderedImage(image), fileSuffix),
-                true);
+        var it = getImageWritersByTypeAndFileSuffix(ImageTypeSpecifier.createFromRenderedImage(image), fileSuffix);
         if (!it.hasNext()) {
             throw new IOException("Can't write image to \"" + path + "\": couldn't find ImageWriter for file extension \"." + fileSuffix + "\"\n"
                     + "(or image type cannot be encoded with this extension)");
         }
 
-        var writer = it.next().createWriterInstance();
+        var writer = it.next();
         try (var os = Files.newOutputStream(path);
              var out = ImageIO.createImageOutputStream(os)) {
             writer.setOutput(out);
