@@ -44,7 +44,9 @@ public final class FacePoolDefinitionParser {
 	private static final String DELIMITER = "\t";
 	private static final Pattern DELIMITER_PATTERN = Pattern.compile(DELIMITER, Pattern.LITERAL);
 	private static final String COMMENT_PREFIX = ";";
+	private static final String HEADER = "FACE POOL DEFINITION VERSION 1";
 
+	private static final String CMD_NAME = "NAME";
 	private static final String CMD_BEGIN = "BEGIN";
 	private static final String CMD_ADD = "ADD";
 	private static final String CMD_ADD_S = "+";
@@ -59,11 +61,14 @@ public final class FacePoolDefinitionParser {
 	private static final String SCN_CATS = "CATEGORIES";
 	private static final String SCN_SHEET = "SHEET";
 
+	private static final int SCNID_HEAD = -2;
 	private static final int SCNID_ROOT = -1;
 	private static final int SCNID_DESC = 0;
 	private static final int SCNID_CREDS = 1;
 	private static final int SCNID_CATS = 2;
 	private static final int SCNID_SHEET = 3;
+
+	private String name;
 
 	private record FaceRecord(@NotNull String imagePath, @NotNull String category, @NotNull String name, int lineNumber) {}
 
@@ -129,6 +134,8 @@ public final class FacePoolDefinitionParser {
 	private ArrayList<FaceSheet.Entry> pendingSheetEntries;
 
 	private FacePoolDefinitionParser() {
+		name = null;
+
 		categories = null;
 		categoryLines = null;
 		faceRecordsByFullName = null;
@@ -136,7 +143,7 @@ public final class FacePoolDefinitionParser {
 		poolDescription = null;
 		poolCredits = null;
 
-		currentSectionID = SCNID_ROOT;
+		currentSectionID = SCNID_HEAD;
 		currentSectionName = null;
 
 		targetLines = null;
@@ -152,6 +159,16 @@ public final class FacePoolDefinitionParser {
 
 	private void parseLine(@NotNull String line, int lineNumber) throws FacePoolDefinitionException {
 		if (line.isEmpty() || line.startsWith(COMMENT_PREFIX) || line.isBlank()) {
+			return;
+		}
+
+		if (currentSectionID == SCNID_HEAD) {
+			if (!HEADER.equals(line)) {
+				throw new FacePoolDefinitionException("Missing header",
+						"(expected \"%s\", got \"%s\")".formatted(HEADER, line), lineNumber);
+			}
+
+			currentSectionID = SCNID_ROOT;
 			return;
 		}
 
@@ -218,6 +235,14 @@ public final class FacePoolDefinitionParser {
 					sheetInputPath = scn.next();
 				}
 
+				yield true;
+			}
+			case CMD_NAME -> {
+				if (!scn.hasNext()) {
+					throw new FacePoolDefinitionException(CMD_NAME + " command missing name parameter", lineNumber);
+				}
+
+				name = scn.next();
 				yield true;
 			}
 			case CMD_END -> throw new FacePoolDefinitionException("No section to end", lineNumber);
@@ -502,6 +527,10 @@ public final class FacePoolDefinitionParser {
 			}
 		}
 
-		return new FacePoolDefinition(categories, sheets, poolDescription, poolCredits);
+		if (name == null) {
+			throw new FacePoolDefinitionException("Missing name", lineNumber);
+		}
+
+		return new FacePoolDefinition(name, categories, sheets, poolDescription, poolCredits);
 	}
 }

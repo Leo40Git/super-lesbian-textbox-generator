@@ -29,16 +29,23 @@ import org.jetbrains.annotations.Unmodifiable;
 
 @SuppressWarnings("ClassCanBeRecord")
 public final class FacePoolDefinition {
+	private final @NotNull String name;
 	private final @NotNull @Unmodifiable Map<String, FaceCategoryDefinition> categories;
 	private final @NotNull @Unmodifiable List<FaceSheet> sheets;
 	private final @NotNull @Unmodifiable List<String> description, credits;
 
-	public FacePoolDefinition(@NotNull Map<String, FaceCategoryDefinition> categories, @NotNull List<FaceSheet> sheets,
-			@Nullable List<String> description, @Nullable List<String> credits) {
+	public FacePoolDefinition(@NotNull String name,
+							  @NotNull Map<String, FaceCategoryDefinition> categories, @NotNull List<FaceSheet> sheets,
+							  @Nullable List<String> description, @Nullable List<String> credits) {
+		this.name = name;
 		this.categories = CollectionUtils.copyOf(categories);
 		this.sheets = CollectionUtils.copyOf(sheets);
 		this.description = CollectionUtils.copyOrEmpty(description);
 		this.credits = CollectionUtils.copyOrEmpty(credits);
+	}
+
+	public @NotNull String getName() {
+		return name;
 	}
 
 	public @NotNull @Unmodifiable Map<String, FaceCategoryDefinition> getCategories() {
@@ -74,7 +81,7 @@ public final class FacePoolDefinition {
 		}
 	}
 
-	public @NotNull NamedFacePool build(@NotNull String name, @NotNull Path inputDir) throws IOException {
+	public @NotNull NamedFacePool build(@NotNull Path inputDir) throws IOException {
 		var pool = new NamedFacePool(name);
 		for (var sheet : sheets) {
 			append(pool, sheet.split(inputDir));
@@ -82,8 +89,7 @@ public final class FacePoolDefinition {
 		return pool;
 	}
 
-	public @NotNull CompletableFuture<NamedFacePool> buildAsync(@NotNull Executor executor,
-			@NotNull String name, @NotNull Path inputDir) {
+	public @NotNull CompletableFuture<NamedFacePool> buildAsync(@NotNull Executor executor, @NotNull Path inputDir) {
 		if (sheets.isEmpty()) {
 			// nothing to do
 			return CompletableFuture.completedFuture(new NamedFacePool(name));
