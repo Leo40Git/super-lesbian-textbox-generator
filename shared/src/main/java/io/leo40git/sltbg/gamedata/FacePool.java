@@ -24,7 +24,7 @@ public sealed class FacePool permits NamedFacePool {
 
 	public static long getNextOrder(long order) {
 		order += DEFAULT_ORDER_BASE;
-		long rem = order % DEFAULT_ORDER_BASE;
+		long rem = Math.abs(order % DEFAULT_ORDER_BASE);
 		if (rem > 0) {
 			order += DEFAULT_ORDER_BASE - rem;
 		}
