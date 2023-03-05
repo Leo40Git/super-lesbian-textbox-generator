@@ -65,21 +65,11 @@ public final class FacePoolDefinitionParser {
 	private static final int SCNID_CATS = 2;
 	private static final int SCNID_SHEET = 3;
 
-	private static int getSectionID(@NotNull String section, int lineNumber) throws FacePoolDefinitionException {
-		return switch (section) {
-			case SCN_DESC -> SCNID_DESC;
-			case SCN_CREDS -> SCNID_CREDS;
-			case SCN_CATS -> SCNID_CATS;
-			case SCN_SHEET -> SCNID_SHEET;
-			default -> throw new FacePoolDefinitionException("Unknown section \"%s\"".formatted(section), lineNumber);
-		};
-	}
-
-	private record FaceRecord(@NotNull String category, @NotNull String name, int lineNumber) {}
+	private record FaceRecord(@NotNull String imagePath, @NotNull String category, @NotNull String name, int lineNumber) {}
 
 	private HashMap<String, FaceCategoryDefinition> categories;
 	private HashMap<String, Integer> categoryLines;
-	private HashMap<String, FaceRecord> faceRecords;
+	private HashMap<String, FaceRecord> faceRecordsByImagePath, faceRecordsByFullName;
 	private ArrayList<FaceSheet> sheets;
 	private ArrayList<String> poolDescription, poolCredits;
 
@@ -141,7 +131,7 @@ public final class FacePoolDefinitionParser {
 	private FacePoolDefinitionParser() {
 		categories = null;
 		categoryLines = null;
-		faceRecords = null;
+		faceRecordsByFullName = null;
 		sheets = null;
 		poolDescription = null;
 		poolCredits = null;
@@ -211,7 +201,14 @@ public final class FacePoolDefinitionParser {
 				}
 
 				String newSectionName = scn.next();
-				currentSectionID = getSectionID(newSectionName, lineNumber);
+				currentSectionID = switch (newSectionName) {
+					case SCN_DESC -> SCNID_DESC;
+					case SCN_CREDS -> SCNID_CREDS;
+					case SCN_CATS -> SCNID_CATS;
+					case SCN_SHEET -> SCNID_SHEET;
+					default ->
+							throw new FacePoolDefinitionException("Unknown section \"%s\"".formatted(newSectionName), lineNumber);
+				};
 				currentSectionName = newSectionName;
 
 				if (currentSectionID == SCNID_SHEET) {
@@ -382,11 +379,22 @@ public final class FacePoolDefinitionParser {
 				}
 				String name = scn.next();
 
-				if (faceRecords == null) {
-					faceRecords = new HashMap<>();
+				final var record = new FaceRecord(imagePath, category, name, lineNumber);
+
+				if (faceRecordsByImagePath == null) {
+					faceRecordsByImagePath = new HashMap<>();
+				}
+				var oldRecord = faceRecordsByImagePath.put(imagePath, record);
+				if (oldRecord != null) {
+					throw new FacePoolDefinitionException("Face with image path \"" + imagePath + "\" defined twice",
+							"(defined previously at line " + oldRecord.lineNumber() + ")", lineNumber);
+				}
+
+				if (faceRecordsByFullName == null) {
+					faceRecordsByFullName = new HashMap<>();
 				}
 				String fullName = category + Face.PATH_DELIMITER + name;
-				var oldRecord = faceRecords.put(fullName, new FaceRecord(category, name, lineNumber));
+				oldRecord = faceRecordsByFullName.put(fullName, new FaceRecord(imagePath, category, name, lineNumber));
 				if (oldRecord != null) {
 					throw new FacePoolDefinitionException("Face \"" + fullName + "\" defined twice",
 							"(defined previously at line " + oldRecord.lineNumber() + ")", lineNumber);
@@ -458,9 +466,9 @@ public final class FacePoolDefinitionParser {
 			throw new FacePoolDefinitionException(msg, lineNumber);
 		}
 
-		if (faceRecords != null) {
+		if (faceRecordsByFullName != null) {
 			LinkedHashMap<String, ArrayList<Integer>> undefinedCategoryRefs = null;
-			for (var faceRecord : faceRecords.values()) {
+			for (var faceRecord : faceRecordsByFullName.values()) {
 				if (!categories.containsKey(faceRecord.category())) {
 					if (undefinedCategoryRefs == null) {
 						undefinedCategoryRefs = new LinkedHashMap<>();
