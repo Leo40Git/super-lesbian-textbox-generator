@@ -72,7 +72,7 @@ public final class FaceCategoryIO {
     public static void readImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws FaceCategoryIOException {
         FaceCategoryIOException bigExc = null;
 
-        for (var face : category.getFaces().values()) {
+        for (var face : category.getFaces()) {
             try {
                 FaceIO.readImage(face, rootDir);
             } catch (FaceIOException e) {
@@ -99,7 +99,7 @@ public final class FaceCategoryIO {
 
         var futures = new CompletableFuture[faces.size()];
         int futureI = 0;
-        for (var face : faces.values()) {
+        for (var face : faces) {
             futures[futureI] = CompletableFuture.runAsync(() -> {
                 try {
                     FaceIO.readImage(face, rootDir);
@@ -136,7 +136,7 @@ public final class FaceCategoryIO {
 
         var futures = new CompletableFuture[faces.size()];
         int futureI = 0;
-        for (var face : faces.values()) {
+        for (var face : faces) {
             final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, face.getName());
             futures[futureI] = CompletableFuture.runAsync(() -> {
                 child.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
@@ -189,7 +189,7 @@ public final class FaceCategoryIO {
         }
 
         writer.name(FaceFields.FACES);
-        JsonWriteUtils.writeObject(writer, FaceIO::write, category.getFaces().values());
+        JsonWriteUtils.writeObject(writer, FaceIO::write, category.getFaces());
 
         writer.endObject();
     }
@@ -197,7 +197,7 @@ public final class FaceCategoryIO {
     public static void writeImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws FaceCategoryIOException {
         FaceCategoryIOException bigExc = null;
 
-        for (var face : category.getFaces().values()) {
+        for (var face : category.getFaces()) {
             try {
                 FaceIO.writeImage(face, rootDir);
             } catch (FaceIOException e) {
@@ -224,7 +224,7 @@ public final class FaceCategoryIO {
 
         var futures = new CompletableFuture[faces.size()];
         int futureI = 0;
-        for (var face : faces.values()) {
+        for (var face : faces) {
             futures[futureI] = CompletableFuture.runAsync(() -> {
                 try {
                     FaceIO.writeImage(face, rootDir);
@@ -261,7 +261,7 @@ public final class FaceCategoryIO {
 
         var futures = new CompletableFuture[faces.size()];
         int futureI = 0;
-        for (var face : faces.values()) {
+        for (var face : faces) {
             final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, face.getName());
             futures[futureI] = CompletableFuture.runAsync(() -> {
                 child.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);

@@ -12,8 +12,8 @@ package io.leo40git.sltbg.gamedata;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 
@@ -25,7 +25,8 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 public final class FaceCategory implements Comparable<FaceCategory> {
     private @Nullable FacePool pool;
-    final @NotNull LinkedHashMap<String, Face> faces;
+    private final @NotNull ArrayList<Face> faces;
+    private final @NotNull HashMap<String, Face> facesLookup;
     private @NotNull String name;
     private boolean orderSet;
     private long order;
@@ -33,12 +34,13 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     private String @NotNull [] description;
 
     private @Nullable Face iconFace, lastFace;
-    private boolean needsSort;
+    private volatile boolean needsSort;
 
-    private FaceCategory(@NotNull String name, @NotNull LinkedHashMap<String, Face> faces) {
+    private FaceCategory(@NotNull String name, @NotNull ArrayList<Face> faces, @NotNull HashMap<String, Face> facesLookup) {
         validateName(name);
         this.name = name;
         this.faces = faces;
+        this.facesLookup = facesLookup;
 
         pool = null;
         orderSet = false;
@@ -52,7 +54,11 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     }
 
     public FaceCategory(@NotNull String name) {
-        this(name, new LinkedHashMap<>());
+        this(name, new ArrayList<>(), new HashMap<>());
+    }
+
+    public FaceCategory(@NotNull String name, int initialCapacity) {
+        this(name, new ArrayList<>(initialCapacity), new HashMap<>(initialCapacity));
     }
 
     public @Nullable FacePool getPool() {
@@ -61,14 +67,14 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
     void onAddedToPool(@NotNull FacePool pool) {
         this.pool = pool;
-        for (var face : faces.values()) {
+        for (var face : faces) {
             face.onAddedToPool(pool);
         }
     }
 
     void onRemovedFromPool() {
         pool = null;
-        for (var face : faces.values()) {
+        for (var face : faces) {
             face.onRemovedFromPool();
         }
     }
@@ -87,11 +93,11 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         validateName(name);
 
         if (pool != null) {
-            pool.renameCategory(this, name);
+            pool.rename(this, name);
         }
 
         this.name = name;
-        for (var face : faces.values()) {
+        for (var face : faces) {
             face.onCategoryRenamed();
         }
     }
@@ -146,44 +152,27 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         }
     }
 
-    private static final ThreadLocal<ArrayList<Face>> TL_SORT_BUF = new ThreadLocal<>();
-
     void markDirty() {
         needsSort = true;
     }
 
     public void sortIfNeeded() {
         if (needsSort) {
-            var sortBuf = TL_SORT_BUF.get();
-            if (sortBuf == null) {
-                TL_SORT_BUF.set(sortBuf = new ArrayList<>(faces.size()));
-            } else {
-                sortBuf.ensureCapacity(faces.size());
-            }
-
-            try {
-                sortBuf.addAll(faces.values());
-                sortBuf.sort(Comparator.naturalOrder());
-
-                faces.clear();
-                for (var face : sortBuf) {
-                    faces.put(face.getName(), face);
-                }
-            } finally {
-                sortBuf.clear();
+            synchronized (faces) {
+                faces.sort(Comparator.naturalOrder());
             }
 
             needsSort = false;
         }
     }
 
-    public @NotNull @UnmodifiableView Map<String, Face> getFaces() {
+    public @NotNull @UnmodifiableView List<Face> getFaces() {
         sortIfNeeded();
-        return Collections.unmodifiableMap(faces);
+        return Collections.unmodifiableList(faces);
     }
 
     public @Nullable Face getFace(@NotNull String name) {
-        return faces.get(name);
+        return facesLookup.get(name);
     }
 
     public void add(@NotNull Face face) {
@@ -191,84 +180,126 @@ public final class FaceCategory implements Comparable<FaceCategory> {
             throw new IllegalArgumentException("Face is already part of other category: \"" + face.getCategory().getName() + "\"");
         }
 
-        if (faces.containsKey(face.getName())) {
-            throw new IllegalArgumentException("Face with name \"" + face.getName() + "\" already exists in this category");
-        }
-
-        faces.put(face.getName(), face);
-        face.onAddedToCategory(this);
-
-        if (iconFace == null) {
-            iconFace = face;
-        }
-
-        if (!face.isOrderSet()) {
-            if (lastFace != null) {
-                face.setOrder(FacePool.getNextOrder(lastFace.getOrder()));
-            } else {
-                face.setOrder(FacePool.DEFAULT_ORDER_BASE);
+        synchronized (faces) {
+            if (facesLookup.put(face.getName(), face) != null) {
+                throw new IllegalArgumentException("Face with name \"" + face.getName() + "\" already exists in this category");
             }
+
+            faces.add(face);
+            face.onAddedToCategory(this);
+
+            if (iconFace == null) {
+                iconFace = face;
+            }
+
+            if (!face.isOrderSet()) {
+                if (lastFace != null) {
+                    face.setOrder(FacePool.getNextOrder(lastFace.getOrder()));
+                } else {
+                    face.setOrder(FacePool.DEFAULT_ORDER_BASE);
+                }
+            }
+            lastFace = face;
         }
-        lastFace = face;
 
         markDirty();
     }
 
-    void renameFace(@NotNull Face face, @NotNull String newName) {
-        if (faces.containsKey(newName)) {
-            throw new IllegalArgumentException("Face with name \"" + newName + "\" already exists in this category");
-        }
+    void rename(@NotNull Face face, @NotNull String newName) {
+        synchronized (faces) {
+            if (facesLookup.containsKey(newName)) {
+                throw new IllegalArgumentException("Face with name \"" + newName + "\" already exists in this category");
+            }
 
-        faces.remove(face.getName(), face);
-        faces.put(newName, face);
+            facesLookup.remove(face.getName());
+            facesLookup.put(newName, face);
+        }
     }
 
     public boolean contains(@NotNull String name) {
-        return faces.containsKey(name);
+        synchronized (faces) {
+            return facesLookup.containsKey(name);
+        }
     }
 
-    public @Nullable Face remove(@NotNull String name) {
-        var face = faces.remove(name);
-        if (face == null) {
-            return null;
-        }
-
+    private void remove0(@NotNull Face face) {
         face.onRemovedFromCategory();
+
+        boolean doMarkDirty = true;
 
         if (iconFace == face) {
             if (!faces.isEmpty()) {
-                iconFace = faces.values().iterator().next();
+                faces.sort(Comparator.naturalOrder());
+                doMarkDirty = needsSort = false;
+                iconFace = faces.get(0);
             } else {
                 iconFace = null;
             }
         }
 
         if (lastFace == face) {
-            lastFace = null;
-            for (var anFace : faces.values()) {
-                lastFace = anFace;
+            if (!faces.isEmpty()) {
+                faces.sort(Comparator.naturalOrder());
+                doMarkDirty = needsSort = false;
+                iconFace = faces.get(faces.size() - 1);
+            } else {
+                lastFace = null;
             }
         }
 
-        markDirty();
+        if (doMarkDirty) {
+            markDirty();
+        }
+    }
+
+    public boolean remove(@NotNull Face face) {
+        synchronized (faces) {
+            if (faces.remove(face)) {
+                facesLookup.remove(face.getName());
+                remove0(face);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public @Nullable Face remove(@NotNull String name) {
+        final Face face;
+
+        synchronized (faces) {
+            face = facesLookup.remove(name);
+            if (face == null) {
+                return null;
+            }
+            faces.remove(face);
+            remove0(face);
+        }
+
         return face;
     }
 
     public void clear() {
-        for (var face : faces.values()) {
-            face.onRemovedFromCategory();
+        synchronized (faces) {
+            for (var face : faces) {
+                face.onRemovedFromCategory();
+            }
+
+            faces.clear();
+            facesLookup.clear();
+
+            iconFace = null;
+            lastFace = null;
         }
 
-        faces.clear();
-        lastFace = null;
         needsSort = false;
     }
 
     @Contract(" -> new")
     public @NotNull FaceCategory copy() {
-        var clone = new FaceCategory(name, new LinkedHashMap<>(faces.size()));
+        var clone = new FaceCategory(name, faces.size());
 
-        for (var faces : faces.values()) {
+        for (var faces : faces) {
             clone.add(faces.copy());
         }
 

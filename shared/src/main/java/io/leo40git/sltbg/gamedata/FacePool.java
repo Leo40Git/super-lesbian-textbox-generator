@@ -12,8 +12,8 @@ package io.leo40git.sltbg.gamedata;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,15 +31,25 @@ public sealed class FacePool permits NamedFacePool {
         return order;
     }
 
-    private static final ThreadLocal<ArrayList<FaceCategory>> TL_SORT_BUF = new ThreadLocal<>();
-    private final @NotNull LinkedHashMap<String, FaceCategory> categories;
+    private final @NotNull ArrayList<FaceCategory> categories;
+    private final @NotNull HashMap<String, FaceCategory> categoriesLookup;
     private @Nullable FaceCategory lastCategory;
-    private boolean needsSort;
+    private volatile boolean needsSort;
 
-    public FacePool() {
-        categories = new LinkedHashMap<>();
+    private FacePool(@NotNull ArrayList<FaceCategory> categories, @NotNull HashMap<String, FaceCategory> categoriesLookup) {
+        this.categories = categories;
+        this.categoriesLookup = categoriesLookup;
+
         lastCategory = null;
         needsSort = false;
+    }
+
+    public FacePool() {
+        this(new ArrayList<>(), new HashMap<>());
+    }
+
+    public FacePool(int initialCapacity) {
+        this(new ArrayList<>(initialCapacity), new HashMap<>(initialCapacity));
     }
 
     void markDirty() {
@@ -48,37 +58,21 @@ public sealed class FacePool permits NamedFacePool {
 
     public void sortIfNeeded() {
         if (needsSort) {
-            var sortBuf = TL_SORT_BUF.get();
-            if (sortBuf == null) {
-                TL_SORT_BUF.set(sortBuf = new ArrayList<>(categories.size()));
-            } else {
-                sortBuf.ensureCapacity(categories.size());
-            }
-
-            try {
-                sortBuf.addAll(categories.values());
-                sortBuf.sort(Comparator.naturalOrder());
-
-                categories.clear();
-                for (var category : sortBuf) {
-                    categories.put(category.getName(), category);
-                    category.sortIfNeeded();
-                }
-            } finally {
-                sortBuf.clear();
+            synchronized (categories) {
+                categories.sort(Comparator.naturalOrder());
             }
 
             needsSort = false;
         }
     }
 
-    public @NotNull @UnmodifiableView Map<String, FaceCategory> getCategories() {
+    public @NotNull @UnmodifiableView List<FaceCategory> getCategories() {
         sortIfNeeded();
-        return Collections.unmodifiableMap(categories);
+        return Collections.unmodifiableList(categories);
     }
 
     public @Nullable FaceCategory getCategory(@NotNull String name) {
-        return categories.get(name);
+        return categoriesLookup.get(name);
     }
 
     public @Nullable Face getFace(@NotNull String path) {
@@ -100,62 +94,100 @@ public sealed class FacePool permits NamedFacePool {
             throw new IllegalArgumentException("Category is already part of other pool");
         }
 
-        if (categories.containsKey(category.getName())) {
-            throw new IllegalArgumentException("Category with name \"" + category.getName() + "\" already exists in this pool");
-        }
-
-        categories.put(category.getName(), category);
-        category.onAddedToPool(this);
-
-        if (!category.isOrderSet()) {
-            if (lastCategory != null) {
-                category.setOrder(FacePool.getNextOrder(lastCategory.getOrder()));
-            } else {
-                category.setOrder(FacePool.DEFAULT_ORDER_BASE);
+        synchronized (categories) {
+            if (categoriesLookup.put(category.getName(), category) != null) {
+                throw new IllegalArgumentException("Category with name \"" + category.getName() + "\" already exists in this pool");
             }
-        }
-        lastCategory = category;
 
-        markDirty();
+            categories.add(category);
+            category.onAddedToPool(this);
+
+            if (!category.isOrderSet()) {
+                if (lastCategory != null) {
+                    category.setOrder(FacePool.getNextOrder(lastCategory.getOrder()));
+                } else {
+                    category.setOrder(FacePool.DEFAULT_ORDER_BASE);
+                }
+            }
+            lastCategory = category;
+        }
     }
 
-    void renameCategory(@NotNull FaceCategory category, @NotNull String newName) {
-        if (categories.containsKey(newName)) {
-            throw new IllegalArgumentException("Category with name \"" + newName + "\" already exists in this pool");
-        }
+    void rename(@NotNull FaceCategory category, @NotNull String newName) {
+        synchronized (categories) {
+            if (categoriesLookup.containsKey(newName)) {
+                throw new IllegalArgumentException("Category with name \"" + newName + "\" already exists in this pool");
+            }
 
-        categories.remove(category.getName(), category);
-        categories.put(newName, category);
+            categoriesLookup.remove(category.getName(), category);
+            categoriesLookup.put(newName, category);
+        }
     }
 
     public boolean contains(@NotNull String category) {
-        return categories.containsKey(category);
+        synchronized (categories) {
+            return categoriesLookup.containsKey(category);
+        }
     }
 
-    public @Nullable FaceCategory remove(@NotNull String category) {
-        var catObj = categories.remove(category);
-        if (catObj == null) {
-            return null;
-        }
+    private void remove0(@NotNull FaceCategory category) {
+        category.onRemovedFromPool();
 
-        catObj.onRemovedFromPool();
-        if (lastCategory == catObj) {
-            lastCategory = null;
-            for (var anCat : categories.values()) {
-                lastCategory = anCat;
+        boolean doMarkDirty = true;
+
+        if (lastCategory == category) {
+            if (!categories.isEmpty()) {
+                categories.sort(Comparator.naturalOrder());
+                doMarkDirty = needsSort = false;
+                lastCategory = categories.get(categories.size() - 1);
+            } else {
+                lastCategory = null;
             }
         }
-        markDirty();
-        return catObj;
+
+        if (doMarkDirty) {
+            markDirty();
+        }
+    }
+
+    public boolean remove(@NotNull FaceCategory category) {
+        synchronized (categories) {
+            if (categories.remove(category)) {
+                categoriesLookup.remove(category.getName());
+                remove0(category);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public @Nullable FaceCategory remove(@NotNull String name) {
+        final FaceCategory category;
+
+        synchronized (categories) {
+            category = categoriesLookup.remove(name);
+            if (category == null) {
+                return null;
+            }
+
+            remove0(category);
+        }
+
+        return category;
     }
 
     public void clear() {
-        for (var category : categories.values()) {
-            category.onRemovedFromPool();
+        synchronized (categories) {
+            for (var category : categories) {
+                category.onRemovedFromPool();
+            }
+
+            categories.clear();
+            categoriesLookup.clear();
+            lastCategory = null;
         }
 
-        categories.clear();
-        lastCategory = null;
         needsSort = false;
     }
 }

@@ -103,7 +103,7 @@ public final class FacePoolIO {
     public static void readImages(@NotNull NamedFacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
         FacePoolIOException bigExc = null;
 
-        for (var category : pool.getCategories().values()) {
+        for (var category : pool.getCategories()) {
             try {
                 FaceCategoryIO.readImages(category, rootDir);
             } catch (FaceCategoryIOException e) {
@@ -130,7 +130,7 @@ public final class FacePoolIO {
 
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
-        for (var category : categories.values()) {
+        for (var category : categories) {
             futures[futureI] = FaceCategoryIO.readImagesAsync(category, rootDir, executor)
                     .exceptionallyCompose(ex -> {
                         if (ex instanceof FaceCategoryIOException fcioe) {
@@ -169,7 +169,7 @@ public final class FacePoolIO {
 
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
-        for (var category : categories.values()) {
+        for (var category : categories) {
             final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, category.getName());
             futures[futureI] = FaceCategoryIO.readImagesAsync(category, rootDir, executor, child)
                     .exceptionallyCompose(ex -> {
@@ -213,7 +213,7 @@ public final class FacePoolIO {
         }
 
         writer.name(FaceFields.CATEGORIES);
-        JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories().values());
+        JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories());
 
         writer.endObject();
     }
@@ -221,7 +221,7 @@ public final class FacePoolIO {
     public static void writeImages(@NotNull NamedFacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
         FacePoolIOException bigExc = null;
 
-        for (var category : pool.getCategories().values()) {
+        for (var category : pool.getCategories()) {
             try {
                 FaceCategoryIO.writeImages(category, rootDir);
             } catch (FaceCategoryIOException e) {
@@ -248,7 +248,7 @@ public final class FacePoolIO {
 
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
-        for (var category : categories.values()) {
+        for (var category : categories) {
             futures[futureI] = FaceCategoryIO.writeImagesAsync(category, rootDir, executor)
                     .exceptionallyCompose(ex -> {
                         if (ex instanceof FaceCategoryIOException fcioe) {
@@ -287,7 +287,7 @@ public final class FacePoolIO {
 
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
-        for (var category : categories.values()) {
+        for (var category : categories) {
             final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, category.getName());
             futures[futureI] = FaceCategoryIO.writeImagesAsync(category, rootDir, executor, child)
                     .exceptionallyCompose(ex -> {
