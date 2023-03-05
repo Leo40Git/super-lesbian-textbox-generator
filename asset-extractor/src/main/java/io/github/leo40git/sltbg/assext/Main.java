@@ -33,109 +33,109 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class Main {
-	public static void main(String[] args) {
-		var inputDir = Paths.get("input").toAbsolutePath();
-		if (!Files.isDirectory(inputDir)) {
-			String message;
-			try {
-				Files.createDirectories(inputDir);
-				message = "Created folder \"" + inputDir + "\".";
-			} catch (FileAlreadyExistsException e) {
-				message = "Please delete file \"" + inputDir + "\" and create a folder with the same name.";
-			} catch (IOException e) {
-				message = "Please create folder \"" + inputDir + "\".";
-			}
+    public static void main(String[] args) {
+        var inputDir = Paths.get("input").toAbsolutePath();
+        if (!Files.isDirectory(inputDir)) {
+            String message;
+            try {
+                Files.createDirectories(inputDir);
+                message = "Created folder \"" + inputDir + "\".";
+            } catch (FileAlreadyExistsException e) {
+                message = "Please delete file \"" + inputDir + "\" and create a folder with the same name.";
+            } catch (IOException e) {
+                message = "Please create folder \"" + inputDir + "\".";
+            }
 
-			JOptionPane.showMessageDialog(null, message, "Super Lesbian Textbox Generator", JOptionPane.INFORMATION_MESSAGE);
-			return;
-		}
+            JOptionPane.showMessageDialog(null, message, "Super Lesbian Textbox Generator", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
 
-		var outputDir = Paths.get("output").toAbsolutePath();
-		try {
-			FileUtils.deleteDirectoryIfExists(outputDir);
-			Files.createDirectories(outputDir);
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null,
-					"Failed to create output folder \"" + outputDir + "\":\n" + e,
-					"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
+        var outputDir = Paths.get("output").toAbsolutePath();
+        try {
+            FileUtils.deleteDirectoryIfExists(outputDir);
+            Files.createDirectories(outputDir);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Failed to create output folder \"" + outputDir + "\":\n" + e,
+                    "Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-		var ctx = createWindowContext(inputDir);
-		if (ctx == null) {
-			return;
-		}
+        var ctx = createWindowContext(inputDir);
+        if (ctx == null) {
+            return;
+        }
 
-		createTextboxSheet(ctx, outputDir);
-		createPaletteFile(ctx, outputDir);
+        createTextboxSheet(ctx, outputDir);
+        createPaletteFile(ctx, outputDir);
 
-		extractFaces(inputDir, outputDir);
-	}
+        extractFaces(inputDir, outputDir);
+    }
 
-	private static @Nullable WindowContext createWindowContext(@NotNull Path inputDir) {
-		BufferedImage window;
-		try (var windowIn = Files.newInputStream(inputDir.resolve("Window.png"))) {
-			window = ImageIO.read(windowIn);
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null,
-					"Failed to read image \"Window.png\" from input folder \"" + inputDir + "\":\n" + e,
-					"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
+    private static @Nullable WindowContext createWindowContext(@NotNull Path inputDir) {
+        BufferedImage window;
+        try (var windowIn = Files.newInputStream(inputDir.resolve("Window.png"))) {
+            window = ImageIO.read(windowIn);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Failed to read image \"Window.png\" from input folder \"" + inputDir + "\":\n" + e,
+                    "Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
 
-		var tint = new WindowTone(-255, -255, -255, 0);
-		return new WindowContext(window, tint);
-	}
+        var tint = new WindowTone(-255, -255, -255, 0);
+        return new WindowContext(window, tint);
+    }
 
-	private static void createTextboxSheet(@NotNull WindowContext ctx, @NotNull Path outputDir) {
-		final int textboxWidth = 640, textboxHeight = 120;
-		var image = new BufferedImage(textboxWidth, textboxHeight * 3, BufferedImage.TYPE_INT_ARGB);
+    private static void createTextboxSheet(@NotNull WindowContext ctx, @NotNull Path outputDir) {
+        final int textboxWidth = 640, textboxHeight = 120;
+        var image = new BufferedImage(textboxWidth, textboxHeight * 3, BufferedImage.TYPE_INT_ARGB);
 
-		var g = image.createGraphics();
-		g.setBackground(ColorUtils.TRANSPARENT);
-		g.clearRect(0, 0, image.getWidth(), image.getHeight());
+        var g = image.createGraphics();
+        g.setBackground(ColorUtils.TRANSPARENT);
+        g.clearRect(0, 0, image.getWidth(), image.getHeight());
 
-		ctx.drawBackground(g,
-				WindowBackground.MARGIN, WindowBackground.MARGIN,
-				textboxWidth - WindowBackground.MARGIN * 2, textboxHeight - WindowBackground.MARGIN * 2,
-				null);
-		ctx.drawBorder(g, 0, textboxHeight, textboxWidth, textboxHeight, null);
-		ctx.drawArrow(g, 0, textboxHeight * 2, textboxWidth, textboxHeight, 0, null);
+        ctx.drawBackground(g,
+                WindowBackground.MARGIN, WindowBackground.MARGIN,
+                textboxWidth - WindowBackground.MARGIN * 2, textboxHeight - WindowBackground.MARGIN * 2,
+                null);
+        ctx.drawBorder(g, 0, textboxHeight, textboxWidth, textboxHeight, null);
+        ctx.drawArrow(g, 0, textboxHeight * 2, textboxWidth, textboxHeight, 0, null);
 
-		g.dispose();
+        g.dispose();
 
-		try (var os = Files.newOutputStream(outputDir.resolve("textbox.png"))) {
-			ImageIO.write(image, "PNG", os);
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null,
-					"Failed to write image \"textbox.png\" to output folder \"" + outputDir + "\":\n" + e,
-					"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
-		}
-	}
+        try (var os = Files.newOutputStream(outputDir.resolve("textbox.png"))) {
+            ImageIO.write(image, "PNG", os);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Failed to write image \"textbox.png\" to output folder \"" + outputDir + "\":\n" + e,
+                    "Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
-	private static void createPaletteFile(@NotNull WindowContext ctx, @NotNull Path outputDir) {
-		try (var writer = Files.newBufferedWriter(outputDir.resolve("palette.txt"))) {
-			for (int i = 0; i < WindowPalette.SIZE; i++) {
-				var color = ctx.getPaletteColor(i);
-				writer.write("#%02X%02X%02X%n".formatted(color.getRed(), color.getGreen(), color.getBlue()));
-			}
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null,
-					"Failed to write file \"palette.txt\" to output folder \"" + outputDir + "\":\n" + e,
-					"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
-		}
-	}
+    private static void createPaletteFile(@NotNull WindowContext ctx, @NotNull Path outputDir) {
+        try (var writer = Files.newBufferedWriter(outputDir.resolve("palette.txt"))) {
+            for (int i = 0; i < WindowPalette.SIZE; i++) {
+                var color = ctx.getPaletteColor(i);
+                writer.write("#%02X%02X%02X%n".formatted(color.getRed(), color.getGreen(), color.getBlue()));
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Failed to write file \"palette.txt\" to output folder \"" + outputDir + "\":\n" + e,
+                    "Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
-	private static void extractFaces(@NotNull Path inputDir, @NotNull Path outputDir) {
-		List<FaceCollector> collectors;
-		try (var reader = Files.newBufferedReader(inputDir.resolve("faces.lst"))) {
-			collectors = FaceListParser.parse(inputDir, reader);
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null,
-					"Failed to parse \"faces.lst\" in \"" + inputDir + "\":\n" + e,
-					"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
+    private static void extractFaces(@NotNull Path inputDir, @NotNull Path outputDir) {
+        List<FaceCollector> collectors;
+        try (var reader = Files.newBufferedReader(inputDir.resolve("faces.lst"))) {
+            collectors = FaceListParser.parse(inputDir, reader);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Failed to parse \"faces.lst\" in \"" + inputDir + "\":\n" + e,
+                    "Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
 		/*var executor = Executors.newWorkStealingPool();
 		var completionService = new ExecutorCompletionService<List<FacePoolWriter.Entry>>(executor);
@@ -180,26 +180,26 @@ public final class Main {
 
 		executor.shutdownNow();*/
 
-		FacePoolWriter pool = new FacePoolWriter();
+        FacePoolWriter pool = new FacePoolWriter();
 
-		for (var collector : collectors) {
-			try {
-				for (var face : collector.run(inputDir)) {
-					pool.add(face);
-				}
-			} catch (IOException e) {
-				JOptionPane.showMessageDialog(null,
-						"Failed to get face collection results:\n" + e,
-						"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
-			}
-		}
+        for (var collector : collectors) {
+            try {
+                for (var face : collector.run(inputDir)) {
+                    pool.add(face);
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null,
+                        "Failed to get face collection results:\n" + e,
+                        "Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+            }
+        }
 
-		try {
-			pool.write(outputDir);
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null,
-					"Failed to write face pool to directory \"" + outputDir + "\"\n" + e,
-					"Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
-		}
-	}
+        try {
+            pool.write(outputDir);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Failed to write face pool to directory \"" + outputDir + "\"\n" + e,
+                    "Super Lesbian Textbox Generator", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 }

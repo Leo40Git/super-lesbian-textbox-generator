@@ -28,48 +28,50 @@ import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonWriter;
 
 public final class FacePoolWriter {
-	private final List<Entry> faces;
-	private final Map<String, Set<Entry>> byCategory;
+    private final List<Entry> faces;
+    private final Map<String, Set<Entry>> byCategory;
 
-	public FacePoolWriter() {
-		faces = new ArrayList<>();
-		byCategory = new LinkedHashMap<>();
-	}
+    public FacePoolWriter() {
+        faces = new ArrayList<>();
+        byCategory = new LinkedHashMap<>();
+    }
 
-	public void add(@NotNull FacePoolWriter.Entry face) {
-		faces.add(face);
-		byCategory.computeIfAbsent(face.category(), ignored -> new TreeSet<>(Comparator.comparing(Entry::order))).add(face);
-	}
+    public void add(@NotNull FacePoolWriter.Entry face) {
+        faces.add(face);
+        byCategory.computeIfAbsent(face.category(), ignored -> new TreeSet<>(Comparator.comparing(Entry::order))).add(face);
+    }
 
-	public void write(@NotNull Path dir) throws IOException {
-		var facesRoot = dir.resolve("faces");
-		for (var face : faces) {
-			var path = facesRoot.resolve(face.path());
-			Files.createDirectories(path.getParent());
-			try (var os = Files.newOutputStream(path)) {
-				ImageIO.write(face.image(), "PNG", os);
-			}
-		}
+    public void write(@NotNull Path dir) throws IOException {
+        var facesRoot = dir.resolve("faces");
+        for (var face : faces) {
+            var path = facesRoot.resolve(face.path());
+            Files.createDirectories(path.getParent());
+            try (var os = Files.newOutputStream(path)) {
+                ImageIO.write(face.image(), "PNG", os);
+            }
+        }
 
-		try (var writer = JsonWriter.json5(dir.resolve("faces.json5"))) {
-			writer.beginObject();
+        try (var writer = JsonWriter.json5(dir.resolve("faces.json5"))) {
+            writer.beginObject();
 
-			for (var entry : byCategory.entrySet()) {
-				writer.name(entry.getKey());
+            for (var entry : byCategory.entrySet()) {
+                writer.name(entry.getKey());
 
-				writer.beginObject();
+                writer.beginObject();
 
-				for (var face : entry.getValue()) {
-					writer.name(face.name());
-					writer.value("faces/" + face.path());
-				}
+                for (var face : entry.getValue()) {
+                    writer.name(face.name());
+                    writer.value("faces/" + face.path());
+                }
 
-				writer.endObject();
-			}
+                writer.endObject();
+            }
 
-			writer.endObject();
-		}
-	}
+            writer.endObject();
+        }
+    }
 
-	public record Entry(@NotNull String category, @NotNull String name, @NotNull String path, int order, @NotNull BufferedImage image) { }
+    public record Entry(@NotNull String category, @NotNull String name, @NotNull String path, int order,
+                        @NotNull BufferedImage image) {
+    }
 }

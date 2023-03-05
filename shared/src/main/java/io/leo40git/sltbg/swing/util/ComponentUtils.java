@@ -15,16 +15,16 @@ import java.awt.Container;
 import org.jetbrains.annotations.NotNull;
 
 public final class ComponentUtils {
-	private ComponentUtils() {
-		throw new UnsupportedOperationException("ComponentUtils only contains static declarations.");
-	}
+    private ComponentUtils() {
+        throw new UnsupportedOperationException("ComponentUtils only contains static declarations.");
+    }
 
-	public static void setEnabledRecursive(@NotNull Component component, boolean b) {
-		component.setEnabled(b);
-		if (component instanceof Container container) {
-			for (int i = 0; i < container.getComponentCount(); i++) {
-				setEnabledRecursive(container.getComponent(i), b);
-			}
-		}
-	}
+    public static void setEnabledRecursive(@NotNull Component component, boolean b) {
+        component.setEnabled(b);
+        if (component instanceof Container container) {
+            for (int i = 0; i < container.getComponentCount(); i++) {
+                setEnabledRecursive(container.getComponent(i), b);
+            }
+        }
+    }
 }

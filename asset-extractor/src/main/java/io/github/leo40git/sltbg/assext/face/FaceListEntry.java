@@ -13,11 +13,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
 public sealed interface FaceListEntry {
-	default int indexAdvance() {
-		return 1;
-	}
+    default int indexAdvance() {
+        return 1;
+    }
 
-	record Add(@NotNull String category, @NotNull String name, @NotNull String path, int order) implements FaceListEntry { }
+    record Add(@NotNull String category, @NotNull String name, @NotNull String path,
+               int order) implements FaceListEntry {
+    }
 
-	record Skip(@Range(from = 1, to = Integer.MAX_VALUE) int indexAdvance) implements FaceListEntry { }
+    record Skip(@Range(from = 1, to = Integer.MAX_VALUE) int indexAdvance) implements FaceListEntry {
+    }
 }

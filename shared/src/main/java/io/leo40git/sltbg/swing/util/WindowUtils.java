@@ -16,61 +16,64 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public final class WindowUtils {
-	private WindowUtils() {
-		throw new UnsupportedOperationException("WindowUtils only contains static declarations.");
-	}
+    private WindowUtils() {
+        throw new UnsupportedOperationException("WindowUtils only contains static declarations.");
+    }
 
-	public static void ensureNoWindowsAlwaysOnTopNoRestore() {
-		for (var window : Window.getWindows()) {
-			try {
-				window.setAlwaysOnTop(false);
-			} catch (Exception ignored) {}
-		}
-	}
+    public static void ensureNoWindowsAlwaysOnTopNoRestore() {
+        for (var window : Window.getWindows()) {
+            try {
+                window.setAlwaysOnTop(false);
+            } catch (Exception ignored) {
+            }
+        }
+    }
 
-	@Contract(" -> new")
-	public static @NotNull AlwaysOnTopWindowRestorer ensureNoWindowsAlwaysOnTop() {
-		final var windows = new HashSet<Window>();
-		for (var window : Window.getWindows()) {
-			try {
-				if (window.isAlwaysOnTop()) {
-					window.setAlwaysOnTop(false);
-					windows.add(window);
-				}
-			} catch (Exception ignored) {}
-		}
-		return new AlwaysOnTopWindowRestorer(windows);
-	}
+    @Contract(" -> new")
+    public static @NotNull AlwaysOnTopWindowRestorer ensureNoWindowsAlwaysOnTop() {
+        final var windows = new HashSet<Window>();
+        for (var window : Window.getWindows()) {
+            try {
+                if (window.isAlwaysOnTop()) {
+                    window.setAlwaysOnTop(false);
+                    windows.add(window);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return new AlwaysOnTopWindowRestorer(windows);
+    }
 
-	public static final class AlwaysOnTopWindowRestorer implements AutoCloseable {
-		private HashSet<Window> windows;
+    public static final class AlwaysOnTopWindowRestorer implements AutoCloseable {
+        private HashSet<Window> windows;
 
-		private AlwaysOnTopWindowRestorer(HashSet<Window> windows) {
-			this.windows = windows;
-		}
+        private AlwaysOnTopWindowRestorer(HashSet<Window> windows) {
+            this.windows = windows;
+        }
 
-		private void addWindow(@NotNull Window window) {
-			if (windows == null) {
-				throw new IllegalStateException("Already closed!");
-			}
+        private void addWindow(@NotNull Window window) {
+            if (windows == null) {
+                throw new IllegalStateException("Already closed!");
+            }
 
-			windows.add(window);
-		}
+            windows.add(window);
+        }
 
-		@Override
-		public void close() {
-			if (windows == null) {
-				throw new IllegalStateException("Already closed!");
-			}
+        @Override
+        public void close() {
+            if (windows == null) {
+                throw new IllegalStateException("Already closed!");
+            }
 
-			for (var window : windows) {
-				try {
-					window.setAlwaysOnTop(true);
-				} catch (Exception ignored) {}
-			}
+            for (var window : windows) {
+                try {
+                    window.setAlwaysOnTop(true);
+                } catch (Exception ignored) {
+                }
+            }
 
-			windows.clear();
-			windows = null;
-		}
-	}
+            windows.clear();
+            windows = null;
+        }
+    }
 }

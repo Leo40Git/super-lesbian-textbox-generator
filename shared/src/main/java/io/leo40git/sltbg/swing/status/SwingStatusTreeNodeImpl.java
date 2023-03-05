@@ -16,71 +16,71 @@ import io.leo40git.sltbg.status.StatusTreeNodeIcon;
 import org.jetbrains.annotations.NotNull;
 
 final class SwingStatusTreeNodeImpl implements StatusTreeNode {
-	private final @NotNull SwingStatusTreeModel model;
-	private final @NotNull DefaultMutableTreeNode selfNode;
-	private @NotNull StatusTreeNodeIcon icon;
-	private @NotNull String text;
-	private boolean hasExpanded;
+    private final @NotNull SwingStatusTreeModel model;
+    private final @NotNull DefaultMutableTreeNode selfNode;
+    private @NotNull StatusTreeNodeIcon icon;
+    private @NotNull String text;
+    private boolean hasExpanded;
 
-	public SwingStatusTreeNodeImpl(@NotNull SwingStatusTreeModel model, @NotNull DefaultMutableTreeNode selfNode,
-			@NotNull StatusTreeNodeIcon icon, @NotNull String text) {
-		this.model = model;
-		this.selfNode = selfNode;
-		this.icon = icon;
-		this.text = text;
-		hasExpanded = false;
+    public SwingStatusTreeNodeImpl(@NotNull SwingStatusTreeModel model, @NotNull DefaultMutableTreeNode selfNode,
+                                   @NotNull StatusTreeNodeIcon icon, @NotNull String text) {
+        this.model = model;
+        this.selfNode = selfNode;
+        this.icon = icon;
+        this.text = text;
+        hasExpanded = false;
 
-		selfNode.setUserObject(this);
-	}
+        selfNode.setUserObject(this);
+    }
 
-	@Override
-	public @NotNull StatusTreeNodeIcon getIcon() {
-		return icon;
-	}
+    @Override
+    public @NotNull StatusTreeNodeIcon getIcon() {
+        return icon;
+    }
 
-	@Override
-	public void setIcon(@NotNull StatusTreeNodeIcon icon) {
-		if (this.icon != icon) {
-			this.icon = icon;
-			model.queueUpdate();
-		}
-	}
+    @Override
+    public void setIcon(@NotNull StatusTreeNodeIcon icon) {
+        if (this.icon != icon) {
+            this.icon = icon;
+            model.queueUpdate();
+        }
+    }
 
-	@Override
-	public @NotNull String getText() {
-		return text;
-	}
+    @Override
+    public @NotNull String getText() {
+        return text;
+    }
 
-	@Override
-	public void setText(@NotNull String text) {
-		this.text = text;
-		model.queueUpdate();
-	}
+    @Override
+    public void setText(@NotNull String text) {
+        this.text = text;
+        model.queueUpdate();
+    }
 
-	@Override
-	public @NotNull StatusTreeNode addChild(@NotNull StatusTreeNodeIcon icon, @NotNull String text) {
-		var childNode = new DefaultMutableTreeNode();
-		synchronized (model) {
-			selfNode.add(childNode);
-		}
-		model.queueReloadNode(selfNode);
-		if (!hasExpanded) {
-			hasExpanded = true;
-			model.queueExpandNode(selfNode);
-		}
-		return new SwingStatusTreeNodeImpl(model, childNode, icon, text);
-	}
+    @Override
+    public @NotNull StatusTreeNode addChild(@NotNull StatusTreeNodeIcon icon, @NotNull String text) {
+        var childNode = new DefaultMutableTreeNode();
+        synchronized (model) {
+            selfNode.add(childNode);
+        }
+        model.queueReloadNode(selfNode);
+        if (!hasExpanded) {
+            hasExpanded = true;
+            model.queueExpandNode(selfNode);
+        }
+        return new SwingStatusTreeNodeImpl(model, childNode, icon, text);
+    }
 
-	@Override
-	public void removeAllChildren() {
-		synchronized (model) {
-			selfNode.removeAllChildren();
-		}
-		model.queueReloadNode(selfNode);
-	}
+    @Override
+    public void removeAllChildren() {
+        synchronized (model) {
+            selfNode.removeAllChildren();
+        }
+        model.queueReloadNode(selfNode);
+    }
 
-	@Override
-	public String toString() {
-		return text + " (icon: " + icon + ")";
-	}
+    @Override
+    public String toString() {
+        return text + " (icon: " + icon + ")";
+    }
 }

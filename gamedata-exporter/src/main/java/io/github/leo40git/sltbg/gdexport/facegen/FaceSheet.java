@@ -34,118 +34,118 @@ import org.jetbrains.annotations.Unmodifiable;
 
 @SuppressWarnings("ClassCanBeRecord")
 public final class FaceSheet {
-	private final @NotNull String sheetPath;
-	private final int offset;
-	private final @NotNull @Unmodifiable List<Entry> entries;
+    private final @NotNull String sheetPath;
+    private final int offset;
+    private final @NotNull @Unmodifiable List<Entry> entries;
 
-	public FaceSheet(@NotNull String sheetPath, int offset, @NotNull List<Entry> entries) {
-		this.sheetPath = sheetPath;
-		this.offset = offset;
-		this.entries = CollectionUtils.copyOf(entries);
-	}
+    public FaceSheet(@NotNull String sheetPath, int offset, @NotNull List<Entry> entries) {
+        this.sheetPath = sheetPath;
+        this.offset = offset;
+        this.entries = CollectionUtils.copyOf(entries);
+    }
 
-	public @NotNull String getSheetPath() {
-		return sheetPath;
-	}
+    public @NotNull String getSheetPath() {
+        return sheetPath;
+    }
 
-	public int getOffset() {
-		return offset;
-	}
+    public int getOffset() {
+        return offset;
+    }
 
-	public @NotNull @Unmodifiable List<Entry> getEntries() {
-		return entries;
-	}
+    public @NotNull @Unmodifiable List<Entry> getEntries() {
+        return entries;
+    }
 
-	public @NotNull List<Pair<String, Face>> split(@NotNull Path inputDir) throws IOException {
-		var inputPath = inputDir.resolve(sheetPath);
-		BufferedImage sheet;
-		try (var is = Files.newInputStream(inputPath)) {
-			sheet = ImageIO.read(is);
-		}
+    public @NotNull List<Pair<String, Face>> split(@NotNull Path inputDir) throws IOException {
+        var inputPath = inputDir.resolve(sheetPath);
+        BufferedImage sheet;
+        try (var is = Files.newInputStream(inputPath)) {
+            sheet = ImageIO.read(is);
+        }
 
-		if (sheet.getWidth() % IMAGE_SIZE != 0 || sheet.getHeight() % IMAGE_SIZE != 0) {
-			throw new IOException("sheet's dimensions (%d x %d) are not divisible by face image size (%d)"
-					.formatted(sheet.getWidth(), sheet.getHeight(), IMAGE_SIZE));
-		}
+        if (sheet.getWidth() % IMAGE_SIZE != 0 || sheet.getHeight() % IMAGE_SIZE != 0) {
+            throw new IOException("sheet's dimensions (%d x %d) are not divisible by face image size (%d)"
+                    .formatted(sheet.getWidth(), sheet.getHeight(), IMAGE_SIZE));
+        }
 
-		var faces = new ArrayList<Pair<String, Face>>(entries.size());
-		int facesPerRow = sheet.getWidth() / IMAGE_SIZE;
-		int index = offset;
-		for (var entry : entries) {
-			int x = (index % facesPerRow) * IMAGE_SIZE;
-			int y = (index / facesPerRow) * IMAGE_SIZE;
-			var image = sheet.getSubimage(x, y, IMAGE_SIZE, IMAGE_SIZE);
-			var face = new Face(entry.getImagePath(), entry.getName());
-			face.setImage(image);
-			face.setOrder(entry.getOrder());
-			if (entry.getCharacterName() != null) {
-				face.setCharacterName(entry.getCharacterName());
-			}
-			if (!entry.getDescription().isEmpty()) {
-				face.setDescription(entry.getDescription().toArray(ArrayUtils.EMPTY_STRING_ARRAY));
-			}
-			faces.add(new Pair<>(entry.getCategory(), face));
+        var faces = new ArrayList<Pair<String, Face>>(entries.size());
+        int facesPerRow = sheet.getWidth() / IMAGE_SIZE;
+        int index = offset;
+        for (var entry : entries) {
+            int x = (index % facesPerRow) * IMAGE_SIZE;
+            int y = (index / facesPerRow) * IMAGE_SIZE;
+            var image = sheet.getSubimage(x, y, IMAGE_SIZE, IMAGE_SIZE);
+            var face = new Face(entry.getImagePath(), entry.getName());
+            face.setImage(image);
+            face.setOrder(entry.getOrder());
+            if (entry.getCharacterName() != null) {
+                face.setCharacterName(entry.getCharacterName());
+            }
+            if (!entry.getDescription().isEmpty()) {
+                face.setDescription(entry.getDescription().toArray(ArrayUtils.EMPTY_STRING_ARRAY));
+            }
+            faces.add(new Pair<>(entry.getCategory(), face));
 
-			index += entry.getAdvance();
-		}
-		return faces;
-	}
+            index += entry.getAdvance();
+        }
+        return faces;
+    }
 
-	public @NotNull CompletableFuture<List<Pair<String, Face>>> splitAsync(@NotNull Executor executor, @NotNull Path inputDir) {
-		return CompletableFuture.supplyAsync(() -> {
-			try {
-				return split(inputDir);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		}, executor);
-	}
+    public @NotNull CompletableFuture<List<Pair<String, Face>>> splitAsync(@NotNull Executor executor, @NotNull Path inputDir) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return split(inputDir);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }, executor);
+    }
 
-	@SuppressWarnings("ClassCanBeRecord")
-	public static final class Entry {
-		private final @NotNull String imagePath, category, name;
-		private final long order;
-		private final @Nullable String characterName;
-		private final @NotNull @Unmodifiable List<String> description;
-		private final @Range(from = 1, to = Integer.MAX_VALUE) int advance;
+    @SuppressWarnings("ClassCanBeRecord")
+    public static final class Entry {
+        private final @NotNull String imagePath, category, name;
+        private final long order;
+        private final @Nullable String characterName;
+        private final @NotNull @Unmodifiable List<String> description;
+        private final @Range(from = 1, to = Integer.MAX_VALUE) int advance;
 
-		public Entry(@NotNull String imagePath, @NotNull String category, @NotNull String name, long order, @Nullable String characterName,
-				@Nullable List<String> description, @Range(from = 1, to = Integer.MAX_VALUE) int advance) {
-			this.imagePath = imagePath;
-			this.category = category;
-			this.name = name;
-			this.order = order;
-			this.characterName = characterName;
-			this.description = CollectionUtils.copyOrEmpty(description);
-			this.advance = advance;
-		}
+        public Entry(@NotNull String imagePath, @NotNull String category, @NotNull String name, long order, @Nullable String characterName,
+                     @Nullable List<String> description, @Range(from = 1, to = Integer.MAX_VALUE) int advance) {
+            this.imagePath = imagePath;
+            this.category = category;
+            this.name = name;
+            this.order = order;
+            this.characterName = characterName;
+            this.description = CollectionUtils.copyOrEmpty(description);
+            this.advance = advance;
+        }
 
-		public @NotNull String getImagePath() {
-			return imagePath;
-		}
+        public @NotNull String getImagePath() {
+            return imagePath;
+        }
 
-		public @NotNull String getCategory() {
-			return category;
-		}
+        public @NotNull String getCategory() {
+            return category;
+        }
 
-		public @NotNull String getName() {
-			return name;
-		}
+        public @NotNull String getName() {
+            return name;
+        }
 
-		public long getOrder() {
-			return order;
-		}
+        public long getOrder() {
+            return order;
+        }
 
-		public @Nullable String getCharacterName() {
-			return characterName;
-		}
+        public @Nullable String getCharacterName() {
+            return characterName;
+        }
 
-		public @NotNull @Unmodifiable List<String> getDescription() {
-			return description;
-		}
+        public @NotNull @Unmodifiable List<String> getDescription() {
+            return description;
+        }
 
-		public @Range(from = 1, to = Integer.MAX_VALUE) int getAdvance() {
-			return advance;
-		}
-	}
+        public @Range(from = 1, to = Integer.MAX_VALUE) int getAdvance() {
+            return advance;
+        }
+    }
 }

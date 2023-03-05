@@ -15,21 +15,21 @@ import io.github.leo40git.sltbg.app.util.DialogUtils;
 import io.leo40git.sltbg.swing.util.WindowUtils;
 
 public final class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-	private static final String[] OPTIONS = { "Continue", "Abort" };
-	private static final int OPTION_CONTINUE = 0;
-	private static final int OPTION_ABORT = 1;
+    private static final String[] OPTIONS = {"Continue", "Abort"};
+    private static final int OPTION_CONTINUE = 0;
+    private static final int OPTION_ABORT = 1;
 
-	@Override
-	public void uncaughtException(Thread t, Throwable e) {
-		Main.logger().error("Uncaught exception in thread \"" + t.getName() + "\"", e);
-		try (var ignored = WindowUtils.ensureNoWindowsAlwaysOnTop()) {
-			int option = DialogUtils.showCustomConfirmDialog(null,
-					"An uncaught exception has occurred!\n" + DialogUtils.LOG_FILE_INSTRUCTION,
-					"Uncaught Exception!", OPTIONS, JOptionPane.ERROR_MESSAGE);
-			if (option == OPTION_ABORT) {
-				System.exit(1);
-			}
-		}
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        Main.logger().error("Uncaught exception in thread \"" + t.getName() + "\"", e);
+        try (var ignored = WindowUtils.ensureNoWindowsAlwaysOnTop()) {
+            int option = DialogUtils.showCustomConfirmDialog(null,
+                    "An uncaught exception has occurred!\n" + DialogUtils.LOG_FILE_INSTRUCTION,
+                    "Uncaught Exception!", OPTIONS, JOptionPane.ERROR_MESSAGE);
+            if (option == OPTION_ABORT) {
+                System.exit(1);
+            }
+        }
 
-	}
+    }
 }

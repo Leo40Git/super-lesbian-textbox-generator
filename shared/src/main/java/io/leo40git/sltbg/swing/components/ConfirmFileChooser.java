@@ -18,109 +18,112 @@ import io.leo40git.sltbg.util.FileUtils;
 import org.jetbrains.annotations.Contract;
 
 public class ConfirmFileChooser extends JFileChooser {
-	/**
-	 * Enables {@linkplain #setAlternateDirectoryWarningShown(boolean) the alternate directory warning}.
-	 */
-	public static final String ALTERNATE_DIRECTORY_WARNING_SHOWN_CHANGED_PROPERTY = "AlternateDirectoryWarningShownChangedProperty";
+    /**
+     * Enables {@linkplain #setAlternateDirectoryWarningShown(boolean) the alternate directory warning}.
+     */
+    public static final String ALTERNATE_DIRECTORY_WARNING_SHOWN_CHANGED_PROPERTY = "AlternateDirectoryWarningShownChangedProperty";
 
-	private boolean alternateDirectoryWarningShown;
+    private boolean alternateDirectoryWarningShown;
 
-	/**
-	 * Constructs a <code>ConfirmFileChooser</code> pointing to the user's
-	 * default directory.
-	 * <p>
-	 * This default depends on the operating system.<br />
-	 * It is typically the "My Documents" folder on Windows, and the
-	 * user's home directory on Unix.
-	 */
-	public ConfirmFileChooser() {
-		super.setMultiSelectionEnabled(false);
-		alternateDirectoryWarningShown = false;
-	}
+    /**
+     * Constructs a <code>ConfirmFileChooser</code> pointing to the user's
+     * default directory.
+     * <p>
+     * This default depends on the operating system.<br />
+     * It is typically the "My Documents" folder on Windows, and the
+     * user's home directory on Unix.
+     */
+    public ConfirmFileChooser() {
+        super.setMultiSelectionEnabled(false);
+        alternateDirectoryWarningShown = false;
+    }
 
-	/**
-	 * Returns true if the alternate directory warning should be shown.
-	 * @return true if the alternate directory warning should be shown
-	 * @see #setAlternateDirectoryWarningShown(boolean)
-	 */
-	public boolean isAlternateDirectoryWarningShown() {
-		return alternateDirectoryWarningShown;
-	}
+    /**
+     * Returns true if the alternate directory warning should be shown.
+     *
+     * @return true if the alternate directory warning should be shown
+     * @see #setAlternateDirectoryWarningShown(boolean)
+     */
+    public boolean isAlternateDirectoryWarningShown() {
+        return alternateDirectoryWarningShown;
+    }
 
-	/**
-	 * Sets the file chooser to enable the alternate directory warning.
-	 * <p>
-	 * Normally, the file chooser warns that files inside non-empty directories <em>may</em> be replaced or removed.
-	 * <br />
-	 * If the alternate directory warning is enabled,
-	 * this warning will state that files <em>will</em> be replaced or removed.
-	 * @param b true if the alternate directory warning should be shown
-	 * @see #isAlternateDirectoryWarningShown()
-	 */
-	public void setAlternateDirectoryWarningShown(boolean b) {
-		if (alternateDirectoryWarningShown != b) {
-			boolean oldValue = alternateDirectoryWarningShown;
-			alternateDirectoryWarningShown = b;
-			firePropertyChange(ALTERNATE_DIRECTORY_WARNING_SHOWN_CHANGED_PROPERTY, oldValue, b);
-		}
-	}
+    /**
+     * Sets the file chooser to enable the alternate directory warning.
+     * <p>
+     * Normally, the file chooser warns that files inside non-empty directories <em>may</em> be replaced or removed.
+     * <br />
+     * If the alternate directory warning is enabled,
+     * this warning will state that files <em>will</em> be replaced or removed.
+     *
+     * @param b true if the alternate directory warning should be shown
+     * @see #isAlternateDirectoryWarningShown()
+     */
+    public void setAlternateDirectoryWarningShown(boolean b) {
+        if (alternateDirectoryWarningShown != b) {
+            boolean oldValue = alternateDirectoryWarningShown;
+            alternateDirectoryWarningShown = b;
+            firePropertyChange(ALTERNATE_DIRECTORY_WARNING_SHOWN_CHANGED_PROPERTY, oldValue, b);
+        }
+    }
 
-	/**
-	 * <code>ConfirmFileChooser</code> does not support multiple file selection.
-	 * @param b should always be false
-	 * @throws UnsupportedOperationException if <code>b</code> is true.
-	 */
-	@Override
-	@Contract("true -> fail")
-	public void setMultiSelectionEnabled(boolean b) {
-		if (b) {
-			throw new UnsupportedOperationException("ConfirmFileChooser does not support multiple selections.");
-		}
-		
-		super.setMultiSelectionEnabled(false);
-	}
+    /**
+     * <code>ConfirmFileChooser</code> does not support multiple file selection.
+     *
+     * @param b should always be false
+     * @throws UnsupportedOperationException if <code>b</code> is true.
+     */
+    @Override
+    @Contract("true -> fail")
+    public void setMultiSelectionEnabled(boolean b) {
+        if (b) {
+            throw new UnsupportedOperationException("ConfirmFileChooser does not support multiple selections.");
+        }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void approveSelection() {
-		if (getDialogType() == SAVE_DIALOG) {
-			var file = getSelectedFile();
-			if (file != null && file.exists()) {
-				if (file.isDirectory()) {
-					String message;
+        super.setMultiSelectionEnabled(false);
+    }
 
-					try {
-						if (FileUtils.isEmptyDirectory(file.toPath())) {
-							message = file.getName() + " isn't empty.";
-						} else {
-							super.approveSelection();
-							return;
-						}
-					} catch (IOException ignored) {
-						message = "Couldn't check if " + file.getName() + " is empty.";
-					}
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void approveSelection() {
+        if (getDialogType() == SAVE_DIALOG) {
+            var file = getSelectedFile();
+            if (file != null && file.exists()) {
+                if (file.isDirectory()) {
+                    String message;
 
-					message += isAlternateDirectoryWarningShown()
-							? "\nFiles in this directory will be replaced or removed if you continue."
-							: "\nFiles in this directory may be replaced or removed if you continue.";
+                    try {
+                        if (FileUtils.isEmptyDirectory(file.toPath())) {
+                            message = file.getName() + " isn't empty.";
+                        } else {
+                            super.approveSelection();
+                            return;
+                        }
+                    } catch (IOException ignored) {
+                        message = "Couldn't check if " + file.getName() + " is empty.";
+                    }
 
-					if (JOptionPane.showConfirmDialog(this,
-							message + "\nContinue?",
-							"Confirm Save", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
-						return;
-					}
-				} else {
-					if (JOptionPane.showConfirmDialog(this,
-							file.getName() + " already exists.\nDo you want to replace it?",
-							"Confirm Save", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
-						return;
-					}
-				}
-			}
-		}
+                    message += isAlternateDirectoryWarningShown()
+                            ? "\nFiles in this directory will be replaced or removed if you continue."
+                            : "\nFiles in this directory may be replaced or removed if you continue.";
 
-		super.approveSelection();
-	}
+                    if (JOptionPane.showConfirmDialog(this,
+                            message + "\nContinue?",
+                            "Confirm Save", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+                        return;
+                    }
+                } else {
+                    if (JOptionPane.showConfirmDialog(this,
+                            file.getName() + " already exists.\nDo you want to replace it?",
+                            "Confirm Save", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        super.approveSelection();
+    }
 }

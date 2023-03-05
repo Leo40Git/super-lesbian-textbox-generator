@@ -10,10 +10,10 @@
 package io.github.leo40git.sltbg.app.text;
 
 public enum TextStyle {
-	BOLD,
-	ITALIC,
-	UNDERLINE,
-	STRIKETHROUGH;
+    BOLD,
+    ITALIC,
+    UNDERLINE,
+    STRIKETHROUGH;
 
-	public static final int COUNT = values().length;
+    public static final int COUNT = values().length;
 }

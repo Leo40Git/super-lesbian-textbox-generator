@@ -20,35 +20,35 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
 public final class FacePoolIOException extends Exception {
-	private final @NotNull FacePool pool;
-	private final @NotNull List<FaceCategoryIOException> subExceptions;
+    private final @NotNull FacePool pool;
+    private final @NotNull List<FaceCategoryIOException> subExceptions;
 
-	public FacePoolIOException(@NotNull FacePool pool, String message) {
-		super(message);
-		this.pool = pool;
-		subExceptions = new ArrayList<>();
-	}
+    public FacePoolIOException(@NotNull FacePool pool, String message) {
+        super(message);
+        this.pool = pool;
+        subExceptions = new ArrayList<>();
+    }
 
-	public FacePoolIOException(@NotNull FacePool pool, String message, @NotNull Collection<FaceCategoryIOException> subExceptions) {
-		super(message);
-		this.pool = pool;
-		this.subExceptions = new ArrayList<>(subExceptions);
-		for (var e : subExceptions) {
-			addSuppressed(e);
-		}
-	}
+    public FacePoolIOException(@NotNull FacePool pool, String message, @NotNull Collection<FaceCategoryIOException> subExceptions) {
+        super(message);
+        this.pool = pool;
+        this.subExceptions = new ArrayList<>(subExceptions);
+        for (var e : subExceptions) {
+            addSuppressed(e);
+        }
+    }
 
-	public void addSubException(@NotNull FaceCategoryIOException e) {
-		subExceptions.add(e);
-		addSuppressed(e);
-	}
+    public void addSubException(@NotNull FaceCategoryIOException e) {
+        subExceptions.add(e);
+        addSuppressed(e);
+    }
 
-	public @NotNull FacePool getPool() {
-		return pool;
-	}
+    public @NotNull FacePool getPool() {
+        return pool;
+    }
 
-	@Contract(pure = true)
-	public @NotNull @UnmodifiableView List<FaceCategoryIOException> getSubExceptions() {
-		return Collections.unmodifiableList(subExceptions);
-	}
+    @Contract(pure = true)
+    public @NotNull @UnmodifiableView List<FaceCategoryIOException> getSubExceptions() {
+        return Collections.unmodifiableList(subExceptions);
+    }
 }

@@ -12,19 +12,19 @@ package io.github.leo40git.sltbg.app.text.element;
 import org.jetbrains.annotations.Range;
 
 public final class LineBreakElement extends Element {
-	public LineBreakElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourcePosition) {
-		super(sourcePosition, 1);
-	}
+    public LineBreakElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourcePosition) {
+        super(sourcePosition, 1);
+    }
 
-	@Override
-	public boolean isControlElement() {
-		return true;
-	}
+    @Override
+    public boolean isControlElement() {
+        return true;
+    }
 
-	@Override
-	public String toString() {
-		return "LineBreak{" +
-				"sourcePosition=" + sourceStart +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "LineBreak{" +
+                "sourcePosition=" + sourceStart +
+                '}';
+    }
 }

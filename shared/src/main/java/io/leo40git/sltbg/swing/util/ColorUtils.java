@@ -17,43 +17,43 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public final class ColorUtils {
-	private ColorUtils() {
-		throw new UnsupportedOperationException("MoreColors only contains static declarations.");
-	}
+    private ColorUtils() {
+        throw new UnsupportedOperationException("MoreColors only contains static declarations.");
+    }
 
-	public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+    public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
-	@Contract("_, _ -> new")
-	public static @NotNull Color withAlpha(@NotNull Color original, int newAlpha) {
-		return new Color(original.getRed(), original.getGreen(), original.getBlue(), newAlpha);
-	}
+    @Contract("_, _ -> new")
+    public static @NotNull Color withAlpha(@NotNull Color original, int newAlpha) {
+        return new Color(original.getRed(), original.getGreen(), original.getBlue(), newAlpha);
+    }
 
-	@Contract("_, _ -> new")
-	public static @NotNull Color blend(@NotNull Color c1, @NotNull Color c2) {
-		double totalAlpha = c1.getAlpha() + c2.getAlpha();
-		double weight1 = c1.getAlpha() / totalAlpha;
-		double weight2 = c2.getAlpha() / totalAlpha;
+    @Contract("_, _ -> new")
+    public static @NotNull Color blend(@NotNull Color c1, @NotNull Color c2) {
+        double totalAlpha = c1.getAlpha() + c2.getAlpha();
+        double weight1 = c1.getAlpha() / totalAlpha;
+        double weight2 = c2.getAlpha() / totalAlpha;
 
-		double r = weight1 * c1.getRed() + weight2 * c2.getRed();
-		double g = weight1 * c1.getGreen() + weight2 * c2.getGreen();
-		double b = weight1 * c1.getBlue() + weight2 * c2.getBlue();
-		double a = Math.max(c1.getAlpha(), c2.getAlpha());
+        double r = weight1 * c1.getRed() + weight2 * c2.getRed();
+        double g = weight1 * c1.getGreen() + weight2 * c2.getGreen();
+        double b = weight1 * c1.getBlue() + weight2 * c2.getBlue();
+        double a = Math.max(c1.getAlpha(), c2.getAlpha());
 
-		return new Color((int) r, (int) g, (int) b, (int) a);
-	}
+        return new Color((int) r, (int) g, (int) b, (int) a);
+    }
 
-	private static final ThreadLocal<BufferedImage> TL_PREMULTIPLY_SCRATCH = ThreadLocal.withInitial(() -> new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
+    private static final ThreadLocal<BufferedImage> TL_PREMULTIPLY_SCRATCH = ThreadLocal.withInitial(() -> new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
 
-	@Contract("_, _ -> new")
-	public static @NotNull Color preMultiply(@NotNull Color base, @NotNull Color overlay) {
-		var image = TL_PREMULTIPLY_SCRATCH.get();
-		var g = image.createGraphics();
-		g.setBackground(base);
-		g.clearRect(0, 0, 1, 1);
-		g.setComposite(AlphaComposite.SrcOver);
-		g.setColor(overlay);
-		g.fillRect(0, 0, 1, 1);
-		g.dispose();
-		return new Color(image.getRGB(0, 0));
-	}
+    @Contract("_, _ -> new")
+    public static @NotNull Color preMultiply(@NotNull Color base, @NotNull Color overlay) {
+        var image = TL_PREMULTIPLY_SCRATCH.get();
+        var g = image.createGraphics();
+        g.setBackground(base);
+        g.clearRect(0, 0, 1, 1);
+        g.setComposite(AlphaComposite.SrcOver);
+        g.setColor(overlay);
+        g.fillRect(0, 0, 1, 1);
+        g.dispose();
+        return new Color(image.getRGB(0, 0));
+    }
 }

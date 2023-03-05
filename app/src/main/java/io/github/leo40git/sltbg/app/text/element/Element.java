@@ -12,34 +12,34 @@ package io.github.leo40git.sltbg.app.text.element;
 import org.jetbrains.annotations.Range;
 
 public sealed abstract class Element
-		permits ColorControlElement, ErrorElement, IconControlElement, InvisibleControlElement, LineBreakElement, SizeControlElement,
-		StyleControlElement, TextElement {
-	protected final @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, sourceLength;
+        permits ColorControlElement, ErrorElement, IconControlElement, InvisibleControlElement, LineBreakElement, SizeControlElement,
+        StyleControlElement, TextElement {
+    protected final @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, sourceLength;
 
-	public Element(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength) {
-		this.sourceStart = sourceStart;
-		this.sourceLength = sourceLength;
-	}
+    public Element(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength) {
+        this.sourceStart = sourceStart;
+        this.sourceLength = sourceLength;
+    }
 
-	public abstract boolean isControlElement();
+    public abstract boolean isControlElement();
 
-	public @Range(from = 0, to = Integer.MAX_VALUE) int getSourceStart() {
-		return sourceStart;
-	}
+    public @Range(from = 0, to = Integer.MAX_VALUE) int getSourceStart() {
+        return sourceStart;
+    }
 
-	public @Range(from = 1, to = Integer.MAX_VALUE) int getSourceLength() {
-		return sourceLength;
-	}
+    public @Range(from = 1, to = Integer.MAX_VALUE) int getSourceLength() {
+        return sourceLength;
+    }
 
-	public int getSourceEnd() {
-		return sourceStart + sourceLength;
-	}
+    public int getSourceEnd() {
+        return sourceStart + sourceLength;
+    }
 
-	@Override
-	public String toString() {
-		return "Element{" +
-				"sourceStart=" + sourceStart +
-				", sourceLength=" + sourceLength +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Element{" +
+                "sourceStart=" + sourceStart +
+                ", sourceLength=" + sourceLength +
+                '}';
+    }
 }

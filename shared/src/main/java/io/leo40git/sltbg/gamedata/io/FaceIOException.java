@@ -13,19 +13,19 @@ import io.leo40git.sltbg.gamedata.Face;
 import org.jetbrains.annotations.NotNull;
 
 public final class FaceIOException extends Exception {
-	private final @NotNull Face face;
+    private final @NotNull Face face;
 
-	public FaceIOException(@NotNull Face face, String message) {
-		super(message);
-		this.face = face;
-	}
+    public FaceIOException(@NotNull Face face, String message) {
+        super(message);
+        this.face = face;
+    }
 
-	public FaceIOException(@NotNull Face face, String message, Throwable cause) {
-		super(message, cause);
-		this.face = face;
-	}
+    public FaceIOException(@NotNull Face face, String message, Throwable cause) {
+        super(message, cause);
+        this.face = face;
+    }
 
-	public @NotNull Face getFace() {
-		return face;
-	}
+    public @NotNull Face getFace() {
+        return face;
+    }
 }

@@ -12,11 +12,11 @@ package io.github.leo40git.sltbg.app.assets;
 import java.io.IOException;
 
 public final class AppAssets {
-	private AppAssets() {
-		throw new UnsupportedOperationException("AppAssets only contains static declarations.");
-	}
+    private AppAssets() {
+        throw new UnsupportedOperationException("AppAssets only contains static declarations.");
+    }
 
-	public static void load() throws IOException {
-		// TODO
-	}
+    public static void load() throws IOException {
+        // TODO
+    }
 }

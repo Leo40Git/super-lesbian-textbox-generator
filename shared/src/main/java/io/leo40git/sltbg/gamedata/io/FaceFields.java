@@ -10,16 +10,16 @@
 package io.leo40git.sltbg.gamedata.io;
 
 final class FaceFields {
-	private FaceFields() {
-		throw new UnsupportedOperationException("FaceFields only contains static declarations.");
-	}
+    private FaceFields() {
+        throw new UnsupportedOperationException("FaceFields only contains static declarations.");
+    }
 
-	public static final String NAME = "name";
-	public static final String CATEGORIES = "categories";
-	public static final String FACES = "faces";
-	public static final String IMAGE_PATH = "path";
-	public static final String ORDER = "order";
-	public static final String CHARACTER_NAME = "char_name";
-	public static final String DESCRIPTION = "description";
-	public static final String CREDITS = "credits";
+    public static final String NAME = "name";
+    public static final String CATEGORIES = "categories";
+    public static final String FACES = "faces";
+    public static final String IMAGE_PATH = "path";
+    public static final String ORDER = "order";
+    public static final String CHARACTER_NAME = "char_name";
+    public static final String DESCRIPTION = "description";
+    public static final String CREDITS = "credits";
 }

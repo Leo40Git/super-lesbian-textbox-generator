@@ -12,19 +12,19 @@ package io.github.leo40git.sltbg.app.text.element;
 import org.jetbrains.annotations.Range;
 
 public final class InvisibleControlElement extends Element {
-	public InvisibleControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength) {
-		super(sourceStart, sourceLength);
-	}
+    public InvisibleControlElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength) {
+        super(sourceStart, sourceLength);
+    }
 
-	@Override
-	public boolean isControlElement() {
-		return true;
-	}
+    @Override
+    public boolean isControlElement() {
+        return true;
+    }
 
-	@Override
-	public String toString() {
-		return "Control.ContinueLine{" +
-				"sourcePosition=" + sourceStart +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Control.ContinueLine{" +
+                "sourcePosition=" + sourceStart +
+                '}';
+    }
 }

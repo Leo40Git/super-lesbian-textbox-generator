@@ -15,32 +15,35 @@ import java.io.StringWriter;
 import org.jetbrains.annotations.NotNull;
 
 public interface StatusTreeNode {
-	@NotNull StatusTreeNodeIcon getIcon();
-	void setIcon(@NotNull StatusTreeNodeIcon icon);
+    @NotNull StatusTreeNodeIcon getIcon();
 
-	@NotNull String getText();
-	void setText(@NotNull String text);
+    void setIcon(@NotNull StatusTreeNodeIcon icon);
 
-	@NotNull StatusTreeNode addChild(@NotNull StatusTreeNodeIcon icon, @NotNull String text);
-	default @NotNull StatusTreeNode addChild(@NotNull String text) {
-		return addChild(StatusTreeNodeIcon.MESSAGE_INFORMATION, text);
-	}
+    @NotNull String getText();
 
-	void removeAllChildren();
+    void setText(@NotNull String text);
 
-	default @NotNull StatusTreeNode addException(@NotNull Throwable ex, boolean withStackTrace) {
-		if (withStackTrace) {
-			var sw = new StringWriter();
-			try (var pw = new PrintWriter(sw)) {
-				ex.printStackTrace(pw);
-			}
-			return addChild(StatusTreeNodeIcon.MESSAGE_ERROR, sw.toString());
-		} else {
-			return addChild(StatusTreeNodeIcon.MESSAGE_ERROR, ex.toString());
-		}
-	}
+    @NotNull StatusTreeNode addChild(@NotNull StatusTreeNodeIcon icon, @NotNull String text);
 
-	default @NotNull StatusTreeNode addException(@NotNull Throwable ex) {
-		return addException(ex, true);
-	}
+    default @NotNull StatusTreeNode addChild(@NotNull String text) {
+        return addChild(StatusTreeNodeIcon.MESSAGE_INFORMATION, text);
+    }
+
+    void removeAllChildren();
+
+    default @NotNull StatusTreeNode addException(@NotNull Throwable ex, boolean withStackTrace) {
+        if (withStackTrace) {
+            var sw = new StringWriter();
+            try (var pw = new PrintWriter(sw)) {
+                ex.printStackTrace(pw);
+            }
+            return addChild(StatusTreeNodeIcon.MESSAGE_ERROR, sw.toString());
+        } else {
+            return addChild(StatusTreeNodeIcon.MESSAGE_ERROR, ex.toString());
+        }
+    }
+
+    default @NotNull StatusTreeNode addException(@NotNull Throwable ex) {
+        return addException(ex, true);
+    }
 }

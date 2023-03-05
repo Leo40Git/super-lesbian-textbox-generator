@@ -16,23 +16,23 @@ import javax.swing.SwingUtilities;
 import org.jetbrains.annotations.NotNull;
 
 public final class EventDispatchInvoker {
-	private final @NotNull Runnable action;
-	private final @NotNull AtomicBoolean pendingInvoke;
+    private final @NotNull Runnable action;
+    private final @NotNull AtomicBoolean pendingInvoke;
 
-	public EventDispatchInvoker(@NotNull Runnable action) {
-		this.action = action;
-		pendingInvoke = new AtomicBoolean(false);
-	}
+    public EventDispatchInvoker(@NotNull Runnable action) {
+        this.action = action;
+        pendingInvoke = new AtomicBoolean(false);
+    }
 
-	public void invokeLater() {
-		if (!pendingInvoke.compareAndExchange(false, true)) {
-			SwingUtilities.invokeLater(() -> {
-				try {
-					action.run();
-				} finally {
-					pendingInvoke.set(false);
-				}
-			});
-		}
-	}
+    public void invokeLater() {
+        if (!pendingInvoke.compareAndExchange(false, true)) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    action.run();
+                } finally {
+                    pendingInvoke.set(false);
+                }
+            });
+        }
+    }
 }

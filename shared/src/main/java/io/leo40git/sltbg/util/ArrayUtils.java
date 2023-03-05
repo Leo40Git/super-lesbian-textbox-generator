@@ -12,29 +12,29 @@ package io.leo40git.sltbg.util;
 import org.jetbrains.annotations.Contract;
 
 public final class ArrayUtils {
-	private ArrayUtils() {
-		throw new UnsupportedOperationException("ArrayUtils only contains static declarations.");
-	}
+    private ArrayUtils() {
+        throw new UnsupportedOperationException("ArrayUtils only contains static declarations.");
+    }
 
-	public static final String[] EMPTY_STRING_ARRAY = new String[0];
+    public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-	@Contract("null -> null; !null -> !null")
-	public static String[] clone(String[] array) {
-		if (array == null) {
-			return null;
-		} else if (array.length == 0) {
-			return EMPTY_STRING_ARRAY;
-		} else {
-			return array.clone();
-		}
-	}
+    @Contract("null -> null; !null -> !null")
+    public static String[] clone(String[] array) {
+        if (array == null) {
+            return null;
+        } else if (array.length == 0) {
+            return EMPTY_STRING_ARRAY;
+        } else {
+            return array.clone();
+        }
+    }
 
-	@Contract("null -> null; !null -> !null")
-	public static <T> T[] clone(T[] array) {
-		if (array == null) {
-			return null;
-		} else {
-			return array.clone();
-		}
-	}
+    @Contract("null -> null; !null -> !null")
+    public static <T> T[] clone(T[] array) {
+        if (array == null) {
+            return null;
+        } else {
+            return array.clone();
+        }
+    }
 }

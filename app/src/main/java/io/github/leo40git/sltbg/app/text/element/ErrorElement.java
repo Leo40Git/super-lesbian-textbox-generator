@@ -13,32 +13,32 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
 public final class ErrorElement extends Element {
-	private final boolean isControlElement;
-	private final @NotNull String message;
+    private final boolean isControlElement;
+    private final @NotNull String message;
 
-	public ErrorElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength,
-			boolean isControlElement, @NotNull String message) {
-		super(sourceStart, sourceLength);
-		this.isControlElement = isControlElement;
-		this.message = message;
-	}
+    public ErrorElement(@Range(from = 0, to = Integer.MAX_VALUE) int sourceStart, @Range(from = 1, to = Integer.MAX_VALUE) int sourceLength,
+                        boolean isControlElement, @NotNull String message) {
+        super(sourceStart, sourceLength);
+        this.isControlElement = isControlElement;
+        this.message = message;
+    }
 
-	@Override
-	public boolean isControlElement() {
-		return isControlElement;
-	}
+    @Override
+    public boolean isControlElement() {
+        return isControlElement;
+    }
 
-	public @NotNull String getMessage() {
-		return message;
-	}
+    public @NotNull String getMessage() {
+        return message;
+    }
 
-	@Override
-	public String toString() {
-		return "Error{" +
-				"sourceStart=" + sourceStart +
-				", sourceLength=" + sourceLength +
-				", isControlElement=" + isControlElement +
-				", message='" + message + '\'' +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Error{" +
+                "sourceStart=" + sourceStart +
+                ", sourceLength=" + sourceLength +
+                ", isControlElement=" + isControlElement +
+                ", message='" + message + '\'' +
+                '}';
+    }
 }

@@ -15,73 +15,71 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 
 public final class ExtendedScrollPane extends JScrollPane {
-	private JViewport rowFooter, columnFooter;
+    private JViewport rowFooter, columnFooter;
 
-	public ExtendedScrollPane(Component view, int vsbPolicy, int hsbPolicy) {
-		super(view, vsbPolicy, hsbPolicy);
-		setLayout(new ExtendedScrollPaneLayout());
-	}
+    public ExtendedScrollPane(Component view, int vsbPolicy, int hsbPolicy) {
+        super(view, vsbPolicy, hsbPolicy);
+        setLayout(new ExtendedScrollPaneLayout());
+    }
 
-	public ExtendedScrollPane(Component view) {
-		this(view, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED);
-	}
+    public ExtendedScrollPane(Component view) {
+        this(view, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    }
 
-	public ExtendedScrollPane(int vsbPolicy, int hsbPolicy) {
-		this(null, vsbPolicy, hsbPolicy);
-	}
+    public ExtendedScrollPane(int vsbPolicy, int hsbPolicy) {
+        this(null, vsbPolicy, hsbPolicy);
+    }
 
-	public ExtendedScrollPane() {
-		this(null, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED);
-	}
+    public ExtendedScrollPane() {
+        this(null, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    }
 
-	public JViewport getRowFooter() {
-		return rowFooter;
-	}
+    public JViewport getRowFooter() {
+        return rowFooter;
+    }
 
-	public void setRowFooter(JViewport rowFooter) {
-		JViewport old = getRowFooter();
-		this.rowFooter = rowFooter;
-		if (rowFooter != null) {
-			add(rowFooter, ExtendedScrollPaneLayout.ROW_FOOTER);
-		}
-		else if (old != null) {
-			remove(old);
-		}
-		firePropertyChange("rowFooter", old, rowFooter);
-		revalidate();
-		repaint();
-	}
+    public void setRowFooter(JViewport rowFooter) {
+        JViewport old = getRowFooter();
+        this.rowFooter = rowFooter;
+        if (rowFooter != null) {
+            add(rowFooter, ExtendedScrollPaneLayout.ROW_FOOTER);
+        } else if (old != null) {
+            remove(old);
+        }
+        firePropertyChange("rowFooter", old, rowFooter);
+        revalidate();
+        repaint();
+    }
 
-	public void setRowFooterView(Component view) {
-		if (getRowFooter() == null) {
-			setRowFooter(createViewport());
-		}
-		getRowFooter().setView(view);
-	}
+    public void setRowFooterView(Component view) {
+        if (getRowFooter() == null) {
+            setRowFooter(createViewport());
+        }
+        getRowFooter().setView(view);
+    }
 
-	public JViewport getColumnFooter() {
-		return columnFooter;
-	}
+    public JViewport getColumnFooter() {
+        return columnFooter;
+    }
 
-	public void setColumnFooter(JViewport columnFooter) {
-		JViewport old = getColumnFooter();
-		this.columnFooter = columnFooter;
-		if (columnFooter != null) {
-			add(columnFooter, ExtendedScrollPaneLayout.COLUMN_FOOTER);
-		}
-		else if (old != null) {
-			remove(old);
-		}
-		firePropertyChange("columnFooter", old, columnFooter);
+    public void setColumnFooter(JViewport columnFooter) {
+        JViewport old = getColumnFooter();
+        this.columnFooter = columnFooter;
+        if (columnFooter != null) {
+            add(columnFooter, ExtendedScrollPaneLayout.COLUMN_FOOTER);
+        } else if (old != null) {
+            remove(old);
+        }
+        firePropertyChange("columnFooter", old, columnFooter);
 
-		revalidate();
-		repaint();
-	}
+        revalidate();
+        repaint();
+    }
 
-	public void setColumnFooterView(Component view) {
-		if (getColumnFooter() == null) {
-			setColumnFooter(createViewport());
-		}
-		getColumnFooter().setView(view);
-	}
+    public void setColumnFooterView(Component view) {
+        if (getColumnFooter() == null) {
+            setColumnFooter(createViewport());
+        }
+        getColumnFooter().setView(view);
+    }
 }

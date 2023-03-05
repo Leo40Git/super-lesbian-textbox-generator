@@ -20,59 +20,59 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
 public final class TextPalette {
-	public static final int SIZE = 32;
+    public static final int SIZE = 32;
 
-	private final Color[] colors;
+    private final Color[] colors;
 
-	public TextPalette() {
-		colors = new Color[32];
-		Arrays.fill(colors, Color.BLACK);
-	}
+    public TextPalette() {
+        colors = new Color[32];
+        Arrays.fill(colors, Color.BLACK);
+    }
 
-	public @NotNull Color get(@Range(from = 0, to = SIZE - 1) int index) {
-		return colors[index];
-	}
+    public @NotNull Color get(@Range(from = 0, to = SIZE - 1) int index) {
+        return colors[index];
+    }
 
-	public void put(@Range(from = 0, to = SIZE - 1) int index, @NotNull Color color) {
-		colors[index] = color;
-	}
+    public void put(@Range(from = 0, to = SIZE - 1) int index, @NotNull Color color) {
+        colors[index] = color;
+    }
 
-	@Contract("_ -> new")
-	public static @NotNull TextPalette read(@NotNull BufferedReader reader) throws IOException {
-		var pal = new TextPalette();
+    @Contract("_ -> new")
+    public static @NotNull TextPalette read(@NotNull BufferedReader reader) throws IOException {
+        var pal = new TextPalette();
 
-		int index = 0;
-		String line;
-		while ((line = reader.readLine()) != null) {
-			if (line.isBlank()) {
-				continue;
-			}
+        int index = 0;
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.isBlank()) {
+                continue;
+            }
 
-			if (index >= SIZE) {
-				throw new IOException("Too many lines (more than %d)!".formatted(SIZE));
-			}
+            if (index >= SIZE) {
+                throw new IOException("Too many lines (more than %d)!".formatted(SIZE));
+            }
 
-			try {
-				pal.put(index, Color.decode(line));
-			} catch (NumberFormatException e) {
-				throw new IOException("Line %d: invalid color format".formatted(index + 1), e);
-			}
+            try {
+                pal.put(index, Color.decode(line));
+            } catch (NumberFormatException e) {
+                throw new IOException("Line %d: invalid color format".formatted(index + 1), e);
+            }
 
-			index++;
-		}
+            index++;
+        }
 
-		if (index < SIZE - 1) {
-			throw new IOException("Not enough lines! Expected 32, got %d".formatted(index));
-		}
+        if (index < SIZE - 1) {
+            throw new IOException("Not enough lines! Expected 32, got %d".formatted(index));
+        }
 
-		return pal;
-	}
+        return pal;
+    }
 
-	public void write(@NotNull BufferedWriter writer) throws IOException {
-		for (int i = 0; i < SIZE; i++) {
-			var c = colors[i];
-			writer.write("#%02X%02X%02X".formatted(c.getRed(), c.getGreen(), c.getBlue()));
-			writer.newLine();
-		}
-	}
+    public void write(@NotNull BufferedWriter writer) throws IOException {
+        for (int i = 0; i < SIZE; i++) {
+            var c = colors[i];
+            writer.write("#%02X%02X%02X".formatted(c.getRed(), c.getGreen(), c.getBlue()));
+            writer.newLine();
+        }
+    }
 }

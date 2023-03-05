@@ -15,5 +15,5 @@ import org.jetbrains.annotations.Range;
 
 @FunctionalInterface
 public interface ControlElementParser {
-	@NotNull Element parse(@NotNull TextScanner scn, @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart);
+    @NotNull Element parse(@NotNull TextScanner scn, @Range(from = 0, to = Integer.MAX_VALUE) int sourceStart);
 }

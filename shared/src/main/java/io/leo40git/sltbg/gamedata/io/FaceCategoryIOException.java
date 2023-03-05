@@ -20,35 +20,35 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
 public final class FaceCategoryIOException extends Exception {
-	private final @NotNull FaceCategory category;
-	private final @NotNull List<FaceIOException> subExceptions;
+    private final @NotNull FaceCategory category;
+    private final @NotNull List<FaceIOException> subExceptions;
 
-	public FaceCategoryIOException(@NotNull FaceCategory category, String message) {
-		super(message);
-		this.category = category;
-		subExceptions = new ArrayList<>();
-	}
+    public FaceCategoryIOException(@NotNull FaceCategory category, String message) {
+        super(message);
+        this.category = category;
+        subExceptions = new ArrayList<>();
+    }
 
-	public FaceCategoryIOException(@NotNull FaceCategory category, String message, @NotNull Collection<FaceIOException> subExceptions) {
-		super(message);
-		this.category = category;
-		this.subExceptions = new ArrayList<>(subExceptions);
-		for (var e : subExceptions) {
-			addSuppressed(e);
-		}
-	}
+    public FaceCategoryIOException(@NotNull FaceCategory category, String message, @NotNull Collection<FaceIOException> subExceptions) {
+        super(message);
+        this.category = category;
+        this.subExceptions = new ArrayList<>(subExceptions);
+        for (var e : subExceptions) {
+            addSuppressed(e);
+        }
+    }
 
-	public void addSubException(@NotNull FaceIOException e) {
-		subExceptions.add(e);
-		addSuppressed(e);
-	}
+    public void addSubException(@NotNull FaceIOException e) {
+        subExceptions.add(e);
+        addSuppressed(e);
+    }
 
-	public @NotNull FaceCategory getCategory() {
-		return category;
-	}
+    public @NotNull FaceCategory getCategory() {
+        return category;
+    }
 
-	@Contract(pure = true)
-	public @NotNull @UnmodifiableView List<FaceIOException> getSubExceptions() {
-		return Collections.unmodifiableList(subExceptions);
-	}
+    @Contract(pure = true)
+    public @NotNull @UnmodifiableView List<FaceIOException> getSubExceptions() {
+        return Collections.unmodifiableList(subExceptions);
+    }
 }

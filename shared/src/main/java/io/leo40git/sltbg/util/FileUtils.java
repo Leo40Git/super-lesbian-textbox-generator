@@ -20,47 +20,47 @@ import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 public final class FileUtils {
-	private FileUtils() {
-		throw new UnsupportedOperationException("MoreFiles only contains static declarations.");
-	}
+    private FileUtils() {
+        throw new UnsupportedOperationException("MoreFiles only contains static declarations.");
+    }
 
-	private static final class DirectoryDeleter extends SimpleFileVisitor<Path> {
-		@Override
-		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-			Objects.requireNonNull(file);
-			Files.delete(file);
-			return FileVisitResult.CONTINUE;
-		}
+    private static final class DirectoryDeleter extends SimpleFileVisitor<Path> {
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            Objects.requireNonNull(file);
+            Files.delete(file);
+            return FileVisitResult.CONTINUE;
+        }
 
-		@Override
-		public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-			Objects.requireNonNull(dir);
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            Objects.requireNonNull(dir);
 
-			if (exc != null) {
-				throw exc;
-			}
+            if (exc != null) {
+                throw exc;
+            }
 
-			Files.delete(dir);
-			return FileVisitResult.CONTINUE;
-		}
-	}
+            Files.delete(dir);
+            return FileVisitResult.CONTINUE;
+        }
+    }
 
-	public static void deleteDirectory(@NotNull Path dir) throws IOException {
-		Files.walkFileTree(dir, new DirectoryDeleter());
-	}
+    public static void deleteDirectory(@NotNull Path dir) throws IOException {
+        Files.walkFileTree(dir, new DirectoryDeleter());
+    }
 
-	@SuppressWarnings("UnusedReturnValue")
-	public static boolean deleteDirectoryIfExists(@NotNull Path dir) throws IOException {
-		if (Files.isDirectory(dir)) {
-			deleteDirectory(dir);
-			return true;
-		}
-		return false;
-	}
+    @SuppressWarnings("UnusedReturnValue")
+    public static boolean deleteDirectoryIfExists(@NotNull Path dir) throws IOException {
+        if (Files.isDirectory(dir)) {
+            deleteDirectory(dir);
+            return true;
+        }
+        return false;
+    }
 
-	public static boolean isEmptyDirectory(@NotNull Path dir) throws IOException {
-		try (var ds = Files.newDirectoryStream(dir)) {
-			return !ds.iterator().hasNext();
-		}
-	}
+    public static boolean isEmptyDirectory(@NotNull Path dir) throws IOException {
+        try (var ds = Files.newDirectoryStream(dir)) {
+            return !ds.iterator().hasNext();
+        }
+    }
 }

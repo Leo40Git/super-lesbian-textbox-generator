@@ -24,94 +24,94 @@ import io.leo40git.sltbg.status.StatusTreeNodeIcon;
 import org.jetbrains.annotations.NotNull;
 
 public final class SwingStatusTreeModel extends DefaultTreeModel {
-	private final @NotNull JTree tree;
-	private final @NotNull SwingStatusTreeNodeImpl statusRoot;
+    private final @NotNull JTree tree;
+    private final @NotNull SwingStatusTreeNodeImpl statusRoot;
 
-	private final @NotNull AtomicBoolean updateQueued;
-	private final @NotNull ConcurrentLinkedDeque<DefaultMutableTreeNode> pendingExpansions, pendingReloads;
-	private final @NotNull HashSet<DefaultMutableTreeNode> nodesToReload;
-	private final @NotNull HashSet<TreePath> pathsToExpand;
+    private final @NotNull AtomicBoolean updateQueued;
+    private final @NotNull ConcurrentLinkedDeque<DefaultMutableTreeNode> pendingExpansions, pendingReloads;
+    private final @NotNull HashSet<DefaultMutableTreeNode> nodesToReload;
+    private final @NotNull HashSet<TreePath> pathsToExpand;
 
-	public SwingStatusTreeModel(@NotNull JTree tree, @NotNull StatusTreeNodeIcon rootIcon, @NotNull String rootText) {
-		super(new DefaultMutableTreeNode());
-		this.tree = tree;
+    public SwingStatusTreeModel(@NotNull JTree tree, @NotNull StatusTreeNodeIcon rootIcon, @NotNull String rootText) {
+        super(new DefaultMutableTreeNode());
+        this.tree = tree;
 
-		statusRoot = new SwingStatusTreeNodeImpl(this, (DefaultMutableTreeNode) root, rootIcon, rootText);
-		updateQueued = new AtomicBoolean(false);
-		pendingExpansions = new ConcurrentLinkedDeque<>();
-		pendingReloads = new ConcurrentLinkedDeque<>();
-		nodesToReload = new HashSet<>();
-		pathsToExpand = new HashSet<>();
+        statusRoot = new SwingStatusTreeNodeImpl(this, (DefaultMutableTreeNode) root, rootIcon, rootText);
+        updateQueued = new AtomicBoolean(false);
+        pendingExpansions = new ConcurrentLinkedDeque<>();
+        pendingReloads = new ConcurrentLinkedDeque<>();
+        nodesToReload = new HashSet<>();
+        pathsToExpand = new HashSet<>();
 
-		tree.setModel(this);
-	}
+        tree.setModel(this);
+    }
 
-	public SwingStatusTreeModel(@NotNull JTree tree) {
-		this(tree, StatusTreeNodeIcon.MESSAGE_INFORMATION, "(root)");
-	}
+    public SwingStatusTreeModel(@NotNull JTree tree) {
+        this(tree, StatusTreeNodeIcon.MESSAGE_INFORMATION, "(root)");
+    }
 
-	public @NotNull StatusTreeNode getStatusRoot() {
-		return statusRoot;
-	}
+    public @NotNull StatusTreeNode getStatusRoot() {
+        return statusRoot;
+    }
 
-	void queueUpdate() {
-		if (!updateQueued.compareAndExchange(false, true)) {
-			SwingUtilities.invokeLater(this::performUpdate);
-		}
-	}
+    void queueUpdate() {
+        if (!updateQueued.compareAndExchange(false, true)) {
+            SwingUtilities.invokeLater(this::performUpdate);
+        }
+    }
 
-	void queueExpandNode(@NotNull DefaultMutableTreeNode node) {
-		pendingExpansions.add(node);
-		queueUpdate();
-	}
+    void queueExpandNode(@NotNull DefaultMutableTreeNode node) {
+        pendingExpansions.add(node);
+        queueUpdate();
+    }
 
-	void queueReloadNode(@NotNull DefaultMutableTreeNode node) {
-		pendingReloads.add(node);
-		queueUpdate();
-	}
+    void queueReloadNode(@NotNull DefaultMutableTreeNode node) {
+        pendingReloads.add(node);
+        queueUpdate();
+    }
 
-	private void performUpdate() {
-		pathsToExpand.clear();
+    private void performUpdate() {
+        pathsToExpand.clear();
 
-		var nodeToExpand = pendingExpansions.pollFirst();
-		while (nodeToExpand != null) {
-			pathsToExpand.add(new TreePath(nodeToExpand.getPath()));
-			nodeToExpand = pendingExpansions.pollFirst();
-		}
+        var nodeToExpand = pendingExpansions.pollFirst();
+        while (nodeToExpand != null) {
+            pathsToExpand.add(new TreePath(nodeToExpand.getPath()));
+            nodeToExpand = pendingExpansions.pollFirst();
+        }
 
-		nodesToReload.clear();
+        nodesToReload.clear();
 
-		var nodeToReload = pendingReloads.pollFirst();
-		while (nodeToReload != null) {
-			nodesToReload.add(nodeToReload);
-			nodeToReload = pendingReloads.pollFirst();
-		}
+        var nodeToReload = pendingReloads.pollFirst();
+        while (nodeToReload != null) {
+            nodesToReload.add(nodeToReload);
+            nodeToReload = pendingReloads.pollFirst();
+        }
 
-		if (nodesToReload.size() > 0) {
-			for (var node : nodesToReload) {
-				var expanded = tree.getExpandedDescendants(new TreePath(node.getPath()));
-				if (expanded != null) {
-					while (expanded.hasMoreElements()) {
-						pathsToExpand.add(expanded.nextElement());
-					}
-				}
-				reload(node);
-			}
-		}
+        if (nodesToReload.size() > 0) {
+            for (var node : nodesToReload) {
+                var expanded = tree.getExpandedDescendants(new TreePath(node.getPath()));
+                if (expanded != null) {
+                    while (expanded.hasMoreElements()) {
+                        pathsToExpand.add(expanded.nextElement());
+                    }
+                }
+                reload(node);
+            }
+        }
 
-		nodesToReload.clear();
+        nodesToReload.clear();
 
-		if (pathsToExpand.size() > 0) {
-			for (var path : pathsToExpand) {
-				tree.expandPath(path);
-			}
-		}
+        if (pathsToExpand.size() > 0) {
+            for (var path : pathsToExpand) {
+                tree.expandPath(path);
+            }
+        }
 
-		pathsToExpand.clear();
+        pathsToExpand.clear();
 
-		tree.revalidate();
-		tree.repaint();
+        tree.revalidate();
+        tree.repaint();
 
-		updateQueued.set(false);
-	}
+        updateQueued.set(false);
+    }
 }

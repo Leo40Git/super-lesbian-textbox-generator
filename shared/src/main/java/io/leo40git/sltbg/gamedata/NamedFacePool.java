@@ -13,54 +13,54 @@ import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
 public final class NamedFacePool extends FacePool {
-	private @NotNull String name;
-	private String @NotNull [] description, credits;
+    private @NotNull String name;
+    private String @NotNull [] description, credits;
 
-	public NamedFacePool(@NotNull String name) {
-		super();
-		this.name = name;
-		description = ArrayUtils.EMPTY_STRING_ARRAY;
-		credits = ArrayUtils.EMPTY_STRING_ARRAY;
-	}
+    public NamedFacePool(@NotNull String name) {
+        super();
+        this.name = name;
+        description = ArrayUtils.EMPTY_STRING_ARRAY;
+        credits = ArrayUtils.EMPTY_STRING_ARRAY;
+    }
 
-	public @NotNull String getName() {
-		return name;
-	}
+    public @NotNull String getName() {
+        return name;
+    }
 
-	public void setName(@NotNull String name) {
-		this.name = name;
-	}
+    public void setName(@NotNull String name) {
+        this.name = name;
+    }
 
-	public boolean hasDescription() {
-		return description.length > 0;
-	}
+    public boolean hasDescription() {
+        return description.length > 0;
+    }
 
-	public String @NotNull [] getDescription() {
-		return ArrayUtils.clone(description);
-	}
+    public String @NotNull [] getDescription() {
+        return ArrayUtils.clone(description);
+    }
 
-	public void setDescription(String @NotNull [] description) {
-		this.description = ArrayUtils.clone(description);
-	}
+    public void setDescription(String @NotNull [] description) {
+        this.description = ArrayUtils.clone(description);
+    }
 
-	public void clearDescription() {
-		description = ArrayUtils.EMPTY_STRING_ARRAY;
-	}
+    public void clearDescription() {
+        description = ArrayUtils.EMPTY_STRING_ARRAY;
+    }
 
-	public boolean hasCredits() {
-		return credits.length > 0;
-	}
+    public boolean hasCredits() {
+        return credits.length > 0;
+    }
 
-	public String @NotNull [] getCredits() {
-		return ArrayUtils.clone(credits);
-	}
+    public String @NotNull [] getCredits() {
+        return ArrayUtils.clone(credits);
+    }
 
-	public void setCredits(String @NotNull [] credits) {
-		this.credits = ArrayUtils.clone(credits);
-	}
+    public void setCredits(String @NotNull [] credits) {
+        this.credits = ArrayUtils.clone(credits);
+    }
 
-	public void clearCredits() {
-		credits = ArrayUtils.EMPTY_STRING_ARRAY;
-	}
+    public void clearCredits() {
+        credits = ArrayUtils.EMPTY_STRING_ARRAY;
+    }
 
 }

@@ -15,25 +15,25 @@ import java.util.regex.Pattern;
 import org.jetbrains.annotations.NotNull;
 
 public final class StringUtils {
-	private StringUtils() {
-		throw new UnsupportedOperationException("StringUtils only contains static declarations.");
-	}
+    private StringUtils() {
+        throw new UnsupportedOperationException("StringUtils only contains static declarations.");
+    }
 
-	private static final AtomicBoolean lineSeparatorPatternInitialized = new AtomicBoolean();
-	private static Pattern lineSeparatorPattern;
+    private static final AtomicBoolean lineSeparatorPatternInitialized = new AtomicBoolean();
+    private static Pattern lineSeparatorPattern;
 
-	public static @NotNull String simplifyLineSeparators(@NotNull String s) {
-		if (!lineSeparatorPatternInitialized.compareAndExchange(false, true)) {
-			String lineSeparator = System.lineSeparator();
-			if (!"\n".equals(lineSeparator)) {
-				lineSeparatorPattern = Pattern.compile(lineSeparator, Pattern.LITERAL);
-			}
-		}
+    public static @NotNull String simplifyLineSeparators(@NotNull String s) {
+        if (!lineSeparatorPatternInitialized.compareAndExchange(false, true)) {
+            String lineSeparator = System.lineSeparator();
+            if (!"\n".equals(lineSeparator)) {
+                lineSeparatorPattern = Pattern.compile(lineSeparator, Pattern.LITERAL);
+            }
+        }
 
-		if (lineSeparatorPattern == null) {
-			return s;
-		} else {
-			return lineSeparatorPattern.matcher(s).replaceAll("\n");
-		}
-	}
+        if (lineSeparatorPattern == null) {
+            return s;
+        } else {
+            return lineSeparatorPattern.matcher(s).replaceAll("\n");
+        }
+    }
 }

@@ -9,4 +9,5 @@
 
 package io.leo40git.sltbg.util;
 
-public record Pair<L, R>(L left, R right) { }
+public record Pair<L, R>(L left, R right) {
+}
