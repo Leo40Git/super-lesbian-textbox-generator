@@ -37,11 +37,18 @@ public final class FaceSheet {
     private final @NotNull String sheetPath;
     private final int offset;
     private final @NotNull @Unmodifiable List<Entry> entries;
+    private final int maxIndex;
 
     public FaceSheet(@NotNull String sheetPath, int offset, @NotNull List<Entry> entries) {
         this.sheetPath = sheetPath;
         this.offset = offset;
         this.entries = CollectionUtils.copyOf(entries);
+
+        int maxIndex = offset;
+        for (var entry : entries) {
+            maxIndex += entry.getAdvance();
+        }
+        this.maxIndex = maxIndex;
     }
 
     public @NotNull String getSheetPath() {
@@ -68,12 +75,18 @@ public final class FaceSheet {
                     .formatted(sheet.getWidth(), sheet.getHeight(), IMAGE_SIZE));
         }
 
+        int rows = sheet.getWidth() / IMAGE_SIZE;
+        int cols = sheet.getHeight() / IMAGE_SIZE;
+        if (rows * cols <= maxIndex) {
+            throw new IOException("sheet isn't big enough to cover %d faces (only has %d)"
+                    .formatted(maxIndex, rows * cols));
+        }
+
         var faces = new ArrayList<Pair<String, Face>>(entries.size());
-        int facesPerRow = sheet.getWidth() / IMAGE_SIZE;
         int index = offset;
         for (var entry : entries) {
-            int x = (index % facesPerRow) * IMAGE_SIZE;
-            int y = (index / facesPerRow) * IMAGE_SIZE;
+            int x = (index % rows) * IMAGE_SIZE;
+            int y = (index / rows) * IMAGE_SIZE;
             var image = sheet.getSubimage(x, y, IMAGE_SIZE, IMAGE_SIZE);
             var face = new Face(entry.getImagePath(), entry.getName());
             face.setImage(image);

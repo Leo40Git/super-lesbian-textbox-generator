@@ -349,9 +349,15 @@ public final class FacePoolDefinitionParser {
         };
     }
 
-    private void flushSheetEntry() {
+    private void flushSheetEntry(boolean last) {
         if (currentSheetEntryBuilder == null) {
             return;
+        }
+
+        if (last) {
+            // throw away the advance of last entry
+            // this simplifies the size check in FaceSheet later
+            currentSheetEntryBuilder.advance = 0;
         }
 
         if (pendingSheetEntries == null) {
@@ -363,7 +369,7 @@ public final class FacePoolDefinitionParser {
     }
 
     private void flushSheet() {
-        flushSheetEntry();
+        flushSheetEntry(true);
 
         if (pendingSheetEntries == null || pendingSheetEntries.isEmpty()) {
             return;
@@ -389,7 +395,7 @@ public final class FacePoolDefinitionParser {
                 yield true;
             }
             case CMD_ADD, CMD_ADD_S -> {
-                flushSheetEntry();
+                flushSheetEntry(false);
 
                 if (!scn.hasNext()) {
                     throw new FacePoolDefinitionException(CMD_ADD + " command missing face image path parameter", lineNumber);
