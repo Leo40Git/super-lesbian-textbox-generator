@@ -117,7 +117,8 @@ public final class FacePoolIO {
         }
     }
 
-    public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor) {
+    public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull Executor executor,
+                                                                   @NotNull NamedFacePool pool, @NotNull Path rootDir) {
         var categories = pool.getCategories();
         if (categories.isEmpty()) {
             // nothing to do
@@ -129,7 +130,7 @@ public final class FacePoolIO {
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
         for (var category : categories) {
-            futures[futureI] = FaceCategoryIO.readImagesAsync(category, rootDir, executor)
+            futures[futureI] = FaceCategoryIO.readImagesAsync(executor, category, rootDir)
                     .exceptionallyCompose(ex -> {
                         if (ex instanceof FaceCategoryIOException fcioe) {
                             exceptions.add(fcioe);
@@ -193,7 +194,8 @@ public final class FacePoolIO {
         }
     }
 
-    public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor) {
+    public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull Executor executor,
+                                                                    @NotNull NamedFacePool pool, @NotNull Path rootDir) {
         var categories = pool.getCategories();
         if (categories.isEmpty()) {
             // nothing to do
@@ -205,7 +207,7 @@ public final class FacePoolIO {
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
         for (var category : categories) {
-            futures[futureI] = FaceCategoryIO.writeImagesAsync(category, rootDir, executor)
+            futures[futureI] = FaceCategoryIO.writeImagesAsync(executor, category, rootDir)
                     .exceptionallyCompose(ex -> {
                         if (ex instanceof FaceCategoryIOException fcioe) {
                             exceptions.add(fcioe);

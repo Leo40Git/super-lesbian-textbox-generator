@@ -86,7 +86,8 @@ public final class FaceCategoryIO {
         }
     }
 
-    public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor) {
+    public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull Executor executor,
+                                                                   @NotNull FaceCategory category, @NotNull Path rootDir) {
         var faces = category.getFaces();
         if (faces.isEmpty()) {
             // nothing to do
@@ -167,7 +168,8 @@ public final class FaceCategoryIO {
         }
     }
 
-    public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull FaceCategory category, @NotNull Path rootDir, @NotNull Executor executor) {
+    public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull Executor executor,
+                                                                    @NotNull FaceCategory category, @NotNull Path rootDir) {
         var faces = category.getFaces();
         if (faces.isEmpty()) {
             // nothing to do
