@@ -28,37 +28,40 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     private final @NotNull ArrayList<Face> faces;
     private final @NotNull HashMap<String, Face> facesLookup;
     private @NotNull String name;
-    private boolean orderSet;
+    private boolean orderSet = false;
     private long order;
     private @Nullable String characterName;
-    private String @NotNull [] description;
+    private String @NotNull [] description = ArrayUtils.EMPTY_STRING_ARRAY;
 
     private @Nullable Face iconFace, lastFace;
-    private volatile boolean needsSort;
-
-    private FaceCategory(@NotNull String name, @NotNull ArrayList<Face> faces, @NotNull HashMap<String, Face> facesLookup) {
-        validateName(name);
-        this.name = name;
-        this.faces = faces;
-        this.facesLookup = facesLookup;
-
-        pool = null;
-        orderSet = false;
-        order = 0;
-        characterName = null;
-        description = ArrayUtils.EMPTY_STRING_ARRAY;
-
-        iconFace = null;
-        lastFace = null;
-        needsSort = false;
-    }
+    private volatile boolean needsSort = false;
 
     public FaceCategory(@NotNull String name) {
-        this(name, new ArrayList<>(), new HashMap<>());
+        validateName(name);
+        this.name = name;
+        faces = new ArrayList<>();
+        facesLookup = new HashMap<>();
     }
 
     public FaceCategory(@NotNull String name, int initialCapacity) {
-        this(name, new ArrayList<>(initialCapacity), new HashMap<>(initialCapacity));
+        validateName(name);
+        this.name = name;
+        faces = new ArrayList<>(initialCapacity);
+        facesLookup = new HashMap<>(initialCapacity);
+    }
+
+    public FaceCategory(@NotNull String name, @NotNull List<Face> faces) {
+        validateName(name);
+        this.name = name;
+        this.faces = new ArrayList<>(faces);
+        facesLookup = new HashMap<>(faces.size());
+
+        for (var face : faces) {
+            if (facesLookup.put(face.getName(), face) != null) {
+                throw new IllegalArgumentException("faces contains 2 elements with the same name: '%s'"
+                        .formatted(face.getName()));
+            }
+        }
     }
 
     public @Nullable FacePool getPool() {

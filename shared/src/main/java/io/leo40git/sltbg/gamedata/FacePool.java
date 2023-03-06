@@ -34,22 +34,28 @@ public sealed class FacePool permits NamedFacePool {
     private final @NotNull ArrayList<FaceCategory> categories;
     private final @NotNull HashMap<String, FaceCategory> categoriesLookup;
     private @Nullable FaceCategory lastCategory;
-    private volatile boolean needsSort;
-
-    private FacePool(@NotNull ArrayList<FaceCategory> categories, @NotNull HashMap<String, FaceCategory> categoriesLookup) {
-        this.categories = categories;
-        this.categoriesLookup = categoriesLookup;
-
-        lastCategory = null;
-        needsSort = false;
-    }
+    private volatile boolean needsSort = false;
 
     public FacePool() {
-        this(new ArrayList<>(), new HashMap<>());
+        categories = new ArrayList<>();
+        categoriesLookup = new HashMap<>();
     }
 
     public FacePool(int initialCapacity) {
-        this(new ArrayList<>(initialCapacity), new HashMap<>(initialCapacity));
+        categories = new ArrayList<>(initialCapacity);
+        categoriesLookup = new HashMap<>(initialCapacity);
+    }
+
+    public FacePool(@NotNull List<FaceCategory> categories) {
+        this.categories = new ArrayList<>(categories);
+        categoriesLookup = new HashMap<>(categories.size());
+
+        for (var category : categories) {
+            if (categoriesLookup.put(category.getName(), category) != null) {
+                throw new IllegalArgumentException("categories contains 2 elements with the same name: '%s'"
+                        .formatted(category.getName()));
+            }
+        }
     }
 
     void markDirty() {
