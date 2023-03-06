@@ -33,7 +33,8 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     private @Nullable String characterName;
     private String @NotNull [] description = ArrayUtils.EMPTY_STRING_ARRAY;
 
-    private @Nullable Face iconFace, lastFace;
+    private @Nullable Face iconFace;
+    private long lastOrder = FacePool.DEFAULT_ORDER_BASE;
     private volatile boolean needsSort = false;
 
     public FaceCategory(@NotNull String name) {
@@ -200,14 +201,13 @@ public final class FaceCategory implements Comparable<FaceCategory> {
                 iconFace = face;
             }
 
-            if (!face.isOrderSet()) {
-                if (lastFace != null) {
-                    face.setOrder(FacePool.getNextOrder(lastFace.getOrder()));
-                } else {
-                    face.setOrder(FacePool.DEFAULT_ORDER_BASE);
+            if (face.isOrderSet()) {
+                if (face.getOrder() > lastOrder) {
+                    lastOrder = face.getOrder();
                 }
+            } else {
+                face.setOrder(lastOrder = FacePool.getNextOrder(lastOrder));
             }
-            lastFace = face;
         }
 
         markDirty();
@@ -242,16 +242,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
                 iconFace = faces.get(0);
             } else {
                 iconFace = null;
-            }
-        }
-
-        if (lastFace == face) {
-            if (!faces.isEmpty()) {
-                faces.sort(Comparator.naturalOrder());
-                doMarkDirty = needsSort = false;
-                iconFace = faces.get(faces.size() - 1);
-            } else {
-                lastFace = null;
             }
         }
 
@@ -297,7 +287,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
             facesLookup.clear();
 
             iconFace = null;
-            lastFace = null;
         }
 
         needsSort = false;

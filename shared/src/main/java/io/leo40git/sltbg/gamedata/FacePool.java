@@ -33,7 +33,8 @@ public sealed class FacePool permits NamedFacePool {
 
     private final @NotNull ArrayList<FaceCategory> categories;
     private final @NotNull HashMap<String, FaceCategory> categoriesLookup;
-    private @Nullable FaceCategory lastCategory;
+
+    private long lastOrder = DEFAULT_ORDER_BASE;
     private volatile boolean needsSort = false;
 
     public FacePool() {
@@ -113,14 +114,13 @@ public sealed class FacePool permits NamedFacePool {
             categories.add(category);
             category.onAddedToPool(this);
 
-            if (!category.isOrderSet()) {
-                if (lastCategory != null) {
-                    category.setOrder(FacePool.getNextOrder(lastCategory.getOrder()));
-                } else {
-                    category.setOrder(FacePool.DEFAULT_ORDER_BASE);
+            if (category.isOrderSet()) {
+                if (category.getOrder() > lastOrder) {
+                    lastOrder = category.getOrder();
                 }
+            } else {
+                category.setOrder(lastOrder = getNextOrder(lastOrder));
             }
-            lastCategory = category;
         }
     }
 
@@ -141,24 +141,9 @@ public sealed class FacePool permits NamedFacePool {
         }
     }
 
-    private void remove0(@NotNull FaceCategory category) {
+    protected void remove0(@NotNull FaceCategory category) {
         category.onRemovedFromPool();
-
-        boolean doMarkDirty = true;
-
-        if (lastCategory == category) {
-            if (!categories.isEmpty()) {
-                categories.sort(Comparator.naturalOrder());
-                doMarkDirty = needsSort = false;
-                lastCategory = categories.get(categories.size() - 1);
-            } else {
-                lastCategory = null;
-            }
-        }
-
-        if (doMarkDirty) {
-            markDirty();
-        }
+        markDirty();
     }
 
     public boolean remove(@NotNull FaceCategory category) {
@@ -196,7 +181,6 @@ public sealed class FacePool permits NamedFacePool {
 
             categories.clear();
             categoriesLookup.clear();
-            lastCategory = null;
         }
 
         needsSort = false;
