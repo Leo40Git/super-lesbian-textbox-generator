@@ -50,17 +50,22 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         facesLookup = new HashMap<>(initialCapacity);
     }
 
-    public FaceCategory(@NotNull String name, @NotNull List<Face> faces) {
+    /**
+     * This constructor "takes ownership" of the {@literal faces} list -
+     * <em>you should not modify this list after passing it to this constructor!</em>
+     */
+    public FaceCategory(@NotNull String name, @NotNull ArrayList<Face> faces) {
         validateName(name);
         this.name = name;
-        this.faces = new ArrayList<>(faces);
+        this.faces = faces;
         facesLookup = new HashMap<>(faces.size());
 
         for (var face : faces) {
             if (facesLookup.put(face.getName(), face) != null) {
-                throw new IllegalArgumentException("faces contains 2 elements with the same name: '%s'"
+                throw new IllegalArgumentException("faces contains 2 elements with the same name: \"%s\""
                         .formatted(face.getName()));
             }
+            face.onAddedToCategory(this);
         }
     }
 

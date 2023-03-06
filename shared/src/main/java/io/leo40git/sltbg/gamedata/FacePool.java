@@ -46,8 +46,12 @@ public sealed class FacePool permits NamedFacePool {
         categoriesLookup = new HashMap<>(initialCapacity);
     }
 
-    public FacePool(@NotNull List<FaceCategory> categories) {
-        this.categories = new ArrayList<>(categories);
+    /**
+     * This constructor "takes ownership" of the {@literal categories} list -
+     * <em>you should not modify this list after passing it to this constructor!</em>
+     */
+    public FacePool(@NotNull ArrayList<FaceCategory> categories) {
+        this.categories = categories;
         categoriesLookup = new HashMap<>(categories.size());
 
         for (var category : categories) {
@@ -55,6 +59,7 @@ public sealed class FacePool permits NamedFacePool {
                 throw new IllegalArgumentException("categories contains 2 elements with the same name: '%s'"
                         .formatted(category.getName()));
             }
+            category.onAddedToPool(this);
         }
     }
 
