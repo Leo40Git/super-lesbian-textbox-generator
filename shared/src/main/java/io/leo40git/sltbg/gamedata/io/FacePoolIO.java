@@ -23,8 +23,6 @@ import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MalformedJsonException;
 import io.leo40git.sltbg.json.MissingFieldsException;
-import io.leo40git.sltbg.status.StatusTreeNode;
-import io.leo40git.sltbg.status.StatusTreeNodeIcon;
 import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -155,48 +153,6 @@ public final class FacePoolIO {
                 });
     }
 
-    public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor,
-                                                                   @NotNull StatusTreeNode node) {
-        var categories = pool.getCategories();
-        if (categories.isEmpty()) {
-            // nothing to do
-            return CompletableFuture.completedFuture(null);
-        }
-
-        final var exceptions = new ConcurrentLinkedQueue<FaceCategoryIOException>();
-
-        node.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
-
-        var futures = new CompletableFuture[categories.size()];
-        int futureI = 0;
-        for (var category : categories) {
-            final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, category.getName());
-            futures[futureI] = FaceCategoryIO.readImagesAsync(category, rootDir, executor, child)
-                    .exceptionallyCompose(ex -> {
-                        if (ex instanceof FaceCategoryIOException fcioe) {
-                            exceptions.add(fcioe);
-                            return CompletableFuture.completedStage(null);
-                        } else {
-                            return CompletableFuture.failedStage(ex);
-                        }
-                    });
-            futureI++;
-        }
-
-        return CompletableFuture.allOf(futures)
-                .thenCompose(unused -> {
-                    if (exceptions.isEmpty()) {
-                        node.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
-                        return CompletableFuture.completedStage(null);
-                    } else {
-                        var e = new FacePoolIOException(pool, "Failed to read all face images", exceptions);
-                        e.fillInStackTrace();
-                        node.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
-                        return CompletableFuture.failedStage(e);
-                    }
-                });
-    }
-
     public static void write(@NotNull NamedFacePool pool, @NotNull JsonWriter writer) throws IOException {
         writer.beginObject();
 
@@ -268,48 +224,6 @@ public final class FacePoolIO {
                     } else {
                         var e = new FacePoolIOException(pool, "Failed to write all face images", exceptions);
                         e.fillInStackTrace();
-                        return CompletableFuture.failedStage(e);
-                    }
-                });
-    }
-
-    public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull NamedFacePool pool, @NotNull Path rootDir, @NotNull Executor executor,
-                                                                    @NotNull StatusTreeNode node) {
-        var categories = pool.getCategories();
-        if (categories.isEmpty()) {
-            // nothing to do
-            return CompletableFuture.completedFuture(null);
-        }
-
-        final var exceptions = new ConcurrentLinkedQueue<FaceCategoryIOException>();
-
-        node.setIcon(StatusTreeNodeIcon.OPERATION_IN_PROGRESS);
-
-        var futures = new CompletableFuture[categories.size()];
-        int futureI = 0;
-        for (var category : categories) {
-            final var child = node.addChild(StatusTreeNodeIcon.OPERATION_PENDING, category.getName());
-            futures[futureI] = FaceCategoryIO.writeImagesAsync(category, rootDir, executor, child)
-                    .exceptionallyCompose(ex -> {
-                        if (ex instanceof FaceCategoryIOException fcioe) {
-                            exceptions.add(fcioe);
-                            return CompletableFuture.completedStage(null);
-                        } else {
-                            return CompletableFuture.failedStage(ex);
-                        }
-                    });
-            futureI++;
-        }
-
-        return CompletableFuture.allOf(futures)
-                .thenCompose(unused -> {
-                    if (exceptions.isEmpty()) {
-                        node.setIcon(StatusTreeNodeIcon.OPERATION_FINISHED);
-                        return CompletableFuture.completedStage(null);
-                    } else {
-                        var e = new FacePoolIOException(pool, "Failed to write all face images", exceptions);
-                        e.fillInStackTrace();
-                        node.setIcon(StatusTreeNodeIcon.MESSAGE_ERROR);
                         return CompletableFuture.failedStage(e);
                     }
                 });
