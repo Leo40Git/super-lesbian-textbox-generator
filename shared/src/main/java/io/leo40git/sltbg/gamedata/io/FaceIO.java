@@ -24,6 +24,7 @@ import io.leo40git.sltbg.swing.util.ImageUtils;
 import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
@@ -77,21 +78,38 @@ public final class FaceIO {
         return face;
     }
 
-    public static void readImage(@NotNull Face face, @NotNull Path rootDir) throws FaceIOException {
+    public static void readImage(@NotNull Face face, @NotNull Path rootDir,
+                                 @Nullable FaceImageReadObserver observer) throws FaceIOException {
         face.clearImage();
+
+        if (observer != null) {
+            observer.preReadFaceImage(face);
+        }
 
         final var imagePath = rootDir.resolve(face.getImagePath());
         BufferedImage image;
         try (var is = Files.newInputStream(imagePath)) {
             image = ImageIO.read(is);
         } catch (IOException e) {
-            throw new FaceIOException(face, "Failed to read face image from \"" + imagePath + "\"", e);
+            var exc = new FaceIOException(face, "Failed to read face image from \"" + imagePath + "\"", e);
+            if (observer != null) {
+                observer.postReadFaceImage(face, exc);
+            }
+            throw exc;
         }
 
         try {
             face.setImage(image);
         } catch (IllegalArgumentException e) {
-            throw new FaceIOException(face, "Face image at \"" + imagePath + "\" is invalid", e);
+            var exc = new FaceIOException(face, "Face image at \"" + imagePath + "\" is invalid", e);
+            if (observer != null) {
+                observer.postReadFaceImage(face, exc);
+            }
+            throw exc;
+        }
+
+        if (observer != null) {
+            observer.postReadFaceImage(face, null);
         }
     }
 
@@ -131,17 +149,39 @@ public final class FaceIO {
         createImageDirectories0(face, rootDir.resolve(face.getImagePath()).getParent());
     }
 
-    public static void writeImage(@NotNull Face face, @NotNull Path rootDir) throws FaceIOException {
+    public static void writeImage(@NotNull Face face, @NotNull Path rootDir,
+                                  @Nullable FaceImageWriteObserver observer) throws FaceIOException {
         if (!face.hasImage()) {
             throw new FaceIOException(face, "Face doesn't have an image to write");
         }
 
+        if (observer != null) {
+            observer.preWriteFaceImage(face);
+        }
+
         final var imagePath = rootDir.resolve(face.getImagePath());
-        createImageDirectories0(face, imagePath.getParent());
+
+        try {
+            createImageDirectories0(face, imagePath.getParent());
+        } catch (FaceIOException e) {
+            if (observer != null) {
+                observer.postWriteFaceImage(face, e);
+            }
+            throw e;
+        }
+
         try {
             ImageUtils.writeImage(face.getImage(), imagePath);
         } catch (IOException e) {
-            throw new FaceIOException(face, "Failed to write face image to \"" + imagePath + "\"", e);
+            var exc = new FaceIOException(face, "Failed to write face image to \"" + imagePath + "\"", e);
+            if (observer != null) {
+                observer.postWriteFaceImage(face, exc);
+            }
+            throw exc;
+        }
+
+        if (observer != null) {
+            observer.postWriteFaceImage(face, null);
         }
     }
 }

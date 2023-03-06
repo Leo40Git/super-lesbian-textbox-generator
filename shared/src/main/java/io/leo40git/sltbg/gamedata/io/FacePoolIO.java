@@ -26,6 +26,7 @@ import io.leo40git.sltbg.json.MissingFieldsException;
 import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonWriter;
@@ -98,12 +99,17 @@ public final class FacePoolIO {
         return read(reader, true);
     }
 
-    public static void readImages(@NotNull NamedFacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
+    public static void readImages(@NotNull NamedFacePool pool, @NotNull Path rootDir,
+                                  @Nullable FaceImageReadObserver observer) throws FacePoolIOException {
+        if (observer != null) {
+            observer.preReadFacePoolImages(pool);
+        }
+
         FacePoolIOException bigExc = null;
 
         for (var category : pool.getCategories()) {
             try {
-                FaceCategoryIO.readImages(category, rootDir);
+                FaceCategoryIO.readImages(category, rootDir, observer);
             } catch (FaceCategoryIOException e) {
                 if (bigExc == null) {
                     bigExc = new FacePoolIOException(pool, "Failed to read all face images");
@@ -112,16 +118,28 @@ public final class FacePoolIO {
             }
         }
 
+        if (observer != null) {
+            observer.postReadFacePoolImages(pool, bigExc);
+        }
+
         if (bigExc != null) {
             throw bigExc;
         }
     }
 
     public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull Executor executor,
-                                                                   @NotNull NamedFacePool pool, @NotNull Path rootDir) {
+                                                                   @NotNull NamedFacePool pool, @NotNull Path rootDir,
+                                                                   @Nullable FaceImageReadObserver observer) {
+        if (observer != null) {
+            observer.preReadFacePoolImages(pool);
+        }
+
         var categories = pool.getCategories();
         if (categories.isEmpty()) {
             // nothing to do
+            if (observer != null) {
+                observer.postReadFacePoolImages(pool, null);
+            }
             return CompletableFuture.completedFuture(null);
         }
 
@@ -130,7 +148,7 @@ public final class FacePoolIO {
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
         for (var category : categories) {
-            futures[futureI] = FaceCategoryIO.readImagesAsync(executor, category, rootDir)
+            futures[futureI] = FaceCategoryIO.readImagesAsync(executor, category, rootDir, observer)
                     .exceptionallyCompose(ex -> {
                         if (ex instanceof FaceCategoryIOException fcioe) {
                             exceptions.add(fcioe);
@@ -145,11 +163,16 @@ public final class FacePoolIO {
         return CompletableFuture.allOf(futures)
                 .thenCompose(unused -> {
                     if (exceptions.isEmpty()) {
+                        if (observer != null) {
+                            observer.postReadFacePoolImages(pool, null);
+                        }
                         return CompletableFuture.completedStage(null);
                     } else {
-                        var e = new FacePoolIOException(pool, "Failed to read all face images", exceptions);
-                        e.fillInStackTrace();
-                        return CompletableFuture.failedStage(e);
+                        var exc = new FacePoolIOException(pool, "Failed to read all face images", exceptions);
+                        if (observer != null) {
+                            observer.postReadFacePoolImages(pool, exc);
+                        }
+                        return CompletableFuture.failedStage(exc);
                     }
                 });
     }
@@ -175,12 +198,17 @@ public final class FacePoolIO {
         writer.endObject();
     }
 
-    public static void writeImages(@NotNull NamedFacePool pool, @NotNull Path rootDir) throws FacePoolIOException {
+    public static void writeImages(@NotNull NamedFacePool pool, @NotNull Path rootDir,
+                                   @Nullable FaceImageWriteObserver observer) throws FacePoolIOException {
+        if (observer != null) {
+            observer.preWriteFacePoolImages(pool);
+        }
+
         FacePoolIOException bigExc = null;
 
         for (var category : pool.getCategories()) {
             try {
-                FaceCategoryIO.writeImages(category, rootDir);
+                FaceCategoryIO.writeImages(category, rootDir, observer);
             } catch (FaceCategoryIOException e) {
                 if (bigExc == null) {
                     bigExc = new FacePoolIOException(pool, "Failed to write all face images");
@@ -189,16 +217,28 @@ public final class FacePoolIO {
             }
         }
 
+        if (observer != null) {
+            observer.postWriteFacePoolImages(pool, bigExc);
+        }
+
         if (bigExc != null) {
             throw bigExc;
         }
     }
 
     public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull Executor executor,
-                                                                    @NotNull NamedFacePool pool, @NotNull Path rootDir) {
+                                                                    @NotNull NamedFacePool pool, @NotNull Path rootDir,
+                                                                    @Nullable FaceImageWriteObserver observer) {
+        if (observer != null) {
+            observer.preWriteFacePoolImages(pool);
+        }
+
         var categories = pool.getCategories();
         if (categories.isEmpty()) {
             // nothing to do
+            if (observer != null) {
+                observer.postWriteFacePoolImages(pool, null);
+            }
             return CompletableFuture.completedFuture(null);
         }
 
@@ -207,7 +247,7 @@ public final class FacePoolIO {
         var futures = new CompletableFuture[categories.size()];
         int futureI = 0;
         for (var category : categories) {
-            futures[futureI] = FaceCategoryIO.writeImagesAsync(executor, category, rootDir)
+            futures[futureI] = FaceCategoryIO.writeImagesAsync(executor, category, rootDir, observer)
                     .exceptionallyCompose(ex -> {
                         if (ex instanceof FaceCategoryIOException fcioe) {
                             exceptions.add(fcioe);
@@ -222,11 +262,16 @@ public final class FacePoolIO {
         return CompletableFuture.allOf(futures)
                 .thenCompose(unused -> {
                     if (exceptions.isEmpty()) {
+                        if (observer != null) {
+                            observer.postWriteFacePoolImages(pool, null);
+                        }
                         return CompletableFuture.completedStage(null);
                     } else {
-                        var e = new FacePoolIOException(pool, "Failed to write all face images", exceptions);
-                        e.fillInStackTrace();
-                        return CompletableFuture.failedStage(e);
+                        var exc = new FacePoolIOException(pool, "Failed to write all face images", exceptions);
+                        if (observer != null) {
+                            observer.postWriteFacePoolImages(pool, exc);
+                        }
+                        return CompletableFuture.failedStage(exc);
                     }
                 });
     }

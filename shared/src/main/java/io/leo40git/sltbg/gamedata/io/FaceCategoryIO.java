@@ -21,6 +21,7 @@ import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MissingFieldsException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonWriter;
@@ -67,12 +68,17 @@ public final class FaceCategoryIO {
         return read(reader, name, true);
     }
 
-    public static void readImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws FaceCategoryIOException {
+    public static void readImages(@NotNull FaceCategory category, @NotNull Path rootDir,
+                                  @Nullable FaceImageReadObserver observer) throws FaceCategoryIOException {
+        if (observer != null) {
+            observer.preReadFaceCategoryImages(category);
+        }
+
         FaceCategoryIOException bigExc = null;
 
         for (var face : category.getFaces()) {
             try {
-                FaceIO.readImage(face, rootDir);
+                FaceIO.readImage(face, rootDir, observer);
             } catch (FaceIOException e) {
                 if (bigExc == null) {
                     bigExc = new FaceCategoryIOException(category, "Failed to read all face images");
@@ -81,16 +87,28 @@ public final class FaceCategoryIO {
             }
         }
 
+        if (observer != null) {
+            observer.postReadFaceCategoryImages(category, bigExc);
+        }
+
         if (bigExc != null) {
             throw bigExc;
         }
     }
 
     public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull Executor executor,
-                                                                   @NotNull FaceCategory category, @NotNull Path rootDir) {
+                                                                   @NotNull FaceCategory category, @NotNull Path rootDir,
+                                                                   @Nullable FaceImageReadObserver observer) {
+        if (observer != null) {
+            observer.preReadFaceCategoryImages(category);
+        }
+
         var faces = category.getFaces();
         if (faces.isEmpty()) {
             // nothing to do
+            if (observer != null) {
+                observer.postReadFaceCategoryImages(category, null);
+            }
             return CompletableFuture.completedFuture(null);
         }
 
@@ -101,7 +119,7 @@ public final class FaceCategoryIO {
         for (var face : faces) {
             futures[futureI] = CompletableFuture.runAsync(() -> {
                 try {
-                    FaceIO.readImage(face, rootDir);
+                    FaceIO.readImage(face, rootDir, observer);
                 } catch (FaceIOException e) {
                     exceptions.add(e);
                 }
@@ -112,11 +130,16 @@ public final class FaceCategoryIO {
         return CompletableFuture.allOf(futures)
                 .thenCompose(unused -> {
                     if (exceptions.isEmpty()) {
+                        if (observer != null) {
+                            observer.postReadFaceCategoryImages(category, null);
+                        }
                         return CompletableFuture.completedStage(null);
                     } else {
-                        var e = new FaceCategoryIOException(category, "Failed to read all face images", exceptions);
-                        e.fillInStackTrace();
-                        return CompletableFuture.failedStage(e);
+                        var exc = new FaceCategoryIOException(category, "Failed to read all face images", exceptions);
+                        if (observer != null) {
+                            observer.postReadFaceCategoryImages(category, exc);
+                        }
+                        return CompletableFuture.failedStage(exc);
                     }
                 });
     }
@@ -149,12 +172,13 @@ public final class FaceCategoryIO {
         writer.endObject();
     }
 
-    public static void writeImages(@NotNull FaceCategory category, @NotNull Path rootDir) throws FaceCategoryIOException {
+    public static void writeImages(@NotNull FaceCategory category, @NotNull Path rootDir,
+                                   @Nullable FaceImageWriteObserver observer) throws FaceCategoryIOException {
         FaceCategoryIOException bigExc = null;
 
         for (var face : category.getFaces()) {
             try {
-                FaceIO.writeImage(face, rootDir);
+                FaceIO.writeImage(face, rootDir, observer);
             } catch (FaceIOException e) {
                 if (bigExc == null) {
                     bigExc = new FaceCategoryIOException(category, "Failed to write all face images");
@@ -163,16 +187,28 @@ public final class FaceCategoryIO {
             }
         }
 
+        if (observer != null) {
+            observer.postWriteFaceCategoryImages(category, bigExc);
+        }
+
         if (bigExc != null) {
             throw bigExc;
         }
     }
 
     public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull Executor executor,
-                                                                    @NotNull FaceCategory category, @NotNull Path rootDir) {
+                                                                    @NotNull FaceCategory category, @NotNull Path rootDir,
+                                                                    @Nullable FaceImageWriteObserver observer) {
+        if (observer != null) {
+            observer.preWriteFaceCategoryImages(category);
+        }
+
         var faces = category.getFaces();
         if (faces.isEmpty()) {
             // nothing to do
+            if (observer != null) {
+                observer.postWriteFaceCategoryImages(category, null);
+            }
             return CompletableFuture.completedFuture(null);
         }
 
@@ -183,7 +219,7 @@ public final class FaceCategoryIO {
         for (var face : faces) {
             futures[futureI] = CompletableFuture.runAsync(() -> {
                 try {
-                    FaceIO.writeImage(face, rootDir);
+                    FaceIO.writeImage(face, rootDir, observer);
                 } catch (FaceIOException e) {
                     exceptions.add(e);
                 }
@@ -194,11 +230,16 @@ public final class FaceCategoryIO {
         return CompletableFuture.allOf(futures)
                 .thenCompose(unused -> {
                     if (exceptions.isEmpty()) {
+                        if (observer != null) {
+                            observer.postWriteFaceCategoryImages(category, null);
+                        }
                         return CompletableFuture.completedStage(null);
                     } else {
-                        var e = new FaceCategoryIOException(category, "Failed to write all face images", exceptions);
-                        e.fillInStackTrace();
-                        return CompletableFuture.failedStage(e);
+                        var exc = new FaceCategoryIOException(category, "Failed to write all face images", exceptions);
+                        if (observer != null) {
+                            observer.postWriteFaceCategoryImages(category, exc);
+                        }
+                        return CompletableFuture.failedStage(exc);
                     }
                 });
     }
