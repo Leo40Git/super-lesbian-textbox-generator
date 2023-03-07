@@ -26,19 +26,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class FacePoolDefinitionParser {
-    public static @NotNull FacePoolDefinition parse(@NotNull BufferedReader reader, int lineNumber) throws IOException {
+    public static @NotNull FacePoolDefinition parse(@NotNull BufferedReader reader) throws IOException {
         var parser = new FacePoolDefinitionParser();
+        int lineNumber = 1;
 
         String line;
         while ((line = reader.readLine()) != null) {
             parser.parseLine(line, lineNumber++);
         }
 
-        return parser.end(lineNumber);
-    }
-
-    public static @NotNull FacePoolDefinition parse(@NotNull BufferedReader reader) throws IOException {
-        return parse(reader, 1);
+        return parser.end();
     }
 
     private static final String DELIMITER = "\t";
@@ -156,8 +153,8 @@ public final class FacePoolDefinitionParser {
 
         if (currentSectionID == SCNID_HEAD) {
             if (!HEADER.equals(line)) {
-                throw new FacePoolDefinitionException("Missing header",
-                        "(expected \"%s\", got \"%s\")".formatted(HEADER, line), lineNumber);
+                throw FacePoolDefinitionException.atLine("Missing header",
+                        lineNumber, "(expected \"%s\", got \"%s\")".formatted(HEADER, line));
             }
 
             currentSectionID = SCNID_ROOT;
@@ -183,7 +180,7 @@ public final class FacePoolDefinitionParser {
         };
 
         if (!lineOK) {
-            throw new FacePoolDefinitionException("Unexpected line \"%s\"".formatted(line), lineNumber);
+            throw FacePoolDefinitionException.atLine("Unexpected line \"%s\"".formatted(line), lineNumber);
         }
     }
 
@@ -198,7 +195,7 @@ public final class FacePoolDefinitionParser {
 
     @Contract("_ -> fail")
     private boolean throwNestedSectionException(int lineNumber) throws FacePoolDefinitionException {
-        throw new FacePoolDefinitionException("Tried to begin nested section", lineNumber);
+        throw FacePoolDefinitionException.atLine("Tried to begin nested section", lineNumber);
     }
 
     private boolean parseLineRoot(@NotNull Scanner scn, int lineNumber) throws FacePoolDefinitionException {
@@ -206,7 +203,7 @@ public final class FacePoolDefinitionParser {
         return switch (cmd) {
             case CMD_BEGIN -> {
                 if (!scn.hasNext()) {
-                    throw new FacePoolDefinitionException(CMD_BEGIN + " command missing section parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_BEGIN + " command missing section parameter", lineNumber);
                 }
 
                 String newSectionName = scn.next();
@@ -216,13 +213,13 @@ public final class FacePoolDefinitionParser {
                     case SCN_CATS -> SCNID_CATS;
                     case SCN_SHEET -> SCNID_SHEET;
                     default ->
-                            throw new FacePoolDefinitionException("Unknown section \"%s\"".formatted(newSectionName), lineNumber);
+                            throw FacePoolDefinitionException.atLine("Unknown section \"%s\"".formatted(newSectionName), lineNumber);
                 };
                 currentSectionName = newSectionName;
 
                 if (currentSectionID == SCNID_SHEET) {
                     if (!scn.hasNext()) {
-                        throw new FacePoolDefinitionException(CMD_BEGIN + " " + SCN_SHEET + " command missing sheet path parameter", lineNumber);
+                        throw FacePoolDefinitionException.atLine(CMD_BEGIN + " " + SCN_SHEET + " command missing sheet path parameter", lineNumber);
                     }
                     sheetInputPath = scn.next();
                 }
@@ -231,13 +228,13 @@ public final class FacePoolDefinitionParser {
             }
             case CMD_NAME -> {
                 if (!scn.hasNext()) {
-                    throw new FacePoolDefinitionException(CMD_NAME + " command missing name parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_NAME + " command missing name parameter", lineNumber);
                 }
 
                 name = scn.next();
                 yield true;
             }
-            case CMD_END -> throw new FacePoolDefinitionException("No section to end", lineNumber);
+            case CMD_END -> throw FacePoolDefinitionException.atLine("No section to end", lineNumber);
             default -> false;
         };
     }
@@ -292,18 +289,18 @@ public final class FacePoolDefinitionParser {
                 flushCategory();
 
                 if (!scn.hasNext()) {
-                    throw new FacePoolDefinitionException(CMD_ADD + " command missing category name parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_ADD + " command missing category name parameter", lineNumber);
                 }
                 String name = scn.next();
 
                 var existingCategory = categories.get(name);
                 if (existingCategory != null) {
-                    throw new FacePoolDefinitionException("Category \"" + name + "\" defined twice",
-                            "(defined previously at line " + existingCategory.lineNumber + ")", lineNumber);
+                    throw FacePoolDefinitionException.atLine("Category \"" + name + "\" defined twice",
+                            lineNumber, "(defined previously at line " + existingCategory.lineNumber + ")");
                 }
 
                 if (!scn.hasNextLong()) {
-                    throw new FacePoolDefinitionException(CMD_ADD + " command missing category order parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_ADD + " command missing category order parameter", lineNumber);
                 }
                 long order = scn.nextLong();
 
@@ -317,8 +314,8 @@ public final class FacePoolDefinitionParser {
             }
             case CMD_DESC, CMD_DESC_S -> {
                 if (currentCategoryBuilder == null) {
-                    throw new FacePoolDefinitionException(
-                            CMD_DESC + " command not following " + CMD_ADD + " command or other " + CMD_DESC + " command", lineNumber);
+                    throw FacePoolDefinitionException.atLine("Unexpected " + CMD_DESC + " command",
+                            lineNumber, "Must follow " + CMD_ADD + " command, or another " + CMD_DESC + " command");
                 }
 
                 if (!scn.hasNext()) {
@@ -371,7 +368,7 @@ public final class FacePoolDefinitionParser {
                 flushFace();
 
                 if (!scn.hasNext()) {
-                    throw new FacePoolDefinitionException(CMD_ADD + " command missing face image path parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_ADD + " command missing face image path parameter", lineNumber);
                 }
                 String imagePath = scn.next();
 
@@ -381,18 +378,18 @@ public final class FacePoolDefinitionParser {
                 } else {
                     var oldLineNumber = faceLinesByImagePath.put(imagePath, lineNumber);
                     if (oldLineNumber != null) {
-                        throw new FacePoolDefinitionException("Face with image path \"" + imagePath + "\" defined twice",
-                                "(defined previously at line " + oldLineNumber + ")", lineNumber);
+                        throw FacePoolDefinitionException.atLine("Face with image path \"" + imagePath + "\" defined twice",
+                                lineNumber, "Defined previously at line " + oldLineNumber);
                     }
                 }
 
                 if (!scn.hasNext()) {
-                    throw new FacePoolDefinitionException(CMD_ADD + " command missing face category parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_ADD + " command missing face category parameter", lineNumber);
                 }
                 String category = scn.next();
 
                 if (!scn.hasNext()) {
-                    throw new FacePoolDefinitionException(CMD_ADD + " command missing face name parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_ADD + " command missing face name parameter", lineNumber);
                 }
                 String name = scn.next();
 
@@ -403,13 +400,13 @@ public final class FacePoolDefinitionParser {
                 } else {
                     var oldLineNumber = faceLinesByFullName.put(fullName, lineNumber);
                     if (oldLineNumber != null) {
-                        throw new FacePoolDefinitionException("Face \"" + fullName + "\" defined twice",
-                                "(defined previously at line " + oldLineNumber + ")", lineNumber);
+                        throw FacePoolDefinitionException.atLine("Face \"" + fullName + "\" defined twice",
+                                lineNumber, "Defined previously at line " + oldLineNumber);
                     }
                 }
 
                 if (!scn.hasNextLong()) {
-                    throw new FacePoolDefinitionException(CMD_ADD + " command missing face order parameter", lineNumber);
+                    throw FacePoolDefinitionException.atLine(CMD_ADD + " command missing face order parameter", lineNumber);
                 }
                 long order = scn.nextLong();
 
@@ -424,7 +421,7 @@ public final class FacePoolDefinitionParser {
             }
             case CMD_DESC, CMD_DESC_S -> {
                 if (currentFaceBuilder == null || !canDescribeCurrentFace) {
-                    throw new FacePoolDefinitionException(
+                    throw FacePoolDefinitionException.atLine(
                             CMD_DESC + " command not following " + CMD_ADD + " command or other " + CMD_DESC + " command", lineNumber);
                 }
 
@@ -447,13 +444,13 @@ public final class FacePoolDefinitionParser {
         };
     }
 
-    private @NotNull FacePoolDefinition end(int lineNumber) throws FacePoolDefinitionException {
+    private @NotNull FacePoolDefinition end() throws FacePoolDefinitionException {
         if (currentSectionID != SCNID_ROOT) {
-            throw new FacePoolDefinitionException("Unterminated %s section".formatted(currentSectionName), lineNumber);
+            throw FacePoolDefinitionException.atEOF("Unterminated %s section".formatted(currentSectionName));
         }
 
         if (name == null) {
-            throw new FacePoolDefinitionException("Missing name", lineNumber);
+            throw FacePoolDefinitionException.atEOF("Missing name");
         }
 
         if (categories == null /*|| sheets == null*/) {
@@ -465,7 +462,7 @@ public final class FacePoolDefinitionParser {
             } else /*if (sheets == null)*/ {
                 msg = "Missing at least one %s section".formatted(SCN_SHEET);
             }
-            throw new FacePoolDefinitionException(msg, lineNumber);
+            throw FacePoolDefinitionException.atEOF(msg);
         }
 
         if (undefinedCategoryRefs != null) {
@@ -488,7 +485,7 @@ public final class FacePoolDefinitionParser {
                     sb.append("s ").append(entry.getValue().stream().map(Object::toString).collect(Collectors.joining(", ")));
                 }
             }
-            throw new FacePoolDefinitionException("Found references to undefined categories", sb.toString(), lineNumber);
+            throw FacePoolDefinitionException.atEOF("Found references to undefined categories", sb.toString());
         }
 
 
