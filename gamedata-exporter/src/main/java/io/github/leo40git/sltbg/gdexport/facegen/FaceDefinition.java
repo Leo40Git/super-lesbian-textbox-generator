@@ -9,7 +9,6 @@
 
 package io.github.leo40git.sltbg.gdexport.facegen;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.leo40git.sltbg.util.CollectionUtils;
@@ -17,32 +16,21 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-public final class FaceCategoryDefinition {
-    public final int lineNumber;
-    public final @NotNull String name;
+@SuppressWarnings("ClassCanBeRecord")
+public final class FaceDefinition {
+    public final @NotNull String imagePath, category, name;
     public final long order;
     public final @Nullable String characterName;
     public final @NotNull @Unmodifiable List<String> description;
-    public @Nullable ArrayList<FaceDefinition> faces;
 
-    public FaceCategoryDefinition(int lineNumber,
-                                  @NotNull String name, long order, @Nullable String characterName,
-                                  @Nullable List<String> description) {
-        this.lineNumber = lineNumber;
+    public FaceDefinition(@NotNull String imagePath, @NotNull String category, @NotNull String name,
+                          long order, @Nullable String characterName,
+                          @Nullable List<String> description) {
+        this.imagePath = imagePath;
+        this.category = category;
         this.name = name;
         this.order = order;
         this.characterName = characterName;
         this.description = CollectionUtils.copyOrEmpty(description);
-    }
-
-    public @Nullable List<FaceDefinition> getFaces() {
-        return faces;
-    }
-
-    public void addFace(@NotNull FaceDefinition face) {
-        if (faces == null) {
-            faces = new ArrayList<>();
-        }
-        faces.add(face);
     }
 }

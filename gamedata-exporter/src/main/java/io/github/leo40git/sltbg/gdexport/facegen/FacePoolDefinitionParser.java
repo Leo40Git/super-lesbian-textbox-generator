@@ -68,30 +68,23 @@ public final class FacePoolDefinitionParser {
     private static final int SCNID_CATS = 2;
     private static final int SCNID_SHEET = 3;
 
-    private String name;
-
-    private record FaceRecord(@NotNull String imagePath, @NotNull String category, @NotNull String name,
-                              int lineNumber) {
-    }
-
-    private HashMap<String, FaceCategoryDefinition> categories;
-    private HashMap<String, Integer> categoryLines;
-    private HashMap<String, FaceRecord> faceRecordsByImagePath, faceRecordsByFullName;
-    private ArrayList<FaceSheet> sheets;
-    private ArrayList<String> poolDescription, poolCredits;
-
     private int currentSectionID;
     private String currentSectionName;
 
+    private String name;
+    private ArrayList<String> poolDescription, poolCredits;
     private ArrayList<String> targetLines;
 
     private static final class FaceCategoryDefinitionBuilder {
-        private final @NotNull String name;
-        private final long order;
-        private final @Nullable String characterName;
+        public final int lineNumber;
+        public final @NotNull String name;
+        public final long order;
+        public final @Nullable String characterName;
         public @Nullable ArrayList<String> description;
 
-        public FaceCategoryDefinitionBuilder(@NotNull String name, long order, @Nullable String characterName) {
+        public FaceCategoryDefinitionBuilder(int lineNumber,
+                                             @NotNull String name, long order, @Nullable String characterName) {
+            this.lineNumber = lineNumber;
             this.name = name;
             this.order = order;
             this.characterName = characterName;
@@ -99,64 +92,61 @@ public final class FacePoolDefinitionParser {
 
         @Contract(" -> new")
         public @NotNull FaceCategoryDefinition build() {
-            return new FaceCategoryDefinition(name, order, characterName, description);
+            return new FaceCategoryDefinition(lineNumber, name, order, characterName, description);
         }
     }
 
     private FaceCategoryDefinitionBuilder currentCategoryBuilder;
+    private HashMap<String, FaceCategoryDefinition> categories;
+    private LinkedHashMap<String, ArrayList<Integer>> undefinedCategoryRefs;
 
-    private static final class FaceSheetEntryBuilder {
-        private final @NotNull String imagePath, category, name;
-        private final long order;
-        private final @Nullable String characterName;
+    private static final class FaceDefinitionBuilder {
+        public final int lineNumber;
+        public final @NotNull String imagePath, category, name;
+        public final long order;
+        public final @Nullable String characterName;
         public @Nullable ArrayList<String> description;
-        public int advance;
 
-        public FaceSheetEntryBuilder(@NotNull String imagePath, @NotNull String category, @NotNull String name, long order,
+        public FaceDefinitionBuilder(int lineNumber,
+                                     @NotNull String imagePath, @NotNull String category, @NotNull String name, long order,
                                      @Nullable String characterName) {
+            this.lineNumber = lineNumber;
             this.imagePath = imagePath;
             this.category = category;
             this.name = name;
             this.order = order;
             this.characterName = characterName;
-
-            advance = 1;
         }
 
         @Contract(" -> new")
-        public @NotNull FaceSheet.Entry build() {
-            return new FaceSheet.Entry(imagePath, category, name, order, characterName, description, advance);
+        public @NotNull FaceDefinition build() {
+            return new FaceDefinition(imagePath, category, name, order, characterName, description);
         }
     }
 
     private String sheetInputPath;
-    private int sheetOffset;
-    private FaceSheetEntryBuilder currentSheetEntryBuilder;
-    private boolean canDescribeCurrentSheetEntry;
-    private ArrayList<FaceSheet.Entry> pendingSheetEntries;
+    private HashMap<String, Integer> faceLinesByImagePath, faceLinesByFullName;
+    private FaceDefinitionBuilder currentFaceBuilder;
+    private boolean canDescribeCurrentFace;
 
     private FacePoolDefinitionParser() {
-        name = null;
-
-        categories = null;
-        categoryLines = null;
-        faceRecordsByFullName = null;
-        sheets = null;
-        poolDescription = null;
-        poolCredits = null;
-
         currentSectionID = SCNID_HEAD;
         currentSectionName = null;
 
+        name = null;
+        poolDescription = null;
+        poolCredits = null;
         targetLines = null;
 
         currentCategoryBuilder = null;
+        categories = null;
+        undefinedCategoryRefs = null;
 
         sheetInputPath = null;
-        sheetOffset = 0;
-        currentSheetEntryBuilder = null;
-        canDescribeCurrentSheetEntry = false;
-        pendingSheetEntries = null;
+        faceLinesByImagePath = null;
+        faceLinesByFullName = null;
+        currentFaceBuilder = null;
+        canDescribeCurrentFace = false;
     }
 
     private void parseLine(@NotNull String line, int lineNumber) throws FacePoolDefinitionException {
@@ -306,13 +296,10 @@ public final class FacePoolDefinitionParser {
                 }
                 String name = scn.next();
 
-                if (categoryLines == null) {
-                    categoryLines = new HashMap<>();
-                }
-                var oldLine = categoryLines.put(name, lineNumber);
-                if (oldLine != null) {
+                var existingCategory = categories.get(name);
+                if (existingCategory != null) {
                     throw new FacePoolDefinitionException("Category \"" + name + "\" defined twice",
-                            "(defined previously at line " + oldLine + ")", lineNumber);
+                            "(defined previously at line " + existingCategory.lineNumber + ")", lineNumber);
                 }
 
                 if (!scn.hasNextLong()) {
@@ -325,7 +312,7 @@ public final class FacePoolDefinitionParser {
                     characterName = scn.next();
                 }
 
-                currentCategoryBuilder = new FaceCategoryDefinitionBuilder(name, order, characterName);
+                currentCategoryBuilder = new FaceCategoryDefinitionBuilder(lineNumber, name, order, characterName);
                 yield true;
             }
             case CMD_DESC, CMD_DESC_S -> {
@@ -349,38 +336,24 @@ public final class FacePoolDefinitionParser {
         };
     }
 
-    private void flushSheetEntry(boolean last) {
-        if (currentSheetEntryBuilder == null) {
+    private void flushFace() {
+        if (currentFaceBuilder == null) {
             return;
         }
 
-        if (last) {
-            // throw away the advance of last entry
-            // this simplifies the size check in FaceSheet later
-            currentSheetEntryBuilder.advance = 0;
+        var category = categories.get(currentFaceBuilder.category);
+        if (category != null) {
+            category.addFace(currentFaceBuilder.build());
+        } else {
+            if (undefinedCategoryRefs == null) {
+                undefinedCategoryRefs = new LinkedHashMap<>();
+            }
+            undefinedCategoryRefs.computeIfAbsent(currentFaceBuilder.category, unused -> new ArrayList<>())
+                    .add(currentFaceBuilder.lineNumber);
         }
+        assert category != null : "Flushing face with undeclared category \"" + currentFaceBuilder.category + "\" " +
+                "(should've been caught at parseLineSheet)";
 
-        if (pendingSheetEntries == null) {
-            pendingSheetEntries = new ArrayList<>();
-        }
-
-        pendingSheetEntries.add(currentSheetEntryBuilder.build());
-        currentSheetEntryBuilder = null;
-    }
-
-    private void flushSheet() {
-        flushSheetEntry(true);
-
-        if (pendingSheetEntries == null || pendingSheetEntries.isEmpty()) {
-            return;
-        }
-
-        if (sheets == null) {
-            sheets = new ArrayList<>();
-        }
-        sheets.add(new FaceSheet(sheetInputPath, sheetOffset, pendingSheetEntries));
-        pendingSheetEntries.clear();
-        sheetOffset = 0;
     }
 
     private boolean parseLineSheet(@NotNull Scanner scn, int lineNumber) throws FacePoolDefinitionException {
@@ -390,17 +363,28 @@ public final class FacePoolDefinitionParser {
         return switch (cmd) {
             case CMD_BEGIN -> throwNestedSectionException(lineNumber);
             case CMD_END -> {
-                flushSheet();
+                flushFace();
                 endSection();
                 yield true;
             }
             case CMD_ADD, CMD_ADD_S -> {
-                flushSheetEntry(false);
+                flushFace();
 
                 if (!scn.hasNext()) {
                     throw new FacePoolDefinitionException(CMD_ADD + " command missing face image path parameter", lineNumber);
                 }
                 String imagePath = scn.next();
+
+                if (faceLinesByImagePath == null) {
+                    faceLinesByImagePath = new HashMap<>();
+                    faceLinesByImagePath.put(imagePath, lineNumber);
+                } else {
+                    var oldLineNumber = faceLinesByImagePath.put(imagePath, lineNumber);
+                    if (oldLineNumber != null) {
+                        throw new FacePoolDefinitionException("Face with image path \"" + imagePath + "\" defined twice",
+                                "(defined previously at line " + oldLineNumber + ")", lineNumber);
+                    }
+                }
 
                 if (!scn.hasNext()) {
                     throw new FacePoolDefinitionException(CMD_ADD + " command missing face category parameter", lineNumber);
@@ -412,25 +396,16 @@ public final class FacePoolDefinitionParser {
                 }
                 String name = scn.next();
 
-                final var record = new FaceRecord(imagePath, category, name, lineNumber);
-
-                if (faceRecordsByImagePath == null) {
-                    faceRecordsByImagePath = new HashMap<>();
-                }
-                var oldRecord = faceRecordsByImagePath.put(imagePath, record);
-                if (oldRecord != null) {
-                    throw new FacePoolDefinitionException("Face with image path \"" + imagePath + "\" defined twice",
-                            "(defined previously at line " + oldRecord.lineNumber() + ")", lineNumber);
-                }
-
-                if (faceRecordsByFullName == null) {
-                    faceRecordsByFullName = new HashMap<>();
-                }
                 String fullName = category + Face.PATH_DELIMITER + name;
-                oldRecord = faceRecordsByFullName.put(fullName, new FaceRecord(imagePath, category, name, lineNumber));
-                if (oldRecord != null) {
-                    throw new FacePoolDefinitionException("Face \"" + fullName + "\" defined twice",
-                            "(defined previously at line " + oldRecord.lineNumber() + ")", lineNumber);
+                if (faceLinesByFullName == null) {
+                    faceLinesByFullName = new HashMap<>();
+                    faceLinesByFullName.put(fullName, lineNumber);
+                } else {
+                    var oldLineNumber = faceLinesByFullName.put(fullName, lineNumber);
+                    if (oldLineNumber != null) {
+                        throw new FacePoolDefinitionException("Face \"" + fullName + "\" defined twice",
+                                "(defined previously at line " + oldLineNumber + ")", lineNumber);
+                    }
                 }
 
                 if (!scn.hasNextLong()) {
@@ -443,12 +418,12 @@ public final class FacePoolDefinitionParser {
                     characterName = scn.next();
                 }
 
-                currentSheetEntryBuilder = new FaceSheetEntryBuilder(imagePath, category, name, order, characterName);
-                canDescribeCurrentSheetEntry = true;
+                currentFaceBuilder = new FaceDefinitionBuilder(lineNumber, imagePath, category, name, order, characterName);
+                canDescribeCurrentFace = true;
                 yield true;
             }
             case CMD_DESC, CMD_DESC_S -> {
-                if (currentSheetEntryBuilder == null || !canDescribeCurrentSheetEntry) {
+                if (currentFaceBuilder == null || !canDescribeCurrentFace) {
                     throw new FacePoolDefinitionException(
                             CMD_DESC + " command not following " + CMD_ADD + " command or other " + CMD_DESC + " command", lineNumber);
                 }
@@ -457,26 +432,16 @@ public final class FacePoolDefinitionParser {
                     yield true;
                 }
 
-                if (currentSheetEntryBuilder.description == null) {
-                    currentSheetEntryBuilder.description = new ArrayList<>();
+                if (currentFaceBuilder.description == null) {
+                    currentFaceBuilder.description = new ArrayList<>();
                 }
 
-                currentSheetEntryBuilder.description.add(scn.next());
+                currentFaceBuilder.description.add(scn.next());
                 yield true;
             }
             case CMD_SKIP, CMD_SKIP_S -> {
-                int advance = 1;
-                if (scn.hasNextInt()) {
-                    advance = scn.nextInt();
-                }
-
-                canDescribeCurrentSheetEntry = false;
-                if (currentSheetEntryBuilder == null) {
-                    sheetOffset += advance;
-                } else {
-                    currentSheetEntryBuilder.advance += advance;
-                }
-                yield true;
+                // TODO
+                throw new UnsupportedOperationException();
             }
             default -> false;
         };
@@ -487,9 +452,13 @@ public final class FacePoolDefinitionParser {
             throw new FacePoolDefinitionException("Unterminated %s section".formatted(currentSectionName), lineNumber);
         }
 
-        if (categories == null || sheets == null) {
+        if (name == null) {
+            throw new FacePoolDefinitionException("Missing name", lineNumber);
+        }
+
+        if (categories == null /*|| sheets == null*/) {
             String msg;
-            if (categories == null && sheets == null) {
+            if (categories == null /*&& sheets == null*/) {
                 msg = "Missing %s and %s sections".formatted(SCN_CATS, SCN_SHEET);
             } else if (categories == null) {
                 msg = "Missing %s section".formatted(SCN_CATS);
@@ -499,46 +468,31 @@ public final class FacePoolDefinitionParser {
             throw new FacePoolDefinitionException(msg, lineNumber);
         }
 
-        if (faceRecordsByFullName != null) {
-            LinkedHashMap<String, ArrayList<Integer>> undefinedCategoryRefs = null;
-            for (var faceRecord : faceRecordsByFullName.values()) {
-                if (!categories.containsKey(faceRecord.category())) {
-                    if (undefinedCategoryRefs == null) {
-                        undefinedCategoryRefs = new LinkedHashMap<>();
-                    }
-                    undefinedCategoryRefs.computeIfAbsent(faceRecord.category(), ignored -> new ArrayList<>())
-                            .add(faceRecord.lineNumber());
+        if (undefinedCategoryRefs != null) {
+            var sb = new StringBuilder();
+            boolean needLine = false;
+            for (var entry : undefinedCategoryRefs.entrySet()) {
+                if (entry.getValue().isEmpty()) {
+                    continue;
+                }
+
+                if (needLine) {
+                    sb.append(System.lineSeparator());
+                }
+                needLine = true;
+
+                sb.append(" - \"").append(entry.getKey()).append("\" at line");
+                if (entry.getValue().size() == 1) {
+                    sb.append(' ').append(entry.getValue().get(0));
+                } else {
+                    sb.append("s ").append(entry.getValue().stream().map(Object::toString).collect(Collectors.joining(", ")));
                 }
             }
-
-            if (undefinedCategoryRefs != null && !undefinedCategoryRefs.isEmpty()) {
-                var sb = new StringBuilder();
-                boolean needLine = false;
-                for (var entry : undefinedCategoryRefs.entrySet()) {
-                    if (entry.getValue().isEmpty()) {
-                        continue;
-                    }
-
-                    if (needLine) {
-                        sb.append(System.lineSeparator());
-                    }
-                    needLine = true;
-
-                    sb.append(" - \"").append(entry.getKey()).append("\" at line");
-                    if (entry.getValue().size() == 1) {
-                        sb.append(' ').append(entry.getValue().get(0));
-                    } else {
-                        sb.append("s ").append(entry.getValue().stream().map(Object::toString).collect(Collectors.joining(", ")));
-                    }
-                }
-                throw new FacePoolDefinitionException("Found references to undefined categories", sb.toString(), lineNumber);
-            }
+            throw new FacePoolDefinitionException("Found references to undefined categories", sb.toString(), lineNumber);
         }
 
-        if (name == null) {
-            throw new FacePoolDefinitionException("Missing name", lineNumber);
-        }
 
-        return new FacePoolDefinition(name, categories, sheets, poolDescription, poolCredits);
+
+        return new FacePoolDefinition(name, categories, poolDescription, poolCredits);
     }
 }
