@@ -11,7 +11,6 @@ package io.github.leo40git.sltbg.gdexport.facegen;
 
 import java.util.List;
 
-import io.leo40git.sltbg.util.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -25,12 +24,12 @@ public final class FaceDefinition {
 
     public FaceDefinition(@NotNull String imagePath, @NotNull String category, @NotNull String name,
                           long order, @Nullable String characterName,
-                          @Nullable List<String> description) {
+                          @NotNull List<String> description) {
         this.imagePath = imagePath;
         this.category = category;
         this.name = name;
         this.order = order;
         this.characterName = characterName;
-        this.description = CollectionUtils.copyOrEmpty(description);
+        this.description = description;
     }
 }

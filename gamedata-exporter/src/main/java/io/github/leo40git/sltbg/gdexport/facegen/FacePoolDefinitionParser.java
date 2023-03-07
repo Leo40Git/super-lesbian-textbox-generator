@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
@@ -78,6 +79,7 @@ public final class FacePoolDefinitionParser {
         public final long order;
         public final @Nullable String characterName;
         public @Nullable ArrayList<String> description;
+        public @Nullable ArrayList<FaceDefinitionBuilder> faceBuilders;
 
         public FaceCategoryDefinitionBuilder(int lineNumber,
                                              @NotNull String name, long order, @Nullable String characterName) {
@@ -87,14 +89,40 @@ public final class FacePoolDefinitionParser {
             this.characterName = characterName;
         }
 
+        public void addDescriptionLine(@NotNull String line) {
+            if (description == null) {
+                description = new ArrayList<>();
+            }
+            description.add(line);
+        }
+
+        public void addFaceBuilder(@NotNull FaceDefinitionBuilder faceBuilder) {
+            if (faceBuilders == null) {
+                faceBuilders = new ArrayList<>();
+            }
+            faceBuilders.add(faceBuilder);
+        }
+
         @Contract(" -> new")
         public @NotNull FaceCategoryDefinition build() {
-            return new FaceCategoryDefinition(lineNumber, name, order, characterName, description);
+            final List<String> description = Objects.requireNonNullElseGet(this.description, List::of);
+
+            final List<FaceDefinition> faces;
+            if (this.faceBuilders != null) {
+                faces = new ArrayList<>(faceBuilders.size());
+                for (var face : faceBuilders) {
+                    faces.add(face.build());
+                }
+            } else {
+                faces = List.of();
+            }
+
+            return new FaceCategoryDefinition(name, order, characterName, description, faces);
         }
     }
 
     private FaceCategoryDefinitionBuilder currentCategoryBuilder;
-    private HashMap<String, FaceCategoryDefinition> categories;
+    private HashMap<String, FaceCategoryDefinitionBuilder> categoryBuilders;
     private LinkedHashMap<String, ArrayList<Integer>> undefinedCategoryRefs;
 
     private static final class FaceDefinitionBuilder {
@@ -115,8 +143,17 @@ public final class FacePoolDefinitionParser {
             this.characterName = characterName;
         }
 
+        public void addDescriptionLine(@NotNull String line) {
+            if (description == null) {
+                description = new ArrayList<>();
+            }
+            description.add(line);
+        }
+
         @Contract(" -> new")
         public @NotNull FaceDefinition build() {
+            final List<String> description = Objects.requireNonNullElseGet(this.description, List::of);
+
             return new FaceDefinition(imagePath, category, name, order, characterName, description);
         }
     }
@@ -136,7 +173,7 @@ public final class FacePoolDefinitionParser {
         targetLines = null;
 
         currentCategoryBuilder = null;
-        categories = null;
+        categoryBuilders = null;
         undefinedCategoryRefs = null;
 
         sheetInputPath = null;
@@ -268,11 +305,11 @@ public final class FacePoolDefinitionParser {
             return;
         }
 
-        if (categories == null) {
-            categories = new HashMap<>();
+        if (categoryBuilders == null) {
+            categoryBuilders = new HashMap<>();
         }
 
-        categories.put(currentCategoryBuilder.name, currentCategoryBuilder.build());
+        categoryBuilders.put(currentCategoryBuilder.name, currentCategoryBuilder);
         currentCategoryBuilder = null;
     }
 
@@ -293,7 +330,7 @@ public final class FacePoolDefinitionParser {
                 }
                 String name = scn.next();
 
-                var existingCategory = categories.get(name);
+                var existingCategory = categoryBuilders.get(name);
                 if (existingCategory != null) {
                     throw FacePoolDefinitionException.atLine("Category \"" + name + "\" defined twice",
                             lineNumber, "(defined previously at line " + existingCategory.lineNumber + ")");
@@ -318,15 +355,12 @@ public final class FacePoolDefinitionParser {
                             lineNumber, "Must follow " + CMD_ADD + " command, or another " + CMD_DESC + " command");
                 }
 
-                if (!scn.hasNext()) {
-                    yield true;
+                if (scn.hasNext()) {
+                    currentCategoryBuilder.addDescriptionLine(scn.next());
+                } else {
+                    currentCategoryBuilder.addDescriptionLine("");
                 }
 
-                if (currentCategoryBuilder.description == null) {
-                    currentCategoryBuilder.description = new ArrayList<>();
-                }
-
-                currentCategoryBuilder.description.add(scn.next());
                 yield true;
             }
             default -> false;
@@ -338,9 +372,9 @@ public final class FacePoolDefinitionParser {
             return;
         }
 
-        var category = categories.get(currentFaceBuilder.category);
+        var category = categoryBuilders.get(currentFaceBuilder.category);
         if (category != null) {
-            category.addFace(currentFaceBuilder.build());
+            category.addFaceBuilder(currentFaceBuilder);
         } else {
             if (undefinedCategoryRefs == null) {
                 undefinedCategoryRefs = new LinkedHashMap<>();
@@ -453,11 +487,11 @@ public final class FacePoolDefinitionParser {
             throw FacePoolDefinitionException.atEOF("Missing name");
         }
 
-        if (categories == null /*|| sheets == null*/) {
+        if (categoryBuilders == null /*|| sheets == null*/) {
             String msg;
-            if (categories == null /*&& sheets == null*/) {
+            if (categoryBuilders == null /*&& sheets == null*/) {
                 msg = "Missing %s and %s sections".formatted(SCN_CATS, SCN_SHEET);
-            } else if (categories == null) {
+            } else if (categoryBuilders == null) {
                 msg = "Missing %s section".formatted(SCN_CATS);
             } else /*if (sheets == null)*/ {
                 msg = "Missing at least one %s section".formatted(SCN_SHEET);
@@ -488,7 +522,10 @@ public final class FacePoolDefinitionParser {
             throw FacePoolDefinitionException.atEOF("Found references to undefined categories", sb.toString());
         }
 
-
+        var categories = new HashMap<String, FaceCategoryDefinition>(categoryBuilders.size());
+        for (var categoryBuilder : categoryBuilders.values()) {
+            categories.put(categoryBuilder.name, categoryBuilder.build());
+        }
 
         return new FacePoolDefinition(name, categories, poolDescription, poolCredits);
     }
