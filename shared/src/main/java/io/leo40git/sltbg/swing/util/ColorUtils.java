@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ColorUtils {
     private ColorUtils() {
-        throw new UnsupportedOperationException("MoreColors only contains static declarations.");
+        throw new UnsupportedOperationException("ColorUtils only contains static declarations.");
     }
 
     public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
