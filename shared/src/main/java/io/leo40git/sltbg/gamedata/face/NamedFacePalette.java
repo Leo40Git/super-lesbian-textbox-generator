@@ -27,13 +27,21 @@ import org.quiltmc.json5.JsonWriter;
 
 public final class NamedFacePalette extends FacePalette {
     private @NotNull String name;
-    private @Nullable ArrayList<String> description, credits;
+    private @Nullable ArrayList<String> description = null, credits = null;
 
     public NamedFacePalette(@NotNull String name) {
         super();
         this.name = name;
-        description = null;
-        credits = null;
+    }
+
+    public NamedFacePalette(@NotNull String name, int initialCapacity) {
+        super(initialCapacity);
+        this.name = name;
+    }
+
+    private NamedFacePalette(@NotNull String name, @NotNull ArrayList<FaceCategory> categories) {
+        super(categories);
+        this.name = name;
     }
 
     @Contract("_, _ -> new")
@@ -82,7 +90,7 @@ public final class NamedFacePalette extends FacePalette {
             throw new MissingFieldsException(reader, "Face palette", missingFields);
         }
 
-        var palette = new NamedFacePalette(name);
+        var palette = new NamedFacePalette(name, categories);
         if (description != null) {
             palette.getDescription().addAll(description);
         }
@@ -90,9 +98,6 @@ public final class NamedFacePalette extends FacePalette {
             palette.getCredits().addAll(credits);
         }
 
-        for (var category : categories) {
-            palette.add(category);
-        }
         if (sort) {
             palette.sortIfNeeded();
         }

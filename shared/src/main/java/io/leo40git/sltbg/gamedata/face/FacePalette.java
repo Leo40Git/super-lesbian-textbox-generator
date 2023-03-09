@@ -47,19 +47,12 @@ public sealed class FacePalette permits NamedFacePalette {
         categoriesLookup = new HashMap<>(initialCapacity);
     }
 
-    /**
-     * This constructor "takes ownership" of the {@literal categories} list -
-     * <em>you should not modify this list after passing it to this constructor!</em>
-     */
-    public FacePalette(@NotNull ArrayList<FaceCategory> categories) {
+    protected FacePalette(@NotNull ArrayList<FaceCategory> categories) {
         this.categories = categories;
         categoriesLookup = new HashMap<>(categories.size());
 
         for (var category : categories) {
-            if (categoriesLookup.put(category.getName(), category) != null) {
-                throw new IllegalArgumentException("categories contains 2 elements with the same name: '%s'"
-                        .formatted(category.getName()));
-            }
+            categoriesLookup.put(category.getName(), category);
             category.onAddedToPalette(this);
         }
     }
