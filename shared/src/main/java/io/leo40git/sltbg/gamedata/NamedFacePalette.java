@@ -12,11 +12,11 @@ package io.leo40git.sltbg.gamedata;
 import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
-public final class NamedFacePool extends FacePool {
+public final class NamedFacePalette extends FacePalette {
     private @NotNull String name;
     private String @NotNull [] description, credits;
 
-    public NamedFacePool(@NotNull String name) {
+    public NamedFacePalette(@NotNull String name) {
         super();
         this.name = name;
         description = ArrayUtils.EMPTY_STRING_ARRAY;

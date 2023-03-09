@@ -24,8 +24,8 @@ public final class Face implements Comparable<Face> {
     public static final int ICON_SIZE = IMAGE_SIZE / 2;
     public static final String PATH_DELIMITER = "/";
 
-    private @Nullable NamedFacePool sourcePool;
-    private @Nullable FacePool pool;
+    private @Nullable NamedFacePalette sourcePalette;
+    private @Nullable FacePalette palette;
     private @Nullable FaceCategory category;
     @SuppressWarnings("FieldMayBeFinal")
     private @NotNull String name;
@@ -43,8 +43,8 @@ public final class Face implements Comparable<Face> {
         this.name = name;
         this.imagePath = imagePath;
 
-        sourcePool = null;
-        pool = null;
+        sourcePalette = null;
+        palette = null;
         category = null;
         image = null;
         order = 0;
@@ -56,12 +56,12 @@ public final class Face implements Comparable<Face> {
         icon = null;
     }
 
-    public @Nullable NamedFacePool getSourcePool() {
-        return sourcePool;
+    public @Nullable NamedFacePalette getSourcePalette() {
+        return sourcePalette;
     }
 
-    public @Nullable FacePool getPool() {
-        return pool;
+    public @Nullable FacePalette getPalette() {
+        return palette;
     }
 
     public @Nullable FaceCategory getCategory() {
@@ -74,30 +74,30 @@ public final class Face implements Comparable<Face> {
         }
     }
 
-    void onAddedToPool(@NotNull FacePool pool) {
-        if (pool instanceof NamedFacePool namedPool) {
-            this.sourcePool = namedPool;
+    void onAddedToPalette(@NotNull FacePalette palette) {
+        if (palette instanceof NamedFacePalette namedPalette) {
+            this.sourcePalette = namedPalette;
         }
-        this.pool = pool;
+        this.palette = palette;
     }
 
     void onAddedToCategory(@NotNull FaceCategory category) {
-        if (category.getPool() != null) {
-            onAddedToPool(category.getPool());
+        if (category.getPalette() != null) {
+            onAddedToPalette(category.getPalette());
         }
         this.category = category;
         onCategoryRenamed();
     }
 
-    void onRemovedFromPool() {
-        if (sourcePool == pool) {
-            sourcePool = null;
+    void onRemovedFromPalette() {
+        if (sourcePalette == palette) {
+            sourcePalette = null;
         }
-        pool = null;
+        palette = null;
     }
 
     void onRemovedFromCategory() {
-        onRemovedFromPool();
+        onRemovedFromPalette();
         category = null;
     }
 
@@ -241,7 +241,7 @@ public final class Face implements Comparable<Face> {
     @Contract(" -> new")
     public @NotNull Face copy() {
         var clone = new Face(name, imagePath);
-        clone.sourcePool = sourcePool;
+        clone.sourcePalette = sourcePalette;
         clone.image = image;
         clone.order = order;
         clone.orderSet = orderSet;

@@ -14,24 +14,24 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import io.leo40git.sltbg.gamedata.FacePool;
+import io.leo40git.sltbg.gamedata.FacePalette;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
-public final class FacePoolIOException extends Exception {
-    private final @NotNull FacePool pool;
+public final class FacePaletteIOException extends Exception {
+    private final @NotNull FacePalette palette;
     private final @NotNull List<FaceCategoryIOException> subExceptions;
 
-    public FacePoolIOException(@NotNull FacePool pool, String message) {
+    public FacePaletteIOException(@NotNull FacePalette palette, String message) {
         super(message);
-        this.pool = pool;
+        this.palette = palette;
         subExceptions = new ArrayList<>();
     }
 
-    public FacePoolIOException(@NotNull FacePool pool, String message, @NotNull Collection<FaceCategoryIOException> subExceptions) {
+    public FacePaletteIOException(@NotNull FacePalette palette, String message, @NotNull Collection<FaceCategoryIOException> subExceptions) {
         super(message);
-        this.pool = pool;
+        this.palette = palette;
         this.subExceptions = new ArrayList<>(subExceptions);
         for (var e : subExceptions) {
             addSuppressed(e);
@@ -43,8 +43,8 @@ public final class FacePoolIOException extends Exception {
         addSuppressed(e);
     }
 
-    public @NotNull FacePool getPool() {
-        return pool;
+    public @NotNull FacePalette getPalette() {
+        return palette;
     }
 
     @Contract(pure = true)

@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-public sealed class FacePool permits NamedFacePool {
+public sealed class FacePalette permits NamedFacePalette {
     public static final long DEFAULT_ORDER_BASE = 1000;
 
     public static long getNextOrder(long order) {
@@ -37,12 +37,12 @@ public sealed class FacePool permits NamedFacePool {
     private long lastOrder = DEFAULT_ORDER_BASE;
     private volatile boolean needsSort = false;
 
-    public FacePool() {
+    public FacePalette() {
         categories = new ArrayList<>();
         categoriesLookup = new HashMap<>();
     }
 
-    public FacePool(int initialCapacity) {
+    public FacePalette(int initialCapacity) {
         categories = new ArrayList<>(initialCapacity);
         categoriesLookup = new HashMap<>(initialCapacity);
     }
@@ -51,7 +51,7 @@ public sealed class FacePool permits NamedFacePool {
      * This constructor "takes ownership" of the {@literal categories} list -
      * <em>you should not modify this list after passing it to this constructor!</em>
      */
-    public FacePool(@NotNull ArrayList<FaceCategory> categories) {
+    public FacePalette(@NotNull ArrayList<FaceCategory> categories) {
         this.categories = categories;
         categoriesLookup = new HashMap<>(categories.size());
 
@@ -60,7 +60,7 @@ public sealed class FacePool permits NamedFacePool {
                 throw new IllegalArgumentException("categories contains 2 elements with the same name: '%s'"
                         .formatted(category.getName()));
             }
-            category.onAddedToPool(this);
+            category.onAddedToPalette(this);
         }
     }
 
@@ -102,17 +102,17 @@ public sealed class FacePool permits NamedFacePool {
     }
 
     public void add(@NotNull FaceCategory category) {
-        if (category.getPool() != null) {
-            throw new IllegalArgumentException("Category is already part of other pool");
+        if (category.getPalette() != null) {
+            throw new IllegalArgumentException("Category is already part of other palette");
         }
 
         synchronized (categories) {
             if (categoriesLookup.put(category.getName(), category) != null) {
-                throw new IllegalArgumentException("Category with name \"" + category.getName() + "\" already exists in this pool");
+                throw new IllegalArgumentException("Category with name \"" + category.getName() + "\" already exists in this palette");
             }
 
             categories.add(category);
-            category.onAddedToPool(this);
+            category.onAddedToPalette(this);
 
             if (category.isOrderSet()) {
                 if (category.getOrder() > lastOrder) {
@@ -127,7 +127,7 @@ public sealed class FacePool permits NamedFacePool {
     void rename(@NotNull FaceCategory category, @NotNull String newName) {
         synchronized (categories) {
             if (categoriesLookup.containsKey(newName)) {
-                throw new IllegalArgumentException("Category with name \"" + newName + "\" already exists in this pool");
+                throw new IllegalArgumentException("Category with name \"" + newName + "\" already exists in this palette");
             }
 
             categoriesLookup.remove(category.getName(), category);
@@ -142,7 +142,7 @@ public sealed class FacePool permits NamedFacePool {
     }
 
     protected void remove0(@NotNull FaceCategory category) {
-        category.onRemovedFromPool();
+        category.onRemovedFromPalette();
         markDirty();
     }
 
@@ -176,7 +176,7 @@ public sealed class FacePool permits NamedFacePool {
     public void clear() {
         synchronized (categories) {
             for (var category : categories) {
-                category.onRemovedFromPool();
+                category.onRemovedFromPalette();
             }
 
             categories.clear();

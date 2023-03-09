@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 public final class FaceCategory implements Comparable<FaceCategory> {
-    private @Nullable FacePool pool;
+    private @Nullable FacePalette palette;
     private final @NotNull ArrayList<Face> faces;
     private final @NotNull HashMap<String, Face> facesLookup;
     private @NotNull String name;
@@ -34,7 +34,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     private String @NotNull [] description = ArrayUtils.EMPTY_STRING_ARRAY;
 
     private @Nullable Face iconFace;
-    private long lastOrder = FacePool.DEFAULT_ORDER_BASE;
+    private long lastOrder = FacePalette.DEFAULT_ORDER_BASE;
     private volatile boolean needsSort = false;
 
     public FaceCategory(@NotNull String name) {
@@ -70,21 +70,21 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         }
     }
 
-    public @Nullable FacePool getPool() {
-        return pool;
+    public @Nullable FacePalette getPalette() {
+        return palette;
     }
 
-    void onAddedToPool(@NotNull FacePool pool) {
-        this.pool = pool;
+    void onAddedToPalette(@NotNull FacePalette palette) {
+        this.palette = palette;
         for (var face : faces) {
-            face.onAddedToPool(pool);
+            face.onAddedToPalette(palette);
         }
     }
 
-    void onRemovedFromPool() {
-        pool = null;
+    void onRemovedFromPalette() {
+        palette = null;
         for (var face : faces) {
-            face.onRemovedFromPool();
+            face.onRemovedFromPalette();
         }
     }
 
@@ -101,8 +101,8 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     public void setName(@NotNull String name) {
         validateName(name);
 
-        if (pool != null) {
-            pool.rename(this, name);
+        if (palette != null) {
+            palette.rename(this, name);
         }
 
         this.name = name;
@@ -123,8 +123,8 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         if (!orderSet || this.order != order) {
             this.order = order;
             orderSet = true;
-            if (pool != null) {
-                pool.markDirty();
+            if (palette != null) {
+                palette.markDirty();
             }
         }
     }
@@ -206,7 +206,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
                     lastOrder = face.getOrder();
                 }
             } else {
-                face.setOrder(lastOrder = FacePool.getNextOrder(lastOrder));
+                face.setOrder(lastOrder = FacePalette.getNextOrder(lastOrder));
             }
         }
 

@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 
 import io.leo40git.sltbg.gamedata.FaceCategory;
-import io.leo40git.sltbg.gamedata.NamedFacePool;
+import io.leo40git.sltbg.gamedata.NamedFacePalette;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MalformedJsonException;
@@ -31,13 +31,13 @@ import org.jetbrains.annotations.Nullable;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonWriter;
 
-public final class FacePoolIO {
-    private FacePoolIO() {
-        throw new UnsupportedOperationException("FacePoolIO only contains static declarations.");
+public final class FacePaletteIO {
+    private FacePaletteIO() {
+        throw new UnsupportedOperationException("FacePaletteIO only contains static declarations.");
     }
 
     @Contract("_, _ -> new")
-    public static @NotNull NamedFacePool read(@NotNull JsonReader reader, boolean sort) throws IOException {
+    public static @NotNull NamedFacePalette read(@NotNull JsonReader reader, boolean sort) throws IOException {
         String name = null;
         String[] description = ArrayUtils.EMPTY_STRING_ARRAY, credits = ArrayUtils.EMPTY_STRING_ARRAY;
         HashSet<String> categoryNames = null;
@@ -79,47 +79,47 @@ public final class FacePoolIO {
             if (categories == null) {
                 missingFields.add(FaceFields.CATEGORIES);
             }
-            throw new MissingFieldsException(reader, "Face pool", missingFields);
+            throw new MissingFieldsException(reader, "Face palette", missingFields);
         }
 
-        var pool = new NamedFacePool(name);
-        pool.setDescription(description);
-        pool.setCredits(credits);
+        var palette = new NamedFacePalette(name);
+        palette.setDescription(description);
+        palette.setCredits(credits);
         for (var category : categories) {
-            pool.add(category);
+            palette.add(category);
         }
         if (sort) {
-            pool.sortIfNeeded();
+            palette.sortIfNeeded();
         }
-        return pool;
+        return palette;
     }
 
     @Contract("_ -> new")
-    public static @NotNull NamedFacePool read(@NotNull JsonReader reader) throws IOException {
+    public static @NotNull NamedFacePalette read(@NotNull JsonReader reader) throws IOException {
         return read(reader, true);
     }
 
-    public static void readImages(@NotNull NamedFacePool pool, @NotNull Path rootDir,
-                                  @Nullable FaceImageReadObserver observer) throws FacePoolIOException {
+    public static void readImages(@NotNull NamedFacePalette palette, @NotNull Path rootDir,
+                                  @Nullable FaceImageReadObserver observer) throws FacePaletteIOException {
         if (observer != null) {
-            observer.preReadFacePoolImages(pool);
+            observer.preReadFacePaletteImages(palette);
         }
 
-        FacePoolIOException bigExc = null;
+        FacePaletteIOException bigExc = null;
 
-        for (var category : pool.getCategories()) {
+        for (var category : palette.getCategories()) {
             try {
                 FaceCategoryIO.readImages(category, rootDir, observer);
             } catch (FaceCategoryIOException e) {
                 if (bigExc == null) {
-                    bigExc = new FacePoolIOException(pool, "Failed to read all face images");
+                    bigExc = new FacePaletteIOException(palette, "Failed to read all face images");
                 }
                 bigExc.addSubException(e);
             }
         }
 
         if (observer != null) {
-            observer.postReadFacePoolImages(pool, bigExc);
+            observer.postReadFacePaletteImages(palette, bigExc);
         }
 
         if (bigExc != null) {
@@ -128,17 +128,17 @@ public final class FacePoolIO {
     }
 
     public static @NotNull CompletableFuture<Void> readImagesAsync(@NotNull Executor executor,
-                                                                   @NotNull NamedFacePool pool, @NotNull Path rootDir,
+                                                                   @NotNull NamedFacePalette palette, @NotNull Path rootDir,
                                                                    @Nullable FaceImageReadObserver observer) {
         if (observer != null) {
-            observer.preReadFacePoolImages(pool);
+            observer.preReadFacePaletteImages(palette);
         }
 
-        var categories = pool.getCategories();
+        var categories = palette.getCategories();
         if (categories.isEmpty()) {
             // nothing to do
             if (observer != null) {
-                observer.postReadFacePoolImages(pool, null);
+                observer.postReadFacePaletteImages(palette, null);
             }
             return CompletableFuture.completedFuture(null);
         }
@@ -164,61 +164,61 @@ public final class FacePoolIO {
                 .thenCompose(unused -> {
                     if (exceptions.isEmpty()) {
                         if (observer != null) {
-                            observer.postReadFacePoolImages(pool, null);
+                            observer.postReadFacePaletteImages(palette, null);
                         }
                         return CompletableFuture.completedStage(null);
                     } else {
-                        var exc = new FacePoolIOException(pool, "Failed to read all face images", exceptions);
+                        var exc = new FacePaletteIOException(palette, "Failed to read all face images", exceptions);
                         if (observer != null) {
-                            observer.postReadFacePoolImages(pool, exc);
+                            observer.postReadFacePaletteImages(palette, exc);
                         }
                         return CompletableFuture.failedStage(exc);
                     }
                 });
     }
 
-    public static void write(@NotNull NamedFacePool pool, @NotNull JsonWriter writer) throws IOException {
+    public static void write(@NotNull NamedFacePalette palette, @NotNull JsonWriter writer) throws IOException {
         writer.beginObject();
 
         writer.name(FaceFields.NAME);
-        writer.value(pool.getName());
+        writer.value(palette.getName());
 
-        if (pool.hasDescription()) {
+        if (palette.hasDescription()) {
             writer.name(FaceFields.DESCRIPTION);
-            JsonWriteUtils.writeStringArray(writer, pool.getDescription());
+            JsonWriteUtils.writeStringArray(writer, palette.getDescription());
         }
 
-        if (pool.hasCredits()) {
-            JsonWriteUtils.writeStringArray(writer, pool.getCredits());
+        if (palette.hasCredits()) {
+            JsonWriteUtils.writeStringArray(writer, palette.getCredits());
         }
 
         writer.name(FaceFields.CATEGORIES);
-        JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, pool.getCategories());
+        JsonWriteUtils.writeObject(writer, FaceCategoryIO::write, palette.getCategories());
 
         writer.endObject();
     }
 
-    public static void writeImages(@NotNull NamedFacePool pool, @NotNull Path rootDir,
-                                   @Nullable FaceImageWriteObserver observer) throws FacePoolIOException {
+    public static void writeImages(@NotNull NamedFacePalette palette, @NotNull Path rootDir,
+                                   @Nullable FaceImageWriteObserver observer) throws FacePaletteIOException {
         if (observer != null) {
-            observer.preWriteFacePoolImages(pool);
+            observer.preWriteFacePaletteImages(palette);
         }
 
-        FacePoolIOException bigExc = null;
+        FacePaletteIOException bigExc = null;
 
-        for (var category : pool.getCategories()) {
+        for (var category : palette.getCategories()) {
             try {
                 FaceCategoryIO.writeImages(category, rootDir, observer);
             } catch (FaceCategoryIOException e) {
                 if (bigExc == null) {
-                    bigExc = new FacePoolIOException(pool, "Failed to write all face images");
+                    bigExc = new FacePaletteIOException(palette, "Failed to write all face images");
                 }
                 bigExc.addSubException(e);
             }
         }
 
         if (observer != null) {
-            observer.postWriteFacePoolImages(pool, bigExc);
+            observer.postWriteFacePaletteImages(palette, bigExc);
         }
 
         if (bigExc != null) {
@@ -227,17 +227,17 @@ public final class FacePoolIO {
     }
 
     public static @NotNull CompletableFuture<Void> writeImagesAsync(@NotNull Executor executor,
-                                                                    @NotNull NamedFacePool pool, @NotNull Path rootDir,
+                                                                    @NotNull NamedFacePalette palette, @NotNull Path rootDir,
                                                                     @Nullable FaceImageWriteObserver observer) {
         if (observer != null) {
-            observer.preWriteFacePoolImages(pool);
+            observer.preWriteFacePaletteImages(palette);
         }
 
-        var categories = pool.getCategories();
+        var categories = palette.getCategories();
         if (categories.isEmpty()) {
             // nothing to do
             if (observer != null) {
-                observer.postWriteFacePoolImages(pool, null);
+                observer.postWriteFacePaletteImages(palette, null);
             }
             return CompletableFuture.completedFuture(null);
         }
@@ -263,13 +263,13 @@ public final class FacePoolIO {
                 .thenCompose(unused -> {
                     if (exceptions.isEmpty()) {
                         if (observer != null) {
-                            observer.postWriteFacePoolImages(pool, null);
+                            observer.postWriteFacePaletteImages(palette, null);
                         }
                         return CompletableFuture.completedStage(null);
                     } else {
-                        var exc = new FacePoolIOException(pool, "Failed to write all face images", exceptions);
+                        var exc = new FacePaletteIOException(palette, "Failed to write all face images", exceptions);
                         if (observer != null) {
-                            observer.postWriteFacePoolImages(pool, exc);
+                            observer.postWriteFacePaletteImages(palette, exc);
                         }
                         return CompletableFuture.failedStage(exc);
                     }
