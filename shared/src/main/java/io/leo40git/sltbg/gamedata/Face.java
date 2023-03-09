@@ -10,11 +10,12 @@
 package io.leo40git.sltbg.gamedata;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 
 import io.leo40git.sltbg.swing.util.ImageUtils;
-import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +36,7 @@ public final class Face implements Comparable<Face> {
     private boolean orderSet;
     private @Nullable String characterName;
     private boolean characterNameSet;
-    private String @NotNull [] description;
+    private @Nullable ArrayList<String> description;
 
     private @Nullable ImageIcon icon;
 
@@ -51,7 +52,7 @@ public final class Face implements Comparable<Face> {
         orderSet = false;
         characterName = null;
         characterNameSet = false;
-        description = ArrayUtils.EMPTY_STRING_ARRAY;
+        description = null;
 
         icon = null;
     }
@@ -203,19 +204,18 @@ public final class Face implements Comparable<Face> {
     }
 
     public boolean hasDescription() {
-        return description.length > 0;
+        return description != null && !description.isEmpty();
     }
 
-    public String @NotNull [] getDescription() {
-        return ArrayUtils.clone(description);
-    }
-
-    public void setDescription(String @NotNull [] description) {
-        this.description = ArrayUtils.clone(description);
+    public synchronized @NotNull List<String> getDescription() {
+        if (description == null) {
+            description = new ArrayList<>();
+        }
+        return description;
     }
 
     public void clearDescription() {
-        description = ArrayUtils.EMPTY_STRING_ARRAY;
+        description = null;
     }
 
     public @Nullable ImageIcon getIcon() {
@@ -247,7 +247,9 @@ public final class Face implements Comparable<Face> {
         clone.orderSet = orderSet;
         clone.characterName = characterName;
         clone.characterNameSet = characterNameSet;
-        clone.description = ArrayUtils.clone(description);
+        if (description != null) {
+            clone.description = new ArrayList<>(description);
+        }
         return clone;
     }
 

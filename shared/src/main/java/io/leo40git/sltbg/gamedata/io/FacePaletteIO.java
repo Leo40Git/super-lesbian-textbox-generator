@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
@@ -23,7 +24,6 @@ import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MalformedJsonException;
 import io.leo40git.sltbg.json.MissingFieldsException;
-import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +39,7 @@ public final class FacePaletteIO {
     @Contract("_, _ -> new")
     public static @NotNull NamedFacePalette read(@NotNull JsonReader reader, boolean sort) throws IOException {
         String name = null;
-        String[] description = ArrayUtils.EMPTY_STRING_ARRAY, credits = ArrayUtils.EMPTY_STRING_ARRAY;
+        List<String> description = null, credits = null;
         HashSet<String> categoryNames = null;
         ArrayList<FaceCategory> categories = null;
 
@@ -48,8 +48,8 @@ public final class FacePaletteIO {
             String field = reader.nextName();
             switch (field) {
                 case FaceFields.NAME -> name = reader.nextString();
-                case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
-                case FaceFields.CREDITS -> credits = JsonReadUtils.readStringArray(reader);
+                case FaceFields.DESCRIPTION -> description = JsonReadUtils.readArray(reader, JsonReader::nextString);
+                case FaceFields.CREDITS -> credits = JsonReadUtils.readArray(reader, JsonReader::nextString);
                 case FaceFields.CATEGORIES -> {
                     if (categories == null) {
                         categories = new ArrayList<>();
@@ -83,8 +83,13 @@ public final class FacePaletteIO {
         }
 
         var palette = new NamedFacePalette(name);
-        palette.setDescription(description);
-        palette.setCredits(credits);
+        if (description != null) {
+            palette.getDescription().addAll(description);
+        }
+        if (credits != null) {
+            palette.getCredits().addAll(credits);
+        }
+
         for (var category : categories) {
             palette.add(category);
         }

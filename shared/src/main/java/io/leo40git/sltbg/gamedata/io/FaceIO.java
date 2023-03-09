@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -21,7 +22,6 @@ import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
 import io.leo40git.sltbg.json.MissingFieldsException;
 import io.leo40git.sltbg.swing.util.ImageUtils;
-import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +41,7 @@ public final class FaceIO {
         boolean orderSet = false;
         long order = 0;
         String characterName = null;
-        String[] description = ArrayUtils.EMPTY_STRING_ARRAY;
+        List<String> description = null;
 
         if (reader.peek() == JsonToken.STRING) {
             imagePath = reader.nextString();
@@ -56,7 +56,7 @@ public final class FaceIO {
                         orderSet = true;
                     }
                     case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
-                    case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
+                    case FaceFields.DESCRIPTION -> description = JsonReadUtils.readArray(reader, JsonReader::nextString);
                     default -> reader.skipValue();
                 }
             }
@@ -74,7 +74,9 @@ public final class FaceIO {
         if (characterName != null) {
             face.setCharacterName(characterName);
         }
-        face.setDescription(description);
+        if (description != null) {
+            face.getDescription().addAll(description);
+        }
         return face;
     }
 

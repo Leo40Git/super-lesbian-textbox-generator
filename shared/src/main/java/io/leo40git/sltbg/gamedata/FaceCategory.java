@@ -17,7 +17,6 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 
-import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +30,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     private boolean orderSet = false;
     private long order;
     private @Nullable String characterName;
-    private String @NotNull [] description = ArrayUtils.EMPTY_STRING_ARRAY;
+    private @Nullable ArrayList<String> description;
 
     private @Nullable Face iconFace;
     private long lastOrder = FacePalette.DEFAULT_ORDER_BASE;
@@ -138,19 +137,18 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     }
 
     public boolean hasDescription() {
-        return description.length > 0;
+        return description != null && !description.isEmpty();
     }
 
-    public String @NotNull [] getDescription() {
-        return ArrayUtils.clone(description);
-    }
-
-    public void setDescription(String @NotNull [] description) {
-        this.description = ArrayUtils.clone(description);
+    public synchronized @NotNull List<String> getDescription() {
+        if (description == null) {
+            description = new ArrayList<>();
+        }
+        return description;
     }
 
     public void clearDescription() {
-        description = ArrayUtils.EMPTY_STRING_ARRAY;
+        description = null;
     }
 
     public @Nullable ImageIcon getIcon() {
@@ -303,7 +301,9 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         clone.order = order;
         clone.orderSet = orderSet;
         clone.characterName = characterName;
-        clone.description = ArrayUtils.clone(description);
+        if (description != null) {
+            clone.description = new ArrayList<>(description);
+        }
         return clone;
     }
 

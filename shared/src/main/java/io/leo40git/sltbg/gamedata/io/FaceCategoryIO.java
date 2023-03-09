@@ -43,7 +43,7 @@ public final class FaceCategoryIO {
             switch (field) {
                 case FaceFields.ORDER -> category.setOrder(reader.nextLong());
                 case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
-                case FaceFields.DESCRIPTION -> category.setDescription(JsonReadUtils.readStringArray(reader));
+                case FaceFields.DESCRIPTION -> JsonReadUtils.readArray(reader, JsonReader::nextString, category.getDescription()::add);
                 case FaceFields.FACES -> {
                     JsonReadUtils.readSimpleMap(reader, FaceIO::read, category::add);
                     gotFaces = true;

@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import io.leo40git.sltbg.util.ArrayUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,14 +82,6 @@ public final class JsonReadUtils {
         } else {
             // assume single value
             consumer.accept(delegate.read(reader));
-        }
-    }
-
-    public static String @NotNull [] readStringArray(@NotNull JsonReader reader) throws IOException {
-        if (reader.peek() == JsonToken.STRING) {
-            return new String[] {reader.nextString()};
-        } else {
-            return readArray(reader, JsonReader::nextString).toArray(ArrayUtils.EMPTY_STRING_ARRAY);
         }
     }
 

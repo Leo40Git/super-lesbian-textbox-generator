@@ -9,18 +9,21 @@
 
 package io.leo40git.sltbg.gamedata;
 
-import io.leo40git.sltbg.util.ArrayUtils;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class NamedFacePalette extends FacePalette {
     private @NotNull String name;
-    private String @NotNull [] description, credits;
+    private @Nullable ArrayList<String> description, credits;
 
     public NamedFacePalette(@NotNull String name) {
         super();
         this.name = name;
-        description = ArrayUtils.EMPTY_STRING_ARRAY;
-        credits = ArrayUtils.EMPTY_STRING_ARRAY;
+        description = null;
+        credits = null;
     }
 
     public @NotNull String getName() {
@@ -32,35 +35,32 @@ public final class NamedFacePalette extends FacePalette {
     }
 
     public boolean hasDescription() {
-        return description.length > 0;
+        return description != null && !description.isEmpty();
     }
 
-    public String @NotNull [] getDescription() {
-        return ArrayUtils.clone(description);
-    }
-
-    public void setDescription(String @NotNull [] description) {
-        this.description = ArrayUtils.clone(description);
+    public synchronized @NotNull List<String> getDescription() {
+        if (description == null) {
+            description = new ArrayList<>();
+        }
+        return description;
     }
 
     public void clearDescription() {
-        description = ArrayUtils.EMPTY_STRING_ARRAY;
+        description = null;
     }
 
     public boolean hasCredits() {
-        return credits.length > 0;
+        return credits != null && !credits.isEmpty();
     }
 
-    public String @NotNull [] getCredits() {
-        return ArrayUtils.clone(credits);
-    }
-
-    public void setCredits(String @NotNull [] credits) {
-        this.credits = ArrayUtils.clone(credits);
+    public synchronized @NotNull List<String> getCredits() {
+        if (credits == null) {
+            credits = new ArrayList<>();
+        }
+        return credits;
     }
 
     public void clearCredits() {
-        credits = ArrayUtils.EMPTY_STRING_ARRAY;
+        credits = null;
     }
-
 }

@@ -81,7 +81,136 @@ public final class JsonWriteUtils {
         }
     }
 
-    public static void writeStringArray(@NotNull JsonWriter writer, String @NotNull [] values) throws IOException {
+    public static void writeStringArray(@NotNull JsonWriter writer, @NotNull Iterable<? extends String> values) throws IOException {
+        var it = values.iterator();
+        if (!it.hasNext()) {
+            // write empty array
+            writer.beginArray().endArray();
+            return;
+        }
+
+        var first = it.next();
+        if (!it.hasNext()) {
+            // write one value
+            writer.value(first);
+            return;
+        }
+
+        writer.beginArray();
+        writer.value(first);
+        while (it.hasNext()) {
+            writer.value(it.next());
+        }
+        writer.endArray();
+    }
+    
+    public static void writeStringArray(@NotNull JsonWriter writer, String @NotNull ... values) throws IOException {
+        if (values.length == 1) {
+            writer.value(values[0]);
+        } else {
+            writer.beginArray();
+            for (var value : values) {
+                writer.value(value);
+            }
+            writer.endArray();
+        }
+    }
+
+    public static void writeBooleanArray(@NotNull JsonWriter writer, @NotNull Iterable<? extends Boolean> values) throws IOException {
+        var it = values.iterator();
+        if (!it.hasNext()) {
+            // write empty array
+            writer.beginArray().endArray();
+            return;
+        }
+
+        var first = it.next();
+        if (!it.hasNext()) {
+            // write one value
+            writer.value(first);
+            return;
+        }
+
+        writer.beginArray();
+        writer.value(first);
+        while (it.hasNext()) {
+            writer.value(it.next());
+        }
+        writer.endArray();
+    }
+
+    public static void writeBooleanArray(@NotNull JsonWriter writer, Boolean @NotNull ... values) throws IOException {
+        if (values.length == 1) {
+            writer.value(values[0]);
+        } else {
+            writer.beginArray();
+            for (var value : values) {
+                writer.value(value);
+            }
+            writer.endArray();
+        }
+    }
+
+    public static void writeNumberArray(@NotNull JsonWriter writer, @NotNull Iterable<? extends Number> values) throws IOException {
+        var it = values.iterator();
+        if (!it.hasNext()) {
+            // write empty array
+            writer.beginArray().endArray();
+            return;
+        }
+
+        var first = it.next();
+        if (!it.hasNext()) {
+            // write one value
+            writer.value(first);
+            return;
+        }
+
+        writer.beginArray();
+        writer.value(first);
+        while (it.hasNext()) {
+            writer.value(it.next());
+        }
+        writer.endArray();
+    }
+
+    public static void writeNumberArray(@NotNull JsonWriter writer, Number @NotNull ... values) throws IOException {
+        if (values.length == 1) {
+            writer.value(values[0]);
+        } else {
+            writer.beginArray();
+            for (var value : values) {
+                writer.value(value);
+            }
+            writer.endArray();
+        }
+    }
+
+    public static void writeNumberArray(@NotNull JsonWriter writer, int @NotNull ... values) throws IOException {
+        if (values.length == 1) {
+            writer.value(values[0]);
+        } else {
+            writer.beginArray();
+            for (var value : values) {
+                writer.value(value);
+            }
+            writer.endArray();
+        }
+    }
+
+    public static void writeNumberArray(@NotNull JsonWriter writer, long @NotNull ... values) throws IOException {
+        if (values.length == 1) {
+            writer.value(values[0]);
+        } else {
+            writer.beginArray();
+            for (var value : values) {
+                writer.value(value);
+            }
+            writer.endArray();
+        }
+    }
+
+    public static void writeNumberArray(@NotNull JsonWriter writer, double @NotNull ... values) throws IOException {
         if (values.length == 1) {
             writer.value(values[0]);
         } else {
