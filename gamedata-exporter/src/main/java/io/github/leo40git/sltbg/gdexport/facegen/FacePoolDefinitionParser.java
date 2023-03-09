@@ -21,7 +21,7 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import io.leo40git.sltbg.gamedata.Face;
+import io.leo40git.sltbg.gamedata.face.Face;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

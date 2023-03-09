@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.gamedata;
+package io.leo40git.sltbg.gamedata.face;
 
 import java.io.IOException;
 import java.util.ArrayList;
