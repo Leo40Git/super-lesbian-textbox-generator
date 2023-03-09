@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.gamedata.io;
+package io.leo40git.sltbg.gamedata;
 
 final class FaceFields {
     private FaceFields() {

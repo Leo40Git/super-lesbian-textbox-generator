@@ -9,16 +9,23 @@
 
 package io.leo40git.sltbg.gamedata;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import io.leo40git.sltbg.json.JsonReadUtils;
+import io.leo40git.sltbg.json.JsonWriteUtils;
+import io.leo40git.sltbg.json.MissingFieldsException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
+
+import org.quiltmc.json5.JsonReader;
+import org.quiltmc.json5.JsonWriter;
 
 public final class FaceCategory implements Comparable<FaceCategory> {
     private @Nullable FacePalette palette;
@@ -65,6 +72,71 @@ public final class FaceCategory implements Comparable<FaceCategory> {
             }
             face.onAddedToCategory(this);
         }
+    }
+
+    @Contract("_, _, _ -> new")
+    public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name, boolean sort) throws IOException {
+        var category = new FaceCategory(name);
+
+        boolean gotFaces = false;
+
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String field = reader.nextName();
+            switch (field) {
+                case FaceFields.ORDER -> category.setOrder(reader.nextLong());
+                case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
+                case FaceFields.DESCRIPTION -> JsonReadUtils.readArray(reader, JsonReader::nextString, category.getDescription()::add);
+                case FaceFields.FACES -> {
+                    JsonReadUtils.readSimpleMap(reader, Face::read, category::add);
+                    gotFaces = true;
+                }
+                default -> reader.skipValue();
+            }
+        }
+        reader.endObject();
+
+        if (!gotFaces) {
+            throw new MissingFieldsException("Category", FaceFields.FACES);
+        }
+
+        if (sort) {
+            category.sortIfNeeded();
+        }
+        return category;
+    }
+
+    @Contract("_, _ -> new")
+    public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
+        return read(reader, name, true);
+    }
+
+    public void write(@NotNull JsonWriter writer) throws IOException {
+        sortIfNeeded();
+
+        writer.name(name);
+
+        writer.beginObject();
+
+        if (orderSet) {
+            writer.name(FaceFields.ORDER);
+            writer.value(order);
+        }
+
+        if (characterName != null) {
+            writer.name(FaceFields.CHARACTER_NAME);
+            writer.value(characterName);
+        }
+
+        if (description != null && !description.isEmpty()) {
+            writer.name(FaceFields.DESCRIPTION);
+            JsonWriteUtils.writeStringArray(writer, description);
+        }
+
+        writer.name(FaceFields.FACES);
+        JsonWriteUtils.writeObject(writer, Face::write, faces);
+
+        writer.endObject();
     }
 
     public @Nullable FacePalette getPalette() {
