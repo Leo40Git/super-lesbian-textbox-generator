@@ -15,8 +15,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.swing.ImageIcon;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -149,14 +147,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
     public void clearDescription() {
         description = null;
-    }
-
-    public @Nullable ImageIcon getIcon() {
-        if (iconFace == null) {
-            return null;
-        } else {
-            return iconFace.getIcon();
-        }
     }
 
     void markDirty() {

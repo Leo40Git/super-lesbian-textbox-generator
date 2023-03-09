@@ -9,20 +9,14 @@
 
 package io.leo40git.sltbg.gamedata;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.ImageIcon;
-
-import io.leo40git.sltbg.swing.util.ImageUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class Face implements Comparable<Face> {
-    public static final int IMAGE_SIZE = 96;
-    public static final int ICON_SIZE = IMAGE_SIZE / 2;
     public static final String PATH_DELIMITER = "/";
 
     private @Nullable NamedFacePalette sourcePalette;
@@ -31,14 +25,11 @@ public final class Face implements Comparable<Face> {
     @SuppressWarnings("FieldMayBeFinal")
     private @NotNull String name;
     private @NotNull String imagePath;
-    private @Nullable BufferedImage image;
     private long order;
     private boolean orderSet;
     private @Nullable String characterName;
     private boolean characterNameSet;
     private @Nullable ArrayList<String> description;
-
-    private @Nullable ImageIcon icon;
 
     public Face(@NotNull String name, @NotNull String imagePath) {
         this.name = name;
@@ -47,14 +38,11 @@ public final class Face implements Comparable<Face> {
         sourcePalette = null;
         palette = null;
         category = null;
-        image = null;
         order = 0;
         orderSet = false;
         characterName = null;
         characterNameSet = false;
         description = null;
-
-        icon = null;
     }
 
     public @Nullable NamedFacePalette getSourcePalette() {
@@ -70,9 +58,6 @@ public final class Face implements Comparable<Face> {
     }
 
     void onCategoryRenamed() {
-        if (icon != null) {
-            icon.setDescription(createIconDescription());
-        }
     }
 
     void onAddedToPalette(@NotNull FacePalette palette) {
@@ -114,9 +99,6 @@ public final class Face implements Comparable<Face> {
         if (!characterNameSet) {
             characterName = null;
         }
-        if (icon != null) {
-            icon.setDescription(createIconDescription());
-        }
     }
 
     public @NotNull String getImagePath() {
@@ -125,33 +107,6 @@ public final class Face implements Comparable<Face> {
 
     public void setImagePath(@NotNull String imagePath) {
         this.imagePath = imagePath;
-    }
-
-    public boolean hasImage() {
-        return image != null;
-    }
-
-    public @NotNull BufferedImage getImage() {
-        if (image == null) {
-            throw new IllegalStateException("No image!");
-        }
-
-        return image;
-    }
-
-    public void setImage(@NotNull BufferedImage image) {
-        if (image.getWidth() != IMAGE_SIZE || image.getHeight() != IMAGE_SIZE) {
-            throw new IllegalArgumentException("image has incorrect dimensions: expected %1$d x %1$d, got %2$d x %3$d"
-                    .formatted(IMAGE_SIZE, image.getWidth(), image.getHeight()));
-        }
-
-        this.image = image;
-        icon = null;
-    }
-
-    public void clearImage() {
-        image = null;
-        icon = null;
     }
 
     public boolean isOrderSet() {
@@ -218,31 +173,10 @@ public final class Face implements Comparable<Face> {
         description = null;
     }
 
-    public @Nullable ImageIcon getIcon() {
-        if (image == null) {
-            return null;
-        }
-
-        if (icon == null) {
-            icon = new ImageIcon(ImageUtils.scaleImage(image, ICON_SIZE, ICON_SIZE), createIconDescription());
-        }
-
-        return icon;
-    }
-
-    private @NotNull String createIconDescription() {
-        if (category == null) {
-            return name;
-        } else {
-            return category + PATH_DELIMITER + name;
-        }
-    }
-
     @Contract(" -> new")
     public @NotNull Face copy() {
         var clone = new Face(name, imagePath);
         clone.sourcePalette = sourcePalette;
-        clone.image = image;
         clone.order = order;
         clone.orderSet = orderSet;
         clone.characterName = characterName;
