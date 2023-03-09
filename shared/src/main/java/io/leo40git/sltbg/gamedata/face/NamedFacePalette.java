@@ -51,6 +51,8 @@ public final class NamedFacePalette extends FacePalette {
         HashSet<String> categoryNames = null;
         ArrayList<FaceCategory> categories = null;
 
+        String startLocStr = reader.locationString();
+
         reader.beginObject();
         while (reader.hasNext()) {
             String field = reader.nextName();
@@ -68,7 +70,7 @@ public final class NamedFacePalette extends FacePalette {
                     while (reader.hasNext()) {
                         String categoryName = reader.nextName();
                         if (!categoryNames.add(categoryName)) {
-                            throw new MalformedJsonException(reader, "Category with name \"" + categoryName + "\" defined twice");
+                            throw new MalformedJsonException("Duplicate category" + reader.locationString());
                         }
                         categories.add(FaceCategory.read(reader, categoryName, false));
                     }
@@ -87,7 +89,7 @@ public final class NamedFacePalette extends FacePalette {
             if (categories == null) {
                 missingFields.add(FaceFields.CATEGORIES);
             }
-            throw new MissingFieldsException(reader, "Face palette", missingFields);
+            throw new MissingFieldsException("Face palette" + startLocStr, missingFields);
         }
 
         var palette = new NamedFacePalette(name, categories);

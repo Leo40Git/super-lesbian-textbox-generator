@@ -49,26 +49,28 @@ public final class JsonReadUtils {
     }
 
     public static URL readURL(@NotNull JsonReader reader) throws IOException {
+        String locStr = reader.locationString();
         String s = reader.nextString();
         try {
             return new URL(s);
         } catch (MalformedURLException e) {
-            throw new MalformedJsonException(reader, "Failed to parse URL \"" + s + "\"");
+            throw new MalformedJsonException("Failed to parse URL \"" + s + "\"" + locStr, e);
         }
     }
 
     public static Path readPath(@NotNull JsonReader reader) throws IOException {
+        String locStr = reader.locationString();
         String s = reader.nextString();
         URI uri;
         try {
             uri = new URI(s);
         } catch (URISyntaxException e) {
-            throw new MalformedJsonException(reader, "Failed to parse URI \"" + s + "\"", e);
+            throw new MalformedJsonException("Failed to parse URI \"" + s + "\"" + locStr, e);
         }
         try {
             return Paths.get(uri);
         } catch (IllegalArgumentException e) {
-            throw new MalformedJsonException(reader, "Invalid path URI \"" + uri + "\"", e);
+            throw new MalformedJsonException("Invalid path URI \"" + uri + "\"" + locStr, e);
         }
     }
 
@@ -140,7 +142,7 @@ public final class JsonReadUtils {
             try {
                 key = keyDeserializer.deserialize(name);
             } catch (Exception e) {
-                throw new MalformedJsonException(reader, "Failed to deserialize key from \"" + name + "\"", e);
+                throw new MalformedJsonException("Failed to deserialize key from name" + reader.locationString(), e);
             }
             consumer.accept(key, valueDelegate.read(reader, key));
         }
@@ -328,6 +330,8 @@ public final class JsonReadUtils {
 
         reader.beginArray();
         while (reader.hasNext()) {
+            String locStr = reader.locationString();
+
             reader.beginObject();
             K key = null;
             boolean gotValue = false;
@@ -353,7 +357,7 @@ public final class JsonReadUtils {
             }
 
             if (!missingFields.isEmpty()) {
-                throw new MissingFieldsException(reader, "Map entry", missingFields);
+                throw new MissingFieldsException("Map entry" + locStr, missingFields);
             }
 
             consumer.accept(key, value);

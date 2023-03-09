@@ -61,6 +61,8 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
         boolean gotFaces = false;
 
+        String startLocStr = reader.locationString();
+
         reader.beginObject();
         while (reader.hasNext()) {
             String field = reader.nextName();
@@ -78,7 +80,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         reader.endObject();
 
         if (!gotFaces) {
-            throw new MissingFieldsException("Category", FaceFields.FACES);
+            throw new MissingFieldsException("Category", startLocStr, FaceFields.FACES);
         }
 
         if (sort) {

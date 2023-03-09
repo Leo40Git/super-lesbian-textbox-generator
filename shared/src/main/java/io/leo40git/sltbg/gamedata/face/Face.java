@@ -64,6 +64,8 @@ public final class Face implements Comparable<Face> {
         if (reader.peek() == JsonToken.STRING) {
             imagePath = reader.nextString();
         } else {
+            String startLocStr = reader.locationString();
+
             reader.beginObject();
             while (reader.hasNext()) {
                 String field = reader.nextName();
@@ -81,7 +83,7 @@ public final class Face implements Comparable<Face> {
             reader.endObject();
 
             if (imagePath == null) {
-                throw new MissingFieldsException(reader, "Face", FaceFields.IMAGE_PATH);
+                throw new MissingFieldsException("Face" + startLocStr, FaceFields.IMAGE_PATH);
             }
         }
 
