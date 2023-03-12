@@ -18,6 +18,7 @@ import java.util.List;
 
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
+import io.leo40git.sltbg.json.MalformedJsonException;
 import io.leo40git.sltbg.json.MissingFieldsException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -71,7 +72,12 @@ public final class FaceCategory implements Comparable<FaceCategory> {
                 case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
                 case FaceFields.DESCRIPTION -> JsonReadUtils.readArray(reader, JsonReader::nextString, category.getDescription()::add);
                 case FaceFields.FACES -> {
-                    JsonReadUtils.readSimpleMap(reader, Face::read, category::add);
+                    try {
+                        JsonReadUtils.readSimpleMap(reader, Face::read, category::add);
+                    } catch (IllegalArgumentException e) {
+                        throw new MalformedJsonException("Duplicate face" + reader.locationString());
+                    }
+
                     gotFaces = true;
                 }
                 default -> reader.skipValue();

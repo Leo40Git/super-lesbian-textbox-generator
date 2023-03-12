@@ -10,8 +10,8 @@
 package io.leo40git.sltbg.gamedata.face;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import io.leo40git.sltbg.json.JsonReadUtils;
@@ -27,29 +27,26 @@ import org.quiltmc.json5.JsonWriter;
 
 public final class NamedFacePalette extends FacePalette {
     private @NotNull String name;
+    private @NotNull Path rootDirectory;
     private @Nullable ArrayList<String> description = null, credits = null;
 
-    public NamedFacePalette(@NotNull String name) {
+    public NamedFacePalette(@NotNull String name, @NotNull Path rootDirectory) {
         super();
         this.name = name;
+        this.rootDirectory = rootDirectory;
     }
 
-    public NamedFacePalette(@NotNull String name, int initialCapacity) {
+    public NamedFacePalette(@NotNull String name, @NotNull Path rootDirectory, int initialCapacity) {
         super(initialCapacity);
         this.name = name;
+        this.rootDirectory = rootDirectory;
     }
 
-    private NamedFacePalette(@NotNull String name, @NotNull ArrayList<FaceCategory> categories) {
-        super(categories);
-        this.name = name;
-    }
+    @Contract("_, _, _ -> new")
+    public static @NotNull NamedFacePalette read(@NotNull JsonReader reader, @NotNull Path rootDirectory, boolean sort) throws IOException {
+        var palette = new NamedFacePalette("", rootDirectory);
 
-    @Contract("_, _ -> new")
-    public static @NotNull NamedFacePalette read(@NotNull JsonReader reader, boolean sort) throws IOException {
-        String name = null;
-        List<String> description = null, credits = null;
-        HashSet<String> categoryNames = null;
-        ArrayList<FaceCategory> categories = null;
+        boolean gotName = false, gotCategories = false;
 
         String startLocStr = reader.locationString();
 
@@ -57,47 +54,35 @@ public final class NamedFacePalette extends FacePalette {
         while (reader.hasNext()) {
             String field = reader.nextName();
             switch (field) {
-                case FaceFields.NAME -> name = reader.nextString();
-                case FaceFields.DESCRIPTION -> description = JsonReadUtils.readArray(reader, JsonReader::nextString);
-                case FaceFields.CREDITS -> credits = JsonReadUtils.readArray(reader, JsonReader::nextString);
+                case FaceFields.NAME -> {
+                    palette.setName(reader.nextString());
+                    gotName = true;
+                }
+                case FaceFields.DESCRIPTION -> JsonReadUtils.readArray(reader, JsonReader::nextString, palette.getDescription()::add);
+                case FaceFields.CREDITS -> JsonReadUtils.readArray(reader, JsonReader::nextString, palette.getCredits()::add);
                 case FaceFields.CATEGORIES -> {
-                    if (categories == null) {
-                        categories = new ArrayList<>();
-                        categoryNames = new HashSet<>();
+                    try {
+                        JsonReadUtils.readSimpleMap(reader, FaceCategory::read, palette::add);
+                    } catch (IllegalArgumentException e) {
+                        throw new MalformedJsonException("Duplicate category" + reader.locationString());
                     }
 
-                    reader.beginObject();
-                    while (reader.hasNext()) {
-                        String categoryName = reader.nextName();
-                        if (!categoryNames.add(categoryName)) {
-                            throw new MalformedJsonException("Duplicate category" + reader.locationString());
-                        }
-                        categories.add(FaceCategory.read(reader, categoryName, false));
-                    }
-                    reader.endObject();
+                    gotCategories = true;
                 }
                 default -> reader.skipValue();
             }
         }
         reader.endObject();
 
-        if (name == null || categories == null) {
+        if (!gotName || !gotCategories) {
             var missingFields = new ArrayList<String>();
-            if (name == null) {
+            if (gotName) {
                 missingFields.add(FaceFields.NAME);
             }
-            if (categories == null) {
+            if (gotCategories) {
                 missingFields.add(FaceFields.CATEGORIES);
             }
             throw new MissingFieldsException("Face palette" + startLocStr, missingFields);
-        }
-
-        var palette = new NamedFacePalette(name, categories);
-        if (description != null) {
-            palette.getDescription().addAll(description);
-        }
-        if (credits != null) {
-            palette.getCredits().addAll(credits);
         }
 
         if (sort) {
@@ -106,9 +91,9 @@ public final class NamedFacePalette extends FacePalette {
         return palette;
     }
 
-    @Contract("_ -> new")
-    public static @NotNull NamedFacePalette read(@NotNull JsonReader reader) throws IOException {
-        return read(reader, true);
+    @Contract("_, _ -> new")
+    public static @NotNull NamedFacePalette read(@NotNull JsonReader reader, @NotNull Path rootDirectory) throws IOException {
+        return read(reader, rootDirectory, true);
     }
 
     public void write(@NotNull JsonWriter writer) throws IOException {
@@ -140,6 +125,14 @@ public final class NamedFacePalette extends FacePalette {
 
     public void setName(@NotNull String name) {
         this.name = name;
+    }
+
+    public @NotNull Path getRootDirectory() {
+        return rootDirectory;
+    }
+
+    public void setRootDirectory(@NotNull Path rootDirectory) {
+        this.rootDirectory = rootDirectory;
     }
 
     public boolean hasDescription() {

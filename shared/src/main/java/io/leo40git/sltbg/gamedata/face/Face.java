@@ -10,6 +10,7 @@
 package io.leo40git.sltbg.gamedata.face;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -186,6 +187,13 @@ public final class Face implements Comparable<Face> {
 
     public void setImagePath(@NotNull String imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public @NotNull Path resolveImagePath() {
+        if (sourcePalette == null) {
+            throw new IllegalStateException("No source palette!");
+        }
+        return sourcePalette.getRootDirectory().resolve(imagePath);
     }
 
     public boolean isOrderSet() {

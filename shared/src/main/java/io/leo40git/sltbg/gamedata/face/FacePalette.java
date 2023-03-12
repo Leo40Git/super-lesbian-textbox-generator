@@ -47,16 +47,6 @@ public sealed class FacePalette permits NamedFacePalette {
         categoriesLookup = new HashMap<>(initialCapacity);
     }
 
-    protected FacePalette(@NotNull ArrayList<FaceCategory> categories) {
-        this.categories = categories;
-        categoriesLookup = new HashMap<>(categories.size());
-
-        for (var category : categories) {
-            categoriesLookup.put(category.getName(), category);
-            category.onAddedToPalette(this);
-        }
-    }
-
     void markDirty() {
         needsSort = true;
     }
