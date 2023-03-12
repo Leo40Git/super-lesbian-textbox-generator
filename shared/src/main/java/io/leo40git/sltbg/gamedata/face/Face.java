@@ -174,6 +174,7 @@ public final class Face implements Comparable<Face> {
     public void setName(@NotNull String name) {
         if (category != null) {
             category.rename(this, name);
+            category.markDirty();
         }
 
         if (!characterNameSet) {

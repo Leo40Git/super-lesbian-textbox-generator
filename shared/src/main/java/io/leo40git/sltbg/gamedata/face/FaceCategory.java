@@ -161,6 +161,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
         if (palette != null) {
             palette.rename(this, name);
+            palette.markDirty();
         }
 
         this.name = name;
