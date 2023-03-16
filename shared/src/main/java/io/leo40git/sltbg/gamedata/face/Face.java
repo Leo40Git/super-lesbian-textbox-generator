@@ -38,7 +38,7 @@ public final class Face implements Comparable<Face> {
     private boolean orderSet;
     private @Nullable String characterName;
     private boolean characterNameSet;
-    private @Nullable ArrayList<String> description;
+    private @Nullable List<String> description;
 
     public Face(@NotNull String name, @NotNull String imagePath) {
         this.name = name;

@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.JsonWriteUtils;
@@ -30,13 +31,13 @@ import org.quiltmc.json5.JsonWriter;
 
 public final class FaceCategory implements Comparable<FaceCategory> {
     private @Nullable FacePalette palette;
-    private final @NotNull ArrayList<Face> faces;
-    private final @NotNull HashMap<String, Face> facesLookup;
+    private final @NotNull List<Face> faces;
+    private final @NotNull Map<String, Face> facesLookup;
     private @NotNull String name;
     private boolean orderSet = false;
     private long order;
     private @Nullable String characterName;
-    private @Nullable ArrayList<String> description;
+    private @Nullable List<String> description;
 
     private @Nullable Face iconFace;
     private long lastOrder = FacePalette.DEFAULT_ORDER_BASE;

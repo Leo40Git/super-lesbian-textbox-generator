@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,8 +32,8 @@ public sealed class FacePalette permits NamedFacePalette {
         return order;
     }
 
-    private final @NotNull ArrayList<FaceCategory> categories;
-    private final @NotNull HashMap<String, FaceCategory> categoriesLookup;
+    private final @NotNull List<FaceCategory> categories;
+    private final @NotNull Map<String, FaceCategory> categoriesLookup;
 
     private long lastOrder = DEFAULT_ORDER_BASE;
     private volatile boolean needsSort = false;
