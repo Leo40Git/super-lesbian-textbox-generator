@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-public sealed class FacePalette permits NamedFacePalette {
+public sealed class FacePalette permits FacePaletteFile {
     public static final long DEFAULT_ORDER_BASE = 1000;
 
     public static long getNextOrder(long order) {

@@ -16,18 +16,18 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class NamedFacePalette extends FacePalette {
+public final class FacePaletteFile extends FacePalette {
     private @NotNull String name;
     private @NotNull Path rootDirectory;
     private @Nullable ArrayList<String> description = null, credits = null;
 
-    public NamedFacePalette(@NotNull String name, @NotNull Path rootDirectory) {
+    public FacePaletteFile(@NotNull String name, @NotNull Path rootDirectory) {
         super();
         this.name = name;
         this.rootDirectory = rootDirectory;
     }
 
-    public NamedFacePalette(@NotNull String name, @NotNull Path rootDirectory, int initialCapacity) {
+    public FacePaletteFile(@NotNull String name, @NotNull Path rootDirectory, int initialCapacity) {
         super(initialCapacity);
         this.name = name;
         this.rootDirectory = rootDirectory;

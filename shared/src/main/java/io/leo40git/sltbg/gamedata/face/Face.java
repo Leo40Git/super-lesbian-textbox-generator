@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 public final class Face implements Comparable<Face> {
     public static final String PATH_DELIMITER = "/";
 
-    private @Nullable NamedFacePalette sourcePalette;
+    private @Nullable FacePaletteFile sourceFile;
     private @Nullable FacePalette palette;
     private @Nullable FaceCategory category;
     @SuppressWarnings("FieldMayBeFinal")
@@ -37,8 +37,8 @@ public final class Face implements Comparable<Face> {
         this.order = order;
     }
 
-    public @Nullable NamedFacePalette getSourcePalette() {
-        return sourcePalette;
+    public @Nullable FacePaletteFile getSourceFile() {
+        return sourceFile;
     }
 
     public @Nullable FacePalette getPalette() {
@@ -53,8 +53,8 @@ public final class Face implements Comparable<Face> {
     }
 
     void onAddedToPalette(@NotNull FacePalette palette) {
-        if (palette instanceof NamedFacePalette namedPalette) {
-            this.sourcePalette = namedPalette;
+        if (palette instanceof FacePaletteFile namedPalette) {
+            this.sourceFile = namedPalette;
         }
         this.palette = palette;
     }
@@ -68,8 +68,8 @@ public final class Face implements Comparable<Face> {
     }
 
     void onRemovedFromPalette() {
-        if (sourcePalette == palette) {
-            sourcePalette = null;
+        if (sourceFile == palette) {
+            sourceFile = null;
         }
         palette = null;
     }
@@ -104,10 +104,10 @@ public final class Face implements Comparable<Face> {
     }
 
     public @NotNull Path resolveImagePath() {
-        if (sourcePalette == null) {
+        if (sourceFile == null) {
             throw new IllegalStateException("No source palette!");
         }
-        return sourcePalette.getRootDirectory().resolve(imagePath);
+        return sourceFile.getRootDirectory().resolve(imagePath);
     }
 
     public long getOrder() {
@@ -173,7 +173,7 @@ public final class Face implements Comparable<Face> {
     public @NotNull Face copy() {
         var clone = new Face(name, imagePath, order);
 
-        clone.sourcePalette = sourcePalette;
+        clone.sourceFile = sourceFile;
         if (characterNameSet) {
             clone.characterName = characterName;
             clone.characterNameSet = true;
