@@ -9,7 +9,6 @@
 
 package io.leo40git.sltbg.gamedata.face;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,116 +16,39 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.leo40git.sltbg.json.JsonReadUtils;
-import io.leo40git.sltbg.json.JsonWriteUtils;
-import io.leo40git.sltbg.json.MalformedJsonException;
-import io.leo40git.sltbg.json.MissingFieldsException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
-
-import org.quiltmc.json5.JsonReader;
-import org.quiltmc.json5.JsonWriter;
 
 public final class FaceCategory implements Comparable<FaceCategory> {
     private @Nullable FacePalette palette;
     private final @NotNull List<Face> faces;
     private final @NotNull Map<String, Face> facesLookup;
     private @NotNull String name;
-    private boolean orderSet = false;
     private long order;
     private @Nullable String characterName;
+    private @Nullable Face iconFace;
     private @Nullable List<String> description;
 
-    private @Nullable Face iconFace;
-    private long lastOrder = FacePalette.DEFAULT_ORDER_BASE;
     private volatile boolean needsSort = false;
 
-    public FaceCategory(@NotNull String name) {
+    public FaceCategory(@NotNull String name, long order) {
         validateName(name);
         this.name = name;
+        this.order = order;
+
         faces = new ArrayList<>();
         facesLookup = new HashMap<>();
     }
 
-    public FaceCategory(@NotNull String name, int initialCapacity) {
+    public FaceCategory(@NotNull String name, long order, int initialCapacity) {
         validateName(name);
         this.name = name;
+        this.order = order;
+
         faces = new ArrayList<>(initialCapacity);
         facesLookup = new HashMap<>(initialCapacity);
-    }
-
-    @Contract("_, _, _ -> new")
-    public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name, boolean sort) throws IOException {
-        var category = new FaceCategory(name);
-
-        boolean gotFaces = false;
-
-        String startLocStr = reader.locationString();
-
-        reader.beginObject();
-        while (reader.hasNext()) {
-            String field = reader.nextName();
-            switch (field) {
-                case FaceFields.ORDER -> category.setOrder(reader.nextLong());
-                case FaceFields.CHARACTER_NAME -> category.setCharacterName(reader.nextString());
-                case FaceFields.DESCRIPTION -> JsonReadUtils.readArray(reader, JsonReader::nextString, category.getDescription()::add);
-                case FaceFields.FACES -> {
-                    try {
-                        JsonReadUtils.readSimpleMap(reader, Face::read, category::add);
-                    } catch (IllegalArgumentException e) {
-                        throw new MalformedJsonException("Duplicate face" + reader.locationString());
-                    }
-
-                    gotFaces = true;
-                }
-                default -> reader.skipValue();
-            }
-        }
-        reader.endObject();
-
-        if (!gotFaces) {
-            throw new MissingFieldsException("Category", startLocStr, FaceFields.FACES);
-        }
-
-        if (sort) {
-            category.sortIfNeeded();
-        }
-        return category;
-    }
-
-    @Contract("_, _ -> new")
-    public static @NotNull FaceCategory read(@NotNull JsonReader reader, @NotNull String name) throws IOException {
-        return read(reader, name, true);
-    }
-
-    public void write(@NotNull JsonWriter writer) throws IOException {
-        sortIfNeeded();
-
-        writer.name(name);
-
-        writer.beginObject();
-
-        if (orderSet) {
-            writer.name(FaceFields.ORDER);
-            writer.value(order);
-        }
-
-        if (characterName != null) {
-            writer.name(FaceFields.CHARACTER_NAME);
-            writer.value(characterName);
-        }
-
-        if (description != null && !description.isEmpty()) {
-            writer.name(FaceFields.DESCRIPTION);
-            JsonWriteUtils.writeStringArray(writer, description);
-        }
-
-        writer.name(FaceFields.FACES);
-        JsonWriteUtils.writeObject(writer, Face::write, faces);
-
-        writer.endObject();
     }
 
     public @Nullable FacePalette getPalette() {
@@ -171,18 +93,13 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         }
     }
 
-    public boolean isOrderSet() {
-        return orderSet;
-    }
-
     public long getOrder() {
         return order;
     }
 
     public void setOrder(long order) {
-        if (!orderSet || this.order != order) {
+        if (this.order != order) {
             this.order = order;
-            orderSet = true;
             if (palette != null) {
                 palette.markDirty();
             }
@@ -247,18 +164,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
             faces.add(face);
             face.onAddedToCategory(this);
-
-            if (iconFace == null) {
-                iconFace = face;
-            }
-
-            if (face.isOrderSet()) {
-                if (face.getOrder() > lastOrder) {
-                    lastOrder = face.getOrder();
-                }
-            } else {
-                face.setOrder(lastOrder = FacePalette.getNextOrder(lastOrder));
-            }
         }
 
         markDirty();
@@ -284,21 +189,11 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     private void remove0(@NotNull Face face) {
         face.onRemovedFromCategory();
 
-        boolean doMarkDirty = true;
-
         if (iconFace == face) {
-            if (!faces.isEmpty()) {
-                faces.sort(Comparator.naturalOrder());
-                doMarkDirty = needsSort = false;
-                iconFace = faces.get(0);
-            } else {
-                iconFace = null;
-            }
+            iconFace = null;
         }
 
-        if (doMarkDirty) {
-            markDirty();
-        }
+        markDirty();
     }
 
     public boolean remove(@NotNull Face face) {
@@ -345,14 +240,12 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
     @Contract(" -> new")
     public @NotNull FaceCategory copy() {
-        var clone = new FaceCategory(name, faces.size());
+        var clone = new FaceCategory(name, order, faces.size());
 
         for (var faces : faces) {
             clone.add(faces.copy());
         }
 
-        clone.order = order;
-        clone.orderSet = orderSet;
         clone.characterName = characterName;
         if (description != null) {
             clone.description = new ArrayList<>(description);

@@ -35,7 +35,6 @@ public sealed class FacePalette permits NamedFacePalette {
     private final @NotNull List<FaceCategory> categories;
     private final @NotNull Map<String, FaceCategory> categoriesLookup;
 
-    private long lastOrder = DEFAULT_ORDER_BASE;
     private volatile boolean needsSort = false;
 
     public FacePalette() {
@@ -97,14 +96,6 @@ public sealed class FacePalette permits NamedFacePalette {
 
             categories.add(category);
             category.onAddedToPalette(this);
-
-            if (category.isOrderSet()) {
-                if (category.getOrder() > lastOrder) {
-                    lastOrder = category.getOrder();
-                }
-            } else {
-                category.setOrder(lastOrder = getNextOrder(lastOrder));
-            }
         }
     }
 
