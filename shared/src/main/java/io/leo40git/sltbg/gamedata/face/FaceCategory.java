@@ -28,9 +28,10 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     private @NotNull String name;
     private long order;
     private @Nullable String characterName;
-    private @Nullable Face iconFace;
     private @Nullable List<String> description;
 
+    private @Nullable Face iconFace;
+    private boolean iconFaceFound;
     private volatile boolean needsSort = false;
 
     public FaceCategory(@NotNull String name, long order) {
@@ -130,6 +131,8 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     }
 
     void markDirty() {
+        iconFace = null;
+        iconFaceFound = false;
         needsSort = true;
     }
 
@@ -150,6 +153,20 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
     public @Nullable Face getFace(@NotNull String name) {
         return facesLookup.get(name);
+    }
+
+    public @Nullable Face getIconFace() {
+        if (!iconFaceFound) {
+            sortIfNeeded();
+            for (var face : faces) {
+                if (face.isIcon()) {
+                    iconFace = face;
+                    break;
+                }
+            }
+            iconFaceFound = true;
+        }
+        return iconFace;
     }
 
     public void add(@NotNull Face face) {
@@ -188,11 +205,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
 
     private void remove0(@NotNull Face face) {
         face.onRemovedFromCategory();
-
-        if (iconFace == face) {
-            iconFace = null;
-        }
-
         markDirty();
     }
 
@@ -233,6 +245,7 @@ public final class FaceCategory implements Comparable<FaceCategory> {
             facesLookup.clear();
 
             iconFace = null;
+            iconFaceFound = false;
         }
 
         needsSort = false;

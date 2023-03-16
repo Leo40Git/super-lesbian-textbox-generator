@@ -29,6 +29,7 @@ public final class Face implements Comparable<Face> {
     private long order;
     private @Nullable String characterName;
     private boolean characterNameSet;
+    private boolean icon;
     private @Nullable List<String> description;
 
     Face(@NotNull String name, @NotNull String imagePath, long order) {
@@ -152,6 +153,17 @@ public final class Face implements Comparable<Face> {
     public void clearCharacterName() {
         characterName = null;
         characterNameSet = false;
+    }
+
+    public boolean isIcon() {
+        return icon;
+    }
+
+    public void setIcon(boolean icon) {
+        this.icon = icon;
+        if (category != null) {
+            category.markDirty();
+        }
     }
 
     public boolean hasDescription() {
