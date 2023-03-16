@@ -89,6 +89,7 @@ public final class Face implements Comparable<Face> {
             category.markDirty();
         }
 
+        this.name = name;
         if (!characterNameSet) {
             characterName = null;
         }
@@ -171,9 +172,12 @@ public final class Face implements Comparable<Face> {
     @Contract(" -> new")
     public @NotNull Face copy() {
         var clone = new Face(name, imagePath, order);
+
         clone.sourcePalette = sourcePalette;
-        clone.characterName = characterName;
-        clone.characterNameSet = characterNameSet;
+        if (characterNameSet) {
+            clone.characterName = characterName;
+            clone.characterNameSet = true;
+        }
         if (description != null) {
             clone.description = new ArrayList<>(description);
         }

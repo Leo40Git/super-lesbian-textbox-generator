@@ -241,7 +241,6 @@ public final class FaceCategory implements Comparable<FaceCategory> {
     @Contract(" -> new")
     public @NotNull FaceCategory copy() {
         var clone = new FaceCategory(name, order, faces.size());
-
         for (var faces : faces) {
             clone.add(faces.copy());
         }
