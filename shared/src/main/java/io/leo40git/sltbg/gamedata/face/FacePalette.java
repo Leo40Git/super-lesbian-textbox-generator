@@ -66,8 +66,26 @@ public sealed class FacePalette permits FacePaletteFile {
         return Collections.unmodifiableList(categories);
     }
 
+    public boolean containsCategory(@NotNull String name) {
+        return categoriesLookup.containsKey(name);
+    }
+
     public @Nullable FaceCategory getCategory(@NotNull String name) {
         return categoriesLookup.get(name);
+    }
+
+    public boolean containsFace(@NotNull String path) {
+        int delIdx = path.indexOf(Face.PATH_DELIMITER);
+        if (delIdx < 0) {
+            throw new IllegalArgumentException("Path \"%s\" is missing delimiter '%s'".formatted(path, Face.PATH_DELIMITER));
+        }
+
+        var category = getCategory(path.substring(0, delIdx));
+        if (category == null) {
+            return false;
+        }
+
+        return category.containsFace(path.substring(delIdx + 1));
     }
 
     public @Nullable Face getFace(@NotNull String path) {

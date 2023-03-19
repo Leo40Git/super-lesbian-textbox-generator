@@ -30,7 +30,7 @@ public final class Face implements Comparable<Face> {
     private boolean icon;
     private @Nullable List<String> description;
 
-    Face(@NotNull String name, @NotNull Path imagePath, long order) {
+    public Face(@NotNull String name, @NotNull Path imagePath, long order) {
         this.name = name;
         this.imagePath = imagePath;
         this.order = order;

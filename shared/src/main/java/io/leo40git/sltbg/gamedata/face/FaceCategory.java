@@ -151,6 +151,10 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         return Collections.unmodifiableList(faces);
     }
 
+    public boolean containsFace(@NotNull String name) {
+        return facesLookup.containsKey(name);
+    }
+
     public @Nullable Face getFace(@NotNull String name) {
         return facesLookup.get(name);
     }
