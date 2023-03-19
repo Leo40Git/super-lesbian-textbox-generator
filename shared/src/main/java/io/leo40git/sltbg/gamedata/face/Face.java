@@ -23,16 +23,15 @@ public final class Face implements Comparable<Face> {
     private @Nullable FacePaletteFile sourceFile;
     private @Nullable FacePalette palette;
     private @Nullable FaceCategory category;
-    @SuppressWarnings("FieldMayBeFinal")
     private @NotNull String name;
-    private @NotNull String imagePath;
+    private @NotNull Path imagePath;
     private long order;
     private @Nullable String characterName;
     private boolean characterNameSet;
     private boolean icon;
     private @Nullable List<String> description;
 
-    Face(@NotNull String name, @NotNull String imagePath, long order) {
+    Face(@NotNull String name, @NotNull Path imagePath, long order) {
         this.name = name;
         this.imagePath = imagePath;
         this.order = order;
@@ -96,11 +95,11 @@ public final class Face implements Comparable<Face> {
         }
     }
 
-    public @NotNull String getImagePath() {
+    public @NotNull Path getImagePath() {
         return imagePath;
     }
 
-    public void setImagePath(@NotNull String imagePath) {
+    public void setImagePath(@NotNull Path imagePath) {
         this.imagePath = imagePath;
     }
 
