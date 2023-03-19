@@ -20,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 public final class Face implements Comparable<Face> {
     public static final String PATH_DELIMITER = "/";
 
-    private @Nullable FacePaletteFile sourceFile;
     private @Nullable FacePalette palette;
     private @Nullable FaceCategory category;
     private @NotNull String name;
@@ -37,10 +36,6 @@ public final class Face implements Comparable<Face> {
         this.order = order;
     }
 
-    public @Nullable FacePaletteFile getSourceFile() {
-        return sourceFile;
-    }
-
     public @Nullable FacePalette getPalette() {
         return palette;
     }
@@ -53,9 +48,6 @@ public final class Face implements Comparable<Face> {
     }
 
     void onAddedToPalette(@NotNull FacePalette palette) {
-        if (palette instanceof FacePaletteFile namedPalette) {
-            this.sourceFile = namedPalette;
-        }
         this.palette = palette;
     }
 
@@ -68,9 +60,6 @@ public final class Face implements Comparable<Face> {
     }
 
     void onRemovedFromPalette() {
-        if (sourceFile == palette) {
-            sourceFile = null;
-        }
         palette = null;
     }
 
@@ -101,13 +90,6 @@ public final class Face implements Comparable<Face> {
 
     public void setImagePath(@NotNull Path imagePath) {
         this.imagePath = imagePath;
-    }
-
-    public @NotNull Path resolveImagePath() {
-        if (sourceFile == null) {
-            throw new IllegalStateException("No source palette!");
-        }
-        return sourceFile.getRootDirectory().resolve(imagePath);
     }
 
     public long getOrder() {
@@ -184,7 +166,6 @@ public final class Face implements Comparable<Face> {
     public @NotNull Face copy() {
         var clone = new Face(name, imagePath, order);
 
-        clone.sourceFile = sourceFile;
         if (characterNameSet) {
             clone.characterName = characterName;
             clone.characterNameSet = true;
