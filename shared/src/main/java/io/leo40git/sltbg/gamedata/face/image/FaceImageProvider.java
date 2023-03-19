@@ -24,4 +24,6 @@ public interface FaceImageProvider {
     @NotNull Icon getFaceIcon(@NotNull Face face);
 
     @NotNull Icon getFaceCategoryIcon(@NotNull FaceCategory category);
+
+    default void invalidate() { }
 }
