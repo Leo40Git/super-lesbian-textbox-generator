@@ -11,6 +11,7 @@ package io.leo40git.sltbg.swing.util;
 
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -146,5 +147,10 @@ public final class ImageUtils {
         } finally {
             writer.dispose();
         }
+    }
+
+    public static int getApproximateMemoryFootprint(@NotNull BufferedImage image) {
+        var buf = image.getRaster().getDataBuffer();
+        return buf.getSize() * DataBuffer.getDataTypeSize(buf.getDataType()) / 8;
     }
 }

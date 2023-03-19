@@ -189,4 +189,13 @@ public final class Face implements Comparable<Face> {
             return name.compareTo(o.getName());
         }
     }
+
+    @Override
+    public String toString() {
+        if (category != null) {
+            return category.getName() + PATH_DELIMITER + name;
+        } else {
+            return name;
+        }
+    }
 }
