@@ -101,6 +101,22 @@ public final class JsonReadUtils {
         return new ArrayList<>(set);
     }
 
+    public static @NotNull List<String> readStringArray(@NotNull JsonReader reader) throws IOException {
+        List<String> list = new ArrayList<>();
+
+        if (reader.peek() == JsonToken.BEGIN_ARRAY) {
+            reader.beginArray();
+            while (reader.hasNext()) {
+                list.add(reader.nextString());
+            }
+            reader.endArray();
+        } else {
+            list.add(reader.nextString());
+        }
+
+        return list;
+    }
+
     @FunctionalInterface
     public interface KeyDeserializer<K> {
         @NotNull K deserialize(@NotNull String name) throws Exception;

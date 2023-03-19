@@ -11,6 +11,7 @@ package io.leo40git.sltbg.gamedata.face;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.jetbrains.annotations.Contract;
@@ -158,7 +159,11 @@ public final class Face implements Comparable<Face> {
         return description;
     }
 
-    public void clearDescription() {
+    public synchronized void setDescription(@NotNull Collection<String> description) {
+        this.description = new ArrayList<>(description);
+    }
+
+    public synchronized void clearDescription() {
         description = null;
     }
 

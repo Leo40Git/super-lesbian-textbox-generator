@@ -20,6 +20,7 @@ final class FaceFields {
     public static final String IMAGE_PATH = "path";
     public static final String ORDER = "order";
     public static final String CHARACTER_NAME = "char_name";
+    public static final String ICON = "icon";
     public static final String DESCRIPTION = "description";
     public static final String CREDITS = "credits";
 }

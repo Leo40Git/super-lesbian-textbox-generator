@@ -10,6 +10,7 @@
 package io.leo40git.sltbg.gamedata.face;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -126,7 +127,11 @@ public final class FaceCategory implements Comparable<FaceCategory> {
         return description;
     }
 
-    public void clearDescription() {
+    public synchronized void setDescription(@NotNull Collection<String> description) {
+        this.description = new ArrayList<>(description);
+    }
+
+    public synchronized void clearDescription() {
         description = null;
     }
 
