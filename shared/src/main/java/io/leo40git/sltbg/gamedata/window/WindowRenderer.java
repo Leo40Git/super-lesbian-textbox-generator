@@ -49,6 +49,7 @@ public final class WindowRenderer {
         prompt = new WindowPrompt(version, skinImage);
         colors = new WindowColors(version, skinImage);
     }
+
     public @NotNull WindowVersion getVersion() {
         return version;
     }
