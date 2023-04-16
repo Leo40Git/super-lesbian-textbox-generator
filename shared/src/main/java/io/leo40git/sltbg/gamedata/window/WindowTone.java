@@ -9,6 +9,8 @@
 
 package io.leo40git.sltbg.gamedata.window;
 
+import java.util.Objects;
+
 import org.jetbrains.annotations.Range;
 
 /**
@@ -16,24 +18,79 @@ import org.jetbrains.annotations.Range;
  * <p>
  * There is also an <em>intensity</em> channel that the 3 color channels are scaled by.
  */
-public record WindowTone(
-        @Range(from = -255, to = 255) int red,
-        @Range(from = -255, to = 255) int green,
-        @Range(from = -255, to = 255) int blue,
-        @Range(from = 0, to = 255) int intensity) {
-    public double intensityScale() {
-        return intensity / 255.0;
+public final class WindowTone {
+    private final @Range(from = -255, to = 255) int red, green, blue;
+    private final @Range(from = 0, to = 255) int intensity;
+
+    private final @Range(from = -255, to = 255) int redScaled, greenScaled, blueScaled;
+
+    public WindowTone(
+            @Range(from = -255, to = 255) int red,
+            @Range(from = -255, to = 255) int green,
+            @Range(from = -255, to = 255) int blue,
+            @Range(from = 0, to = 255) int intensity) {
+        this.red = red;
+        this.green = green;
+        this.blue = blue;
+        this.intensity = intensity;
+
+        double intensityScale = intensity / 255.0;
+        redScaled = (int) Math.floor(red * intensityScale);
+        greenScaled = (int) Math.floor(green * intensityScale);
+        blueScaled = (int) Math.floor(blue * intensityScale);
     }
 
-    public int redScaled() {
-        return (int) Math.floor(red * intensityScale());
+    public @Range(from = -255, to = 255) int red() {
+        return red;
     }
 
-    public int greenScaled() {
-        return (int) Math.floor(green * intensityScale());
+    public @Range(from = -255, to = 255) int green() {
+        return green;
     }
 
-    public int blueScaled() {
-        return (int) Math.floor(blue * intensityScale());
+    public @Range(from = -255, to = 255) int blue() {
+        return blue;
     }
+
+    public @Range(from = 0, to = 255) int intensity() {
+        return intensity;
+    }
+
+    public @Range(from = -255, to = 255) int redScaled() {
+        return redScaled;
+    }
+
+    public @Range(from = -255, to = 255) int greenScaled() {
+        return greenScaled;
+    }
+
+    public @Range(from = -255, to = 255) int blueScaled() {
+        return blueScaled;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (WindowTone) obj;
+        return this.red == that.red &&
+                this.green == that.green &&
+                this.blue == that.blue &&
+                this.intensity == that.intensity;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(red, green, blue, intensity);
+    }
+
+    @Override
+    public String toString() {
+        return "WindowTone[" +
+                "red=" + red + ", " +
+                "green=" + green + ", " +
+                "blue=" + blue + ", " +
+                "intensity=" + intensity + ']';
+    }
+
 }
