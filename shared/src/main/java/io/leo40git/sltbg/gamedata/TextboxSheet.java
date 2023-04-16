@@ -14,6 +14,7 @@ import java.awt.image.BufferedImage;
 
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated
 @SuppressWarnings("ClassCanBeRecord")
 public final class TextboxSheet {
     public static final int TEXTBOX_WIDTH = 640;

@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
+@Deprecated
 public final class TextPalette {
     public static final int SIZE = 32;
 
