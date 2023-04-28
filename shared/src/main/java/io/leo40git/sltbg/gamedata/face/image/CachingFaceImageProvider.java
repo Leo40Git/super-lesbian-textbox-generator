@@ -12,6 +12,7 @@ package io.leo40git.sltbg.gamedata.face.image;
 import java.awt.AWTException;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
 import java.awt.IllegalComponentStateException;
 import java.awt.ImageCapabilities;
 import java.awt.RenderingHints;
@@ -40,6 +41,7 @@ import com.github.benmanes.caffeine.cache.CaffeineSpec;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.Scheduler;
+import com.github.benmanes.caffeine.cache.Weigher;
 import io.leo40git.sltbg.gamedata.face.Face;
 import io.leo40git.sltbg.gamedata.face.FaceCategory;
 import io.leo40git.sltbg.swing.util.ColorUtils;
@@ -49,49 +51,112 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CachingFaceImageProvider implements FaceImageProvider {
-    @Contract("_, _ -> new")
-    public static @NotNull Caffeine<Path, BufferedImage> createDefaultBuilder(int imageSize, boolean recordStats) {
-        var builder = Caffeine.newBuilder()
-                .expireAfterAccess(1, TimeUnit.HOURS)
-                .weigher((Path ignored, BufferedImage image) -> ImageUtils.getApproximateMemoryFootprint(image))
-                .maximumWeight(imageSize * imageSize * 8L * 80); // 80 images with int data type (most common)
-        if (recordStats) {
-            builder.recordStats();
+    private static final Weigher<Path, BufferedImage> IMAGE_WEIGHER =
+            (ignored, image) -> ImageUtils.getApproximateMemoryFootprint(image);
+
+    public static final class Builder {
+        private final int imageSize;
+        private int iconSize;
+        private @Nullable Caffeine<Object, Object> imageCacheBuilder, iconCacheBuilder;
+
+        private Builder(int imageSize) {
+            if (imageSize <= 0) {
+                throw new IllegalArgumentException("Image size must be a positive non-zero number");
+            }
+
+            this.imageSize = imageSize;
+            iconSize = imageSize / 2;
         }
-        return builder;
+
+        public Builder setIconSize(int iconSize) {
+            if (iconSize <= 0) {
+                throw new IllegalArgumentException("Icon size must be a positive non-zero number");
+            }
+
+            if (iconSize < imageSize) {
+                throw new IllegalArgumentException("Icon size (%d x %1$d) cannot be larger than image size (%d x %2$d)"
+                        .formatted(iconSize, imageSize));
+            }
+
+            this.iconSize = iconSize;
+            return this;
+        }
+
+        public Builder setImageCacheBuilder(Caffeine<Object, Object> imageCacheBuilder) {
+            this.imageCacheBuilder = imageCacheBuilder;
+            return this;
+        }
+
+        public Builder setImageCacheSpec(@NotNull CaffeineSpec spec) {
+            this.imageCacheBuilder = Caffeine.from(spec)
+                    .scheduler(Scheduler.systemScheduler());
+            return this;
+        }
+
+        public Builder setIconCacheBuilder(Caffeine<Object, Object> iconCacheBuilder) {
+            this.iconCacheBuilder = iconCacheBuilder;
+            return this;
+        }
+
+        public Builder setIconCacheSpec(@NotNull CaffeineSpec spec) {
+            this.iconCacheBuilder = Caffeine.from(spec);
+            return this;
+        }
+
+        @Contract(" -> new")
+        public @NotNull CachingFaceImageProvider build() {
+            var imageCacheBuilder = this.imageCacheBuilder;
+            if (imageCacheBuilder == null) {
+                imageCacheBuilder = createDefaultImageCacheBuilder(imageSize);
+            }
+
+            var iconCacheBuilder = this.iconCacheBuilder;
+            if (iconCacheBuilder == null) {
+                iconCacheBuilder = createDefaultIconCacheBuilder();
+            }
+
+            return new CachingFaceImageProvider(imageSize, iconSize, imageCacheBuilder, iconCacheBuilder);
+        }
+    }
+
+    @Contract("_ -> new")
+    public static @NotNull Builder builder(int imageSize) {
+        return new Builder(imageSize);
+    }
+
+    @Contract("_ -> new")
+    public static @NotNull Caffeine<Object, Object> createDefaultImageCacheBuilder(int imageSize) {
+        return Caffeine.newBuilder()
+                .scheduler(Scheduler.systemScheduler())
+                .expireAfterAccess(1, TimeUnit.HOURS)
+                .maximumWeight(imageSize * imageSize * 8L * 80); // 80 images with int data type (most common)
+    }
+
+    @Contract(" -> new")
+    public static Caffeine<Object, Object> createDefaultIconCacheBuilder() {
+        return Caffeine.newBuilder()
+                .maximumSize(128)
+                .expireAfterAccess(1, TimeUnit.MINUTES);
     }
 
     private final int imageSize, iconSize;
     private final @NotNull AsyncLoadingCache<Path, BufferedImage> imageCache;
-    private final @NotNull LoadingCache<Path, IconImpl> iconCache;
+    private final @NotNull LoadingCache<Path, IconData> iconCache;
 
-    public CachingFaceImageProvider(int imageSize, int iconSize, @NotNull Caffeine<Path, BufferedImage> builder) {
-        if (iconSize > imageSize) {
-            throw new IllegalArgumentException("Icon size (%d x %1$d) cannot be larger than image size (%d x %2$d)"
-                    .formatted(iconSize, imageSize));
-        }
-
+    private CachingFaceImageProvider(int imageSize, int iconSize,
+                                     Caffeine<Object, Object> imageCacheBuilder,
+                                     Caffeine<Object, Object> iconCacheBuilder) {
         this.imageSize = imageSize;
         this.iconSize = iconSize;
 
-        imageCache = builder
+        this.imageCache = imageCacheBuilder
+                .weigher(IMAGE_WEIGHER)
                 .removalListener(this::onImageRemoved)
                 .buildAsync(this::loadImage);
-        iconCache = Caffeine.newBuilder()
-                .maximumSize(128)
-                .expireAfterAccess(1, TimeUnit.MINUTES)
-                .evictionListener(this::onIconRemoved)
-                .build(IconImpl::new);
-    }
 
-    public CachingFaceImageProvider(int imageSize, int iconSize, @NotNull CaffeineSpec spec) {
-        this(imageSize, iconSize, Caffeine.from(spec)
-                .scheduler(Scheduler.systemScheduler())
-                .weigher((Path ignored, BufferedImage image) -> ImageUtils.getApproximateMemoryFootprint(image)));
-    }
-
-    public CachingFaceImageProvider(int imageSize, int iconSize) {
-        this(imageSize, iconSize, createDefaultBuilder(imageSize, false));
+        this.iconCache = iconCacheBuilder
+                .removalListener(this::onIconRemoved)
+                .build(IconData::new);
     }
 
     private @NotNull BufferedImage loadImage(@NotNull Path path) throws IOException {
@@ -109,16 +174,16 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
     private void onImageRemoved(@Nullable Path path, @Nullable BufferedImage image, RemovalCause cause) {
         if (path != null && !cause.wasEvicted()) {
-            var icon = iconCache.getIfPresent(path);
-            if (icon != null) {
-                icon.notifyImageRemoved();
+            var iconData = iconCache.getIfPresent(path);
+            if (iconData != null) {
+                iconData.notifyImageRemoved();
             }
         }
     }
 
-    private void onIconRemoved(@Nullable Path path, @Nullable IconImpl icon, RemovalCause cause) {
-        if (icon != null) {
-            icon.cleanUp();
+    private void onIconRemoved(@Nullable Path path, @Nullable IconData iconData, RemovalCause cause) {
+        if (iconData != null) {
+            iconData.cleanUp();
         }
     }
 
@@ -129,7 +194,8 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
     @Override
     public @NotNull Icon getFaceIcon(@NotNull Face face) {
-        var icon = iconCache.get(face.getImagePath());
+        var data = iconCache.get(face.getImagePath());
+        var icon = new IconImpl(data);
         icon.setDescription(face.toString());
         return icon;
     }
@@ -151,17 +217,118 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         }
     }
 
-    private final class IconImpl implements Icon, Accessible {
+    private final class IconData {
+        private static final int STATE_ERROR = -1;
+        private static final int STATE_LOADING = 0;
+        private static final int STATE_READY = 1;
+
         private static final ImageCapabilities ACCELERATED_CAPS = new ImageCapabilities(true);
 
         private final @NotNull Path path;
         private @Nullable BufferedImage image;
         private @Nullable VolatileImage scaledImage;
-        private @Nullable String description;
-        private @Nullable AccessibleIconImpl accessibleContext;
+        private boolean validated, dead;
 
-        public IconImpl(@NotNull Path path) {
+        public IconData(@NotNull Path path) {
             this.path = path;
+            validated = false;
+            dead = false;
+        }
+
+        public int validate(GraphicsConfiguration gc) {
+            if (dead) {
+                return STATE_ERROR;
+            }
+
+            boolean forceRedraw = false;
+            if (image == null) {
+                var future = imageCache.get(path);
+                if (future.isDone()) {
+                    try {
+                        image = future.get();
+                        forceRedraw = true;
+                    } catch (InterruptedException | CancellationException | ExecutionException ignored) {
+                        validated = false;
+                        return STATE_ERROR;
+                    }
+                } else {
+                    validated = false;
+                    return STATE_LOADING;
+                }
+            }
+
+            int scaledImageVS = VolatileImage.IMAGE_INCOMPATIBLE;
+            if (scaledImage != null) {
+                scaledImageVS = scaledImage.validate(gc);
+            }
+
+            boolean redraw = false;
+            if (scaledImageVS == VolatileImage.IMAGE_INCOMPATIBLE) {
+                if (scaledImage != null) {
+                    scaledImage.flush();
+                }
+
+                try {
+                    scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, ACCELERATED_CAPS);
+                } catch (AWTException ignored) {
+                    scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
+                }
+
+                redraw = true;
+            } else if (forceRedraw || scaledImageVS == VolatileImage.IMAGE_RESTORED) {
+                redraw = true;
+            }
+
+            if (redraw) {
+                var g = scaledImage.createGraphics();
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                g.setBackground(ColorUtils.TRANSPARENT);
+                g.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
+                g.drawImage(image, 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
+                g.dispose();
+            }
+
+            validated = true;
+            return STATE_READY;
+        }
+
+        public @NotNull VolatileImage getScaledImage() {
+            if (dead) {
+                throw new IllegalStateException("This icon data has been cleaned up and is no longer usable!");
+            }
+
+            if (!validated) {
+                throw new IllegalStateException("Not validated! Call validate and ensure it returns STATE_READY!");
+            }
+            validated = false;
+
+            assert scaledImage != null;
+            return scaledImage;
+        }
+
+        public void notifyImageRemoved() {
+            validated = false;
+
+            image = null;
+        }
+
+        public void cleanUp() {
+            validated = false;
+            dead = true;
+
+            if (scaledImage != null) {
+                scaledImage.flush();
+                scaledImage = null;
+            }
+        }
+    }
+
+    private final class IconImpl implements Icon, Accessible {
+        private final @NotNull IconData data;
+        private @Nullable String description;
+
+        private IconImpl(@NotNull IconData data) {
+            this.data = data;
         }
 
         public @Nullable String getDescription() {
@@ -179,51 +346,16 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
                 return;
             }
 
-            boolean forceRedraw = false;
-            if (image == null) {
-                var future = imageCache.get(path);
-                if (future.isDone()) {
-                    try {
-                        image = future.get();
-                        forceRedraw = true;
-                    } catch (InterruptedException | CancellationException | ExecutionException ignored) {
-                        // TODO draw error icon
-                    }
-                } else {
+            int state = data.validate(gc);
+            switch (state) {
+                case IconData.STATE_ERROR -> {
+                    // TODO draw error icon
+                }
+                case IconData.STATE_LOADING -> {
                     // TODO draw loading icon
                 }
+                case IconData.STATE_READY -> g.drawImage(data.getScaledImage(), x, y, null);
             }
-
-            int scaledImageVS = VolatileImage.IMAGE_INCOMPATIBLE;
-            if (scaledImage != null) {
-                scaledImageVS = scaledImage.validate(gc);
-            }
-
-            boolean redraw = false;
-            if (scaledImageVS == VolatileImage.IMAGE_INCOMPATIBLE) {
-                if (scaledImage != null) {
-                    scaledImage.flush();
-                }
-                try {
-                    scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, ACCELERATED_CAPS);
-                } catch (AWTException ignored) {
-                    scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                }
-                redraw = true;
-            } else if (forceRedraw || scaledImageVS == VolatileImage.IMAGE_RESTORED) {
-                redraw = true;
-            }
-
-            if (redraw) {
-                var scaledImageG = scaledImage.createGraphics();
-                scaledImageG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                scaledImageG.setBackground(ColorUtils.TRANSPARENT);
-                scaledImageG.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                scaledImageG.drawImage(image, 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
-                scaledImageG.dispose();
-            }
-
-            g.drawImage(scaledImage, x, y, null);
         }
 
         @Override
@@ -236,16 +368,8 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             return CachingFaceImageProvider.this.iconSize;
         }
 
-        public void notifyImageRemoved() {
-            image = null;
-        }
-
-        public void cleanUp() {
-            if (scaledImage != null) {
-                scaledImage.flush();
-                scaledImage = null;
-            }
-        }
+        /// region AccessibleContext junk
+        private @Nullable AccessibleIconImpl accessibleContext;
 
         @Override
         public AccessibleContext getAccessibleContext() {
@@ -263,12 +387,12 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
             @Override
             public String getAccessibleIconDescription() {
-                return IconImpl.this.description;
+                return IconImpl.this.getDescription();
             }
 
             @Override
             public void setAccessibleIconDescription(String description) {
-                IconImpl.this.description = description;
+                IconImpl.this.setDescription(description);
             }
 
             @Override
@@ -281,7 +405,6 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
                 return CachingFaceImageProvider.this.iconSize;
             }
 
-            //<editor-fold desc="Unimplemented methods">
             @Override
             public AccessibleStateSet getAccessibleStateSet() {
                 return null;
@@ -306,7 +429,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             public Locale getLocale() throws IllegalComponentStateException {
                 return null;
             }
-            //</editor-fold>
         }
+        /// endregion
     }
 }
