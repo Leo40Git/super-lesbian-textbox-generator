@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.gamedata.face.image;
+package io.leo40git.sltbg.swing.gamedata.face.image;
 
 import java.awt.image.BufferedImage;
 import java.util.concurrent.CompletableFuture;
