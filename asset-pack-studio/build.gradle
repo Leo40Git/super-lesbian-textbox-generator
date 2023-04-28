@@ -6,19 +6,14 @@ plugins {
 group 'io.github.leo40git.sltbg'
 version '1.0-SNAPSHOT'
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 jar {
     manifest {
-        attributes('Main-Class': 'io.github.leo40git.sltbg.app.Main')
+        attributes('Main-Class': 'io.github.leo40git.sltbg.apstudio.Main')
     }
 }
 
 application {
-    mainClass = 'io.github.leo40git.sltbg.app.Main'
+    mainClass = 'io.github.leo40git.apstudio.app.Main'
 }
 
 sourceSets {
@@ -45,14 +40,6 @@ dependencies {
 
     testImplementation platform('org.junit:junit-bom:5.9.2')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
-}
-
-processResources {
-    inputs.property "version", project.version
-
-    filesMatching("build_info.json") {
-        expand "version": project.version
-    }
 }
 
 test {

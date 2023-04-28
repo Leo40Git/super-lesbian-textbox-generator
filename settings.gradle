@@ -1,17 +1,14 @@
 pluginManagement {
     repositories {
         mavenCentral()
-        maven {
-            name 'QuiltMC'
-            url 'https://maven.quiltmc.org/repository/release'
-        }
+        gradlePluginPortal()
     }
 }
 
 rootProject.name = 'super-lesbian-textbox-generator'
 include 'shared'
 include 'app'
+include 'asset-pack-studio'
 
 //include 'asset-extractor'
 //include 'gamedata-exporter'
-

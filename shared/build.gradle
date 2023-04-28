@@ -5,13 +5,21 @@ plugins {
 group 'io.github.leo40git.sltbg'
 version '1.0-SNAPSHOT'
 
+repositories {
+    mavenCentral()
+    maven {
+        name 'QuiltMC'
+        url 'https://maven.quiltmc.org/repository/release'
+    }
+}
+
 dependencies {
-    compileOnlyApi 'org.jetbrains:annotations:23.0.0'
+    compileOnlyApi 'org.jetbrains:annotations:24.0.1'
     api 'org.quiltmc:quilt-json5:1.0.3'
     api 'com.github.ben-manes.caffeine:caffeine:3.1.5'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    testImplementation platform('org.junit:junit-bom:5.9.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
 }
 
 test {
