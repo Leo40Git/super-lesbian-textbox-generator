@@ -2,7 +2,7 @@ plugins {
     id 'org.quiltmc.gradle.licenser' version '1.+'
 }
 
-group 'io.github.leo40git'
+group 'io.github.leo40git.sltbg'
 version '0.0-INTERNAL'
 
 subprojects {

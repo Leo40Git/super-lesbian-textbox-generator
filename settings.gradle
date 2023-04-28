@@ -10,7 +10,8 @@ pluginManagement {
 
 rootProject.name = 'super-lesbian-textbox-generator'
 include 'shared'
-include 'asset-extractor'
 include 'app'
-include 'gamedata-exporter'
+
+//include 'asset-extractor'
+//include 'gamedata-exporter'
 
