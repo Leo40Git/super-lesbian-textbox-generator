@@ -240,6 +240,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         private final @NotNull Path path;
         private @Nullable BufferedImage image;
         private @Nullable VolatileImage scaledImage;
+        private @Nullable String detailString;
         private boolean alive;
 
         public IconDelegate(@NotNull Path path) {
@@ -249,6 +250,10 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
         public boolean isAlive() {
             return alive;
+        }
+
+        public @Nullable String getDetailString() {
+            return detailString;
         }
 
         public void paintIcon(Component c, Graphics g, int x, int y) {
@@ -268,8 +273,21 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
                         try {
                             image = future.get();
                             forceRedraw = true;
-                        } catch (InterruptedException | CancellationException | ExecutionException ignored) { }
+                        } catch (InterruptedException e) {
+                            detailString = "Image loading interrupted";
+                        }
+                        catch (CancellationException e) {
+                            detailString = "Image loading cancelled";
+                        }
+                        catch (ExecutionException e) {
+                            detailString = "Image loading failed";
+                            var cause = e.getCause();
+                            if (cause != null) {
+                                detailString += ":\n" + cause;
+                            }
+                        }
                     } else {
+                        detailString = "Loading...";
                         state = STATE_LOADING;
                     }
                 }
@@ -344,7 +362,20 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         }
 
         public @Nullable String getDescription() {
-            return description;
+            String detail = null;
+            if (delegate != null && delegate.isAlive()) {
+                detail = delegate.getDetailString();
+            }
+
+            if (description != null) {
+                if (detail != null) {
+                    return description + "\n" + detail;
+                } else {
+                    return description;
+                }
+            } else {
+                return detail;
+            }
         }
 
         public void setDescription(@Nullable String description) {
