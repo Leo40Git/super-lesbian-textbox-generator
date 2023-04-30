@@ -18,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
+// TODO replace with rich version that supports icon names
+@Deprecated
 public final class IconSet {
     public static final int ICON_SIZE = 24;
 
