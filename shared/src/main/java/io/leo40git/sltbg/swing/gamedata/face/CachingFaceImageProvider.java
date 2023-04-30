@@ -44,6 +44,7 @@ import com.github.benmanes.caffeine.cache.Scheduler;
 import com.github.benmanes.caffeine.cache.Weigher;
 import io.leo40git.sltbg.gamedata.face.Face;
 import io.leo40git.sltbg.gamedata.face.FaceCategory;
+import io.leo40git.sltbg.swing.ErrorIcon;
 import io.leo40git.sltbg.swing.util.ColorUtils;
 import io.leo40git.sltbg.swing.util.ImageUtils;
 import org.jetbrains.annotations.Contract;
@@ -202,8 +203,9 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         if (iconFace != null) {
             return getFaceIcon(iconFace);
         } else {
-            // TODO return fallback icon
-            throw new UnsupportedOperationException("fallback icon NYI");
+            var icon = new ErrorIcon(iconSize, iconSize);
+            icon.setDescription("Category '" + category.getName() + "' is empty!");
+            return icon;
         }
     }
 
@@ -218,8 +220,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         if (iconFace != null) {
             paintFaceIcon(iconFace, c, g, x, y);
         } else {
-            // TODO paint fallback icon
-            throw new UnsupportedOperationException("fallback icon NYI");
+            ErrorIcon.paintIcon(c, g, x, y, iconSize, iconSize);
         }
     }
 
@@ -310,9 +311,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             }
 
             switch (state) {
-                case IconDelegate.STATE_ERROR -> {
-                    // TODO paint error icon
-                }
+                case IconDelegate.STATE_ERROR -> ErrorIcon.paintIcon(c, g, x, y, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
                 case IconDelegate.STATE_LOADING -> {
                     // TODO paint loading icon
                 }
@@ -370,7 +369,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             return CachingFaceImageProvider.this.iconSize;
         }
 
-        /// region AccessibleContext junk
+        /// region Accessible junk
         private @Nullable AccessibleIconImpl accessibleContext;
 
         @Override
