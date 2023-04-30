@@ -201,12 +201,6 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     @Override
-    public void invalidate() {
-        imageCache.synchronous().invalidateAll();
-        iconCache.invalidateAll();
-    }
-
-    @Override
     public @NotNull Icon getFaceCategoryIcon(@NotNull FaceCategory category) {
         var iconFace = category.getIconFace();
         if (iconFace != null) {
@@ -215,6 +209,28 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             // TODO return fallback icon
             throw new UnsupportedOperationException("fallback icon NYI");
         }
+    }
+
+    @Override
+    public void paintFaceIcon(@NotNull Face face, Component c, Graphics g, int x, int y) {
+        iconCache.get(face.getImagePath()).paintIcon(c, g, x, y);
+    }
+
+    @Override
+    public void paintFaceCategoryIcon(@NotNull FaceCategory category, Component c, Graphics g, int x, int y) {
+        var iconFace = category.getIconFace();
+        if (iconFace != null) {
+            paintFaceIcon(iconFace, c, g, x, y);
+        } else {
+            // TODO paint fallback icon
+            throw new UnsupportedOperationException("fallback icon NYI");
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        imageCache.synchronous().invalidateAll();
+        iconCache.invalidateAll();
     }
 
     private final class IconData {
@@ -306,6 +322,30 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             return scaledImage;
         }
 
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            if (c == null) {
+                // TODO paint fallback icon
+                return;
+            }
+
+            var gc = c.getGraphicsConfiguration();
+            if (gc == null) {
+                // TODO paint fallback icon
+                return;
+            }
+
+            int state = validate(gc);
+            switch (state) {
+                case IconData.STATE_ERROR -> {
+                    // TODO paint error icon
+                }
+                case IconData.STATE_LOADING -> {
+                    // TODO paint loading icon
+                }
+                case IconData.STATE_READY -> g.drawImage(getScaledImage(), x, y, c);
+            }
+        }
+
         public void notifyImageRemoved() {
             validated = false;
 
@@ -341,21 +381,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
-            var gc = c.getGraphicsConfiguration();
-            if (gc == null) {
-                return;
-            }
-
-            int state = data.validate(gc);
-            switch (state) {
-                case IconData.STATE_ERROR -> {
-                    // TODO draw error icon
-                }
-                case IconData.STATE_LOADING -> {
-                    // TODO draw loading icon
-                }
-                case IconData.STATE_READY -> g.drawImage(data.getScaledImage(), x, y, null);
-            }
+            data.paintIcon(c, g, x, y);
         }
 
         @Override

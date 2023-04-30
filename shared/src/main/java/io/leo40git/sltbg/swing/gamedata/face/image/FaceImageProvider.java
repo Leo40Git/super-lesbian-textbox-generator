@@ -9,6 +9,8 @@
 
 package io.leo40git.sltbg.swing.gamedata.face.image;
 
+import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.CompletableFuture;
 
@@ -24,6 +26,14 @@ public interface FaceImageProvider {
     @NotNull Icon getFaceIcon(@NotNull Face face);
 
     @NotNull Icon getFaceCategoryIcon(@NotNull FaceCategory category);
+
+    default void paintFaceIcon(@NotNull Face face, Component c, Graphics g, int x, int y) {
+        getFaceIcon(face).paintIcon(c, g, x, y);
+    }
+
+    default void paintFaceCategoryIcon(@NotNull FaceCategory category, Component c, Graphics g, int x, int y) {
+        getFaceCategoryIcon(category).paintIcon(c, g, x, y);
+    }
 
     default void invalidate() { }
 }
