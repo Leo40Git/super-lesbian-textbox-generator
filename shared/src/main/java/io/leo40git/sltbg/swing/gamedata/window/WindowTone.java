@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.gamedata.window;
+package io.leo40git.sltbg.swing.gamedata.window;
 
 import java.util.Objects;
 

@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.swing.gamedata.face.image;
+package io.leo40git.sltbg.swing.gamedata.face;
 
 import java.awt.Component;
 import java.awt.Graphics;

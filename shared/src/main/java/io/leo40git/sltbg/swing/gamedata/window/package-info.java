@@ -11,4 +11,4 @@
  * This package contains classes that are used to render accurate RPG Maker VX, VX Ace, MV and MZ textboxes.
  */
 
-package io.leo40git.sltbg.gamedata.window;
+package io.leo40git.sltbg.swing.gamedata.window;
