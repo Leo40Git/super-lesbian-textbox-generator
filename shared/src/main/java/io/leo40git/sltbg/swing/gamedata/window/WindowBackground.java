@@ -63,7 +63,7 @@ final class WindowBackground {
             var g = scratch2.createGraphics();
             try {
                 // draw stretched and tinted base
-                g.setComposite(tone.intensity() > 0 ? new BaseComposite(tone) : AlphaComposite.Src);
+                g.setComposite(tone.isEmpty() ? AlphaComposite.Src : new BaseComposite(tone));
                 g.drawImage(skinImage,
                         0, 0, width, height,
                         0, 0, tileSize, tileSize,
@@ -134,9 +134,9 @@ final class WindowBackground {
                 for (int x = 0; x < w; x++) {
                     for (int y = 0; y < h; y++) {
                         src.getPixel(x + src.getMinX(), y + src.getMinY(), srcRgba);
-                        srcRgba[0] = Math.min(255, Math.max(0, srcRgba[0] + tone.redScaled()));
-                        srcRgba[1] = Math.min(255, Math.max(0, srcRgba[1] + tone.greenScaled()));
-                        srcRgba[2] = Math.min(255, Math.max(0, srcRgba[2] + tone.blueScaled()));
+                        srcRgba[0] = Math.min(255, Math.max(0, srcRgba[0] + tone.red()));
+                        srcRgba[1] = Math.min(255, Math.max(0, srcRgba[1] + tone.green()));
+                        srcRgba[2] = Math.min(255, Math.max(0, srcRgba[2] + tone.blue()));
                         dstOut.setPixel(x + dstOut.getMinX(), y + dstOut.getMinY(), srcRgba);
                     }
                 }
