@@ -23,7 +23,12 @@ public final class TextParserTest {
         GameAssets.setPaletteColor(0, Color.WHITE);
         GameAssets.setPaletteColor(14, new Color(255, 241, 120));
 
-        String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\\n\\++++\\sb\\c[#BB2929]delicious!\\sb\n\\si\\;\\si;";
+        String source = """
+                \\c[14]Melody
+                \\c[0]\\c[#FFF]\\c[#FFFFFF]\\
+                Bunny stew is\s
+                \\++++\\sb\\c[#BB2929]delicious!\\sb
+                \\si\\;\\si;""";
 
         System.out.println(" === preserveInvisible is false === ");
         dumpElements(source, false);
