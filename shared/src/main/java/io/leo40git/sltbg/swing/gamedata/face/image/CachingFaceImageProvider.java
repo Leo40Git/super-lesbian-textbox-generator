@@ -141,7 +141,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
     private final int imageSize, iconSize;
     private final @NotNull AsyncLoadingCache<Path, BufferedImage> imageCache;
-    private final @NotNull LoadingCache<Path, IconData> iconCache;
+    private final @NotNull LoadingCache<Path, IconDelegate> iconCache;
 
     private CachingFaceImageProvider(int imageSize, int iconSize,
                                      Caffeine<Object, Object> imageCacheBuilder,
@@ -156,7 +156,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
         this.iconCache = iconCacheBuilder
                 .removalListener(this::onIconRemoved)
-                .build(IconData::new);
+                .build(IconDelegate::new);
     }
 
     private @NotNull BufferedImage loadImage(@NotNull Path path) throws IOException {
@@ -173,17 +173,14 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     private void onImageRemoved(@Nullable Path path, @Nullable BufferedImage image, RemovalCause cause) {
-        if (path != null && !cause.wasEvicted()) {
-            var iconData = iconCache.getIfPresent(path);
-            if (iconData != null) {
-                iconData.notifyImageRemoved();
-            }
+        if (image != null) {
+            image.flush();
         }
     }
 
-    private void onIconRemoved(@Nullable Path path, @Nullable IconData iconData, RemovalCause cause) {
-        if (iconData != null) {
-            iconData.cleanUp();
+    private void onIconRemoved(@Nullable Path path, @Nullable IconDelegate delegate, RemovalCause cause) {
+        if (delegate != null) {
+            delegate.cleanup();
         }
     }
 
@@ -233,7 +230,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         iconCache.invalidateAll();
     }
 
-    private final class IconData {
+    private final class IconDelegate {
         private static final int STATE_ERROR = -1;
         private static final int STATE_LOADING = 0;
         private static final int STATE_READY = 1;
@@ -243,118 +240,90 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         private final @NotNull Path path;
         private @Nullable BufferedImage image;
         private @Nullable VolatileImage scaledImage;
-        private boolean validated, dead;
+        private boolean alive;
 
-        public IconData(@NotNull Path path) {
+        public IconDelegate(@NotNull Path path) {
             this.path = path;
-            validated = false;
-            dead = false;
-        }
-
-        public int validate(GraphicsConfiguration gc) {
-            if (dead) {
-                return STATE_ERROR;
-            }
-
-            boolean forceRedraw = false;
-            if (image == null) {
-                var future = imageCache.get(path);
-                if (future.isDone()) {
-                    try {
-                        image = future.get();
-                        forceRedraw = true;
-                    } catch (InterruptedException | CancellationException | ExecutionException ignored) {
-                        validated = false;
-                        return STATE_ERROR;
-                    }
-                } else {
-                    validated = false;
-                    return STATE_LOADING;
-                }
-            }
-
-            int scaledImageVS = VolatileImage.IMAGE_INCOMPATIBLE;
-            if (scaledImage != null) {
-                scaledImageVS = scaledImage.validate(gc);
-            }
-
-            boolean redraw = false;
-            if (scaledImageVS == VolatileImage.IMAGE_INCOMPATIBLE) {
-                if (scaledImage != null) {
-                    scaledImage.flush();
-                }
-
-                try {
-                    scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, ACCELERATED_CAPS);
-                } catch (AWTException ignored) {
-                    scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                }
-
-                redraw = true;
-            } else if (forceRedraw || scaledImageVS == VolatileImage.IMAGE_RESTORED) {
-                redraw = true;
-            }
-
-            if (redraw) {
-                var g = scaledImage.createGraphics();
-                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                g.setBackground(ColorUtils.TRANSPARENT);
-                g.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                g.drawImage(image, 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
-                g.dispose();
-            }
-
-            validated = true;
-            return STATE_READY;
-        }
-
-        public @NotNull VolatileImage getScaledImage() {
-            if (dead) {
-                throw new IllegalStateException("This icon data has been cleaned up and is no longer usable!");
-            }
-
-            if (!validated) {
-                throw new IllegalStateException("Not validated! Call validate and ensure it returns STATE_READY!");
-            }
-            validated = false;
-
-            assert scaledImage != null;
-            return scaledImage;
+            alive = true;
         }
 
         public void paintIcon(Component c, Graphics g, int x, int y) {
-            if (c == null) {
-                // TODO paint fallback icon
-                return;
+            GraphicsConfiguration gc = null;
+            if (c != null) {
+                gc = c.getGraphicsConfiguration();
             }
 
-            var gc = c.getGraphicsConfiguration();
-            if (gc == null) {
-                // TODO paint fallback icon
-                return;
+            int state = STATE_ERROR;
+
+            if (alive && c != null && gc != null) {
+                boolean forceRedraw = false;
+
+                if (image == null) {
+                    var future = imageCache.get(path);
+                    if (future.isDone()) {
+                        try {
+                            image = future.get();
+                            forceRedraw = true;
+                        } catch (InterruptedException | CancellationException | ExecutionException ignored) { }
+                    } else {
+                        state = STATE_LOADING;
+                    }
+                }
+
+                if (image != null) {
+                    int scaledImageState = VolatileImage.IMAGE_INCOMPATIBLE;
+                    if (scaledImage != null) {
+                        scaledImageState = scaledImage.validate(gc);
+                    }
+
+                    boolean redraw = false;
+                    if (scaledImageState == VolatileImage.IMAGE_INCOMPATIBLE) {
+                        if (scaledImage != null) {
+                            scaledImage.flush();
+                        }
+
+                        try {
+                            scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, ACCELERATED_CAPS);
+                        } catch (AWTException ignored) {
+                            scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
+                        }
+
+                        redraw = true;
+                    } else if (forceRedraw || scaledImageState == VolatileImage.IMAGE_RESTORED) {
+                        redraw = true;
+                    }
+
+                    if (redraw) {
+                        var scaledImageG = scaledImage.createGraphics();
+                        scaledImageG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                        scaledImageG.setBackground(ColorUtils.TRANSPARENT);
+                        scaledImageG.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
+                        scaledImageG.drawImage(image, 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
+                        scaledImageG.dispose();
+                    }
+
+                    state = STATE_READY;
+                }
             }
 
-            int state = validate(gc);
             switch (state) {
-                case IconData.STATE_ERROR -> {
+                case IconDelegate.STATE_ERROR -> {
                     // TODO paint error icon
                 }
-                case IconData.STATE_LOADING -> {
+                case IconDelegate.STATE_LOADING -> {
                     // TODO paint loading icon
                 }
-                case IconData.STATE_READY -> g.drawImage(getScaledImage(), x, y, c);
+                case IconDelegate.STATE_READY -> g.drawImage(scaledImage, x, y, c);
             }
         }
 
-        public void notifyImageRemoved() {
-            validated = false;
+        public void cleanup() {
+            alive = false;
 
-            image = null;
-        }
-
-        public void cleanUp() {
-            validated = false;
-            dead = true;
+            if (image != null) {
+                image.flush();
+                image = null;
+            }
 
             if (scaledImage != null) {
                 scaledImage.flush();
@@ -364,11 +333,11 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     private final class IconImpl implements Icon, Accessible {
-        private final @NotNull IconData data;
+        private final @NotNull IconDelegate delegate;
         private @Nullable String description;
 
-        private IconImpl(@NotNull IconData data) {
-            this.data = data;
+        private IconImpl(@NotNull IconDelegate delegate) {
+            this.delegate = delegate;
         }
 
         public @Nullable String getDescription() {
@@ -381,7 +350,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
-            data.paintIcon(c, g, x, y);
+            delegate.paintIcon(c, g, x, y);
         }
 
         @Override
