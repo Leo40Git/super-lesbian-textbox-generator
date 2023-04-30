@@ -71,38 +71,38 @@ public final class WindowRenderer {
         return version.getMargin();
     }
 
-    public void drawBackground(@NotNull Graphics g, int x, int y, int width, int height, @Nullable ImageObserver observer) {
-        background.draw(g, x, y, width, height, observer);
+    public void paintBackground(@NotNull Graphics g, int x, int y, int width, int height, @Nullable ImageObserver observer) {
+        background.paint(g, x, y, width, height, observer);
     }
 
-    public void drawBackgroundWithMargin(@NotNull Graphics g, int x, int y, int width, int height, @Nullable ImageObserver observer) {
+    public void paintBackgroundWithMargin(@NotNull Graphics g, int x, int y, int width, int height, @Nullable ImageObserver observer) {
         int margin = version.getMargin();
-        background.draw(g, x + margin, y + margin, width - margin * 2, height - margin * 2, observer);
+        background.paint(g, x + margin, y + margin, width - margin * 2, height - margin * 2, observer);
     }
 
-    public void drawFrame(@NotNull Graphics g, int x, int y, int width, int height, @Nullable ImageObserver observer) {
-        frame.draw(g, x, y, width, height, observer);
+    public void paintFrame(@NotNull Graphics g, int x, int y, int width, int height, @Nullable ImageObserver observer) {
+        frame.paint(g, x, y, width, height, observer);
     }
 
     public int getPadding() {
         return version.getPadding();
     }
 
-    public void drawPrompt(@NotNull Graphics g, @Range(from = 0, to = PROMPT_FRAME_COUNT - 1) int frame,
-                           int x, int y, @Nullable ImageObserver observer) {
-        prompt.drawFrame(g, frame, x, y, observer);
+    public void paintPrompt(@NotNull Graphics g, @Range(from = 0, to = PROMPT_FRAME_COUNT - 1) int frame,
+                            int x, int y, @Nullable ImageObserver observer) {
+        prompt.paintFrame(g, frame, x, y, observer);
     }
 
     public int getPromptSize() {
         return prompt.getFrameSize();
     }
 
-    public void drawPromptInFrame(@NotNull Graphics g, @Range(from = 0, to = PROMPT_FRAME_COUNT - 1) int frame,
-                                  int x, int y, int width, int height, @Nullable ImageObserver observer) {
+    public void paintPromptInFrame(@NotNull Graphics g, @Range(from = 0, to = PROMPT_FRAME_COUNT - 1) int frame,
+                                   int x, int y, int width, int height, @Nullable ImageObserver observer) {
         int size = prompt.getFrameSize();
         x += width / 2 - size / 2;
         y += height - size;
-        prompt.drawFrame(g, frame, x, y, observer);
+        prompt.paintFrame(g, frame, x, y, observer);
     }
 
     public @NotNull Color getColor(@Range(from = 0, to = COLOR_COUNT - 1) int index) {

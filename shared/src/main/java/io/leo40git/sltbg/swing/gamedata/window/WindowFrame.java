@@ -62,7 +62,7 @@ final class WindowFrame {
         pieces[PIECE_BR][0] = startX + pieceSize + pieceMWidth; pieces[PIECE_BR][1] = pieceSize + pieceCHeight; pieces[PIECE_BR][2] = pieceSize; pieces[PIECE_BR][3] = pieceSize;
     }
 
-    public void draw(Graphics g, int x, int y, int width, int height, ImageObserver observer) {
+    public void paint(Graphics g, int x, int y, int width, int height, ImageObserver observer) {
         final int rightX = x + width - pieceSize;
 
         drawPiece(g, PIECE_TL, x, y, pieceSize, pieceSize, observer);

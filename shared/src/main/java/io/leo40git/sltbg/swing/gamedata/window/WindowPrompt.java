@@ -55,7 +55,7 @@ final class WindowPrompt {
         return frameSize;
     }
 
-    public void drawFrame(Graphics g, int i, int x, int y, ImageObserver observer) {
+    public void paintFrame(Graphics g, int i, int x, int y, ImageObserver observer) {
         int[] frameOrigin = frameOrigins[i];
         g.drawImage(skinImage,
                 x, y, x + frameSize, y + frameSize,

@@ -46,7 +46,7 @@ final class WindowBackground {
         tlScratch = new ThreadLocal<>();
     }
 
-    public void draw(Graphics g, int x, int y, int width, int height, ImageObserver observer) {
+    public void paint(Graphics g, int x, int y, int width, int height, ImageObserver observer) {
         if (opacity <= 0) {
             return;
         }
