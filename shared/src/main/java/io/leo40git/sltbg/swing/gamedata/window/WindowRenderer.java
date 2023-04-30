@@ -20,9 +20,12 @@ import org.jetbrains.annotations.Range;
 
 public final class WindowRenderer {
     public static final int PROMPT_FRAME_COUNT = WindowPrompt.FRAME_COUNT;
-    public static final int COLOR_COUNT = WindowColors.COUNT;
+    public static final int COLOR_COUNT = 32;
 
     private static final int SRC_IMAGE_SIZE = 128;
+    private static final int SRC_COLOR_START_X = 64;
+    private static final int SRC_COLOR_START_Y = 96;
+    private static final int SRC_COLOR_SIZE = 8;
 
     private @NotNull WindowVersion version;
     private @NotNull BufferedImage skinImage;
@@ -30,7 +33,7 @@ public final class WindowRenderer {
     private final WindowBackground background;
     private final WindowFrame frame;
     private final WindowPrompt prompt;
-    private final WindowColors colors;
+    private final Color[] colors;
 
     public WindowRenderer(@NotNull WindowVersion version, @NotNull BufferedImage skinImage, @NotNull WindowTone tone, float opacity) {
         checkOpacity(opacity);
@@ -42,7 +45,8 @@ public final class WindowRenderer {
         background = new WindowBackground(version, tone, opacity, skinImage);
         frame = new WindowFrame(version, skinImage);
         prompt = new WindowPrompt(version, skinImage);
-        colors = new WindowColors(version, skinImage);
+        colors = new Color[COLOR_COUNT];
+        initColors();
     }
 
     private static void checkOpacity(float opacity) {
@@ -85,6 +89,7 @@ public final class WindowRenderer {
         background.setSkin(version, skinImage);
         frame.setSkin(version, skinImage);
         prompt.setSkin(version, skinImage);
+        initColors();
     }
 
     public void setTone(@NotNull WindowTone tone) {
@@ -134,7 +139,26 @@ public final class WindowRenderer {
         prompt.paintFrame(g, frame, x, y, observer);
     }
 
+    private void initColors() {
+        // this is simple: there are 32 colored squares on the Window sheet,
+        //  these directly map to the available 32 preset colors
+
+        final int size = version.scale(SRC_COLOR_SIZE);
+        final int startX = version.scale(SRC_COLOR_START_X);
+        int y = version.scale(SRC_COLOR_START_Y);
+
+        int x = startX;
+        for (int i = 0; i < COLOR_COUNT; i++) {
+            colors[i] = new Color(skinImage.getRGB(x, y), false);
+            x += size;
+            if (x >= skinImage.getWidth()) {
+                x = startX;
+                y += size;
+            }
+        }
+    }
+
     public @NotNull Color getColor(@Range(from = 0, to = COLOR_COUNT - 1) int index) {
-        return colors.get(index);
+        return colors[index];
     }
 }
