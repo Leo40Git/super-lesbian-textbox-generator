@@ -191,9 +191,8 @@ public final class TextParser {
                                                 elems.add(new EscapedTextElement(sbStart, 2, "\\;"));
                                                 sbStart += 2;
                                             } else {
-                                                sbStart++;
                                                 sb.append(';');
-                                                sbLength++;
+                                                sbLength += 2;
                                             }
 
                                             scn.skip(2);
