@@ -23,8 +23,18 @@ public final class TextParserTest {
         GameAssets.setPaletteColor(0, Color.WHITE);
         GameAssets.setPaletteColor(14, new Color(255, 241, 120));
 
-        final String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\n\\++++\\sb\\c[#BB2929]delicious!";
-        var elems = TextParser.parse(source, true);
+        String source = "\\c[14]Melody\n\\c[0]Bunny stew is \\n\\++++\\sb\\c[#BB2929]delicious!\\sb\n\\si\\;\\si;";
+
+        System.out.println(" === preserveInvisible is false === ");
+        dumpElements(source, false);
+        System.out.println();
+
+        System.out.println(" === preserveInvisible is true  === ");
+        dumpElements(source, true);
+    }
+
+    private static void dumpElements(String source, boolean preserveInvisible) {
+        var elems = TextParser.parse(source, preserveInvisible);
 
         System.out.format("%d element(s):%n", elems.size());
         for (var elem : elems) {
@@ -32,7 +42,13 @@ public final class TextParserTest {
                 System.out.println(elem);
             } else {
                 System.out.print(elem);
-                String sourcePart = source.substring(elem.getSourceStart(), elem.getSourceEnd());
+                String sourcePart;
+                try {
+                    sourcePart = source.substring(elem.getSourceStart(), elem.getSourceEnd());
+                } catch (Throwable ex) {
+                    System.out.println();
+                    throw ex;
+                }
                 System.out.format(" (from '%s')%n", sourcePart.replaceAll("\\n", "<\\\\n>"));
             }
         }

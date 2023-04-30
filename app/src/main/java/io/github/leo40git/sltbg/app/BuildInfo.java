@@ -14,12 +14,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.List;
 
 import com.vdurmont.semver4j.Semver;
 import com.vdurmont.semver4j.SemverException;
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.MalformedJsonException;
 import io.leo40git.sltbg.json.MissingFieldsException;
+import io.leo40git.sltbg.util.CollectionUtils;
 import org.jetbrains.annotations.Nullable;
 
 import org.quiltmc.json5.JsonReader;
@@ -35,7 +37,7 @@ public final class BuildInfo {
     private static boolean isDevelopment = false;
     private static Semver version;
     private static @Nullable URL updateJsonUrl, homepageUrl, issuesUrl, sourceUrl;
-    private static String[] credits;
+    private static List<String> credits;
 
     static void setDevelopment() {
         if (loaded) {
@@ -60,8 +62,8 @@ public final class BuildInfo {
                 switch (field) {
                     case "version" -> verStr = reader.nextString();
                     case "urls" -> readURLs(reader);
-                    case "credits" -> credits = JsonReadUtils.readStringArray(reader);
-                    default -> throw new MalformedJsonException(reader, "Unknown field " + field);
+                    case "credits" -> credits = CollectionUtils.copyOf(JsonReadUtils.readStringArray(reader));
+                    default -> throw new MalformedJsonException("Unknown field" + reader.locationString());
                 }
             }
             reader.endObject();
@@ -109,7 +111,7 @@ public final class BuildInfo {
                 case "homepage" -> homepageUrl = readNullableURL(reader);
                 case "issues" -> issuesUrl = readNullableURL(reader);
                 case "source" -> sourceUrl = readNullableURL(reader);
-                default -> throw new MalformedJsonException(reader, "Unknown field " + field);
+                default -> throw new MalformedJsonException("Unknown field" + reader.locationString());
             }
         }
         reader.endObject();
@@ -155,8 +157,8 @@ public final class BuildInfo {
         return sourceUrl;
     }
 
-    public static String[] credits() {
+    public static Iterable<String> credits() {
         assertLoaded();
-        return credits.clone();
+        return credits;
     }
 }

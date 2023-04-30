@@ -89,6 +89,14 @@ public final class TextScanner {
         }
     }
 
+    public char peek(int delta) {
+        if (position + delta > length) {
+            return EOF;
+        } else {
+            return source.charAt(offset + position + delta);
+        }
+    }
+
     public char read() {
         if (position >= length) {
             return EOF;

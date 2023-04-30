@@ -66,8 +66,8 @@ public final class TextParser {
                             }
                             scn.skip();
                         }
-                        case '0', '\n' -> {
-                            // "null" escape, C-style escaped newline
+                        case '\n' -> {
+                            // C-style escaped newline
                             if (preserveInvisible) {
                                 sbStart = flushTextElement(elems, sb, sbStart, sbLength);
                                 sbLength = 0;
@@ -176,6 +176,30 @@ public final class TextParser {
                                     sbLength = 0;
                                     elems.add(elem);
                                     sbStart += elem.getSourceLength();
+
+                                    char nextChar = scn.peek();
+                                    if (nextChar == ';') {
+                                        // control element terminator
+                                        if (preserveInvisible) {
+                                            elems.add(new EscapedTextElement(sbStart, 1, ";"));
+                                        }
+                                        scn.skip();
+                                    } else if (nextChar == '\\') {
+                                        if (scn.peek(1) == ';') {
+                                            // escaped control element terminator (also shows ';' character)
+                                            if (preserveInvisible) {
+                                                elems.add(new EscapedTextElement(sbStart, 2, "\\;"));
+                                                sbStart += 2;
+                                            } else {
+                                                sbStart++;
+                                                sb.append(';');
+                                                sbLength++;
+                                            }
+
+                                            scn.skip(2);
+                                        }
+                                    }
+
                                     continue;
                                 }
                             }
