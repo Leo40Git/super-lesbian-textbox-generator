@@ -120,7 +120,7 @@ public final class TextRenderer {
                 y += lineHeight + fontSizeDelta * 8;
             } else if (elem instanceof IconControlElement e) {
                 //final int yo = defaultMaxAscent / 2 - GameAssets.ICON_SIZE / 2;
-                GameAssets.drawIcon(g, x, y /* + yo */, e.getIndex());
+                GameAssets.drawIcon(g, x, y /* + yo */, Integer.parseInt(e.getName())); // FIXME
                 x += GameAssets.ICON_SIZE;
             } else if (elem instanceof ColorControlElement e) {
                 g.setColor(e.getColor());
