@@ -324,6 +324,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
                         scaledImageG.dispose();
                     }
 
+                    detailString = null;
                     state = STATE_READY;
                 }
             }
