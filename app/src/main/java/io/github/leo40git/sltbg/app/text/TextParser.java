@@ -71,7 +71,7 @@ public final class TextParser {
                             if (preserveInvisible) {
                                 sbStart = flushTextElement(elems, sb, sbStart, sbLength);
                                 sbLength = 0;
-                                elems.add(new InvisibleControlElement(sbStart, 2));
+                                elems.add(new InvisibleControlElement(sbStart, 2, InvisibleControlElement.Type.CONTINUE_LINE));
                                 sbStart += 2;
                             } else {
                                 sbLength += 2;
@@ -181,7 +181,7 @@ public final class TextParser {
                                     if (nextChar == ';') {
                                         // control element terminator
                                         if (preserveInvisible) {
-                                            elems.add(new EscapedTextElement(sbStart, 1, ";"));
+                                            elems.add(new InvisibleControlElement(sbStart, 1, InvisibleControlElement.Type.TERMINATE));
                                         }
                                         scn.skip();
                                     } else if (nextChar == '\\') {
