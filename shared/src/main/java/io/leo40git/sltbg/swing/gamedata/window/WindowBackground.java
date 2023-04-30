@@ -30,20 +30,48 @@ final class WindowBackground {
 
     private static final int SRC_TILE_SIZE = 64;
 
-    private final WindowTone tone;
-    private final float opacity;
-    private final BufferedImage skinImage;
+    private WindowVersion version;
+    private WindowTone tone;
+    private float opacity;
+    private BufferedImage skinImage;
 
-    private final int tileSize;
     private final ThreadLocal<BufferedImage> tlScratch;
 
     public WindowBackground(WindowVersion version, WindowTone tone, float opacity, BufferedImage skinImage) {
+        this.version = version;
         this.tone = tone;
         this.opacity = opacity;
         this.skinImage = skinImage;
 
-        tileSize = version.scale(SRC_TILE_SIZE);
         tlScratch = new ThreadLocal<>();
+    }
+
+    public void setSkin(WindowVersion version, BufferedImage skinImage) {
+        this.version = version;
+        this.skinImage = skinImage;
+        clearScratch();
+    }
+
+    public WindowTone getTone() {
+        return tone;
+    }
+
+    public void setTone(WindowTone tone) {
+        if (!this.tone.equals(tone)) {
+            this.tone = tone;
+            clearScratch();
+        }
+    }
+
+    public float getOpacity() {
+        return opacity;
+    }
+
+    public void setOpacity(float opacity) {
+        if (this.opacity != opacity) {
+            this.opacity = opacity;
+            clearScratch();
+        }
     }
 
     public void paint(Graphics g, int x, int y, int width, int height, ImageObserver observer) {
@@ -63,6 +91,8 @@ final class WindowBackground {
             if (scratch != null) {
                 scratch.flush();
             }
+
+            int tileSize = version.scale(SRC_TILE_SIZE);
 
             var scratch2 = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             var g = scratch2.createGraphics();
@@ -109,6 +139,14 @@ final class WindowBackground {
             tlScratch.set(scratch);
         }
         return scratch;
+    }
+
+    private void clearScratch() {
+        var scratch = tlScratch.get();
+        if (scratch != null) {
+            scratch.flush();
+        }
+        tlScratch.remove();
     }
 
     private static final class BaseComposite implements Composite {

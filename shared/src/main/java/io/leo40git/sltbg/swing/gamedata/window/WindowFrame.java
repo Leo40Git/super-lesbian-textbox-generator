@@ -35,20 +35,26 @@ final class WindowFrame {
     private static final int SRC_MIDDLE_PIECE_WIDTH = 32, SRC_CENTER_PIECE_HEIGHT = 32;
     private static final int SRC_MIDDLE_PADDING = 32;
 
-    private final BufferedImage skinImage;
-    private final int pieceSize, pieceMWidth, pieceCHeight;
+    private WindowVersion version;
+    private BufferedImage skinImage;
+
+    private int pieceSize, pieceMWidth, pieceCHeight;
     private final int[][] pieces;
 
     public WindowFrame(WindowVersion version, BufferedImage skinImage) {
+        this.version = version;
         this.skinImage = skinImage;
 
+        pieces = new int[PIECE_MAX][4];
+        initPieces();
+    }
+
+    private void initPieces() {
         final int startX = version.scale(SRC_START_X);
         pieceSize = version.scale(SRC_PIECE_SIZE);
         pieceMWidth = version.scale(SRC_MIDDLE_PIECE_WIDTH);
         pieceCHeight = version.scale(SRC_CENTER_PIECE_HEIGHT);
         final int midPad = version.scale(SRC_MIDDLE_PADDING);
-
-        pieces = new int[PIECE_MAX][4];
 
         pieces[PIECE_TL][0] = startX; pieces[PIECE_TL][1] = 0; pieces[PIECE_TL][2] = pieceSize; pieces[PIECE_TL][3] = pieceSize;
         pieces[PIECE_TM][0] = startX + pieceSize; pieces[PIECE_TM][1] = 0; pieces[PIECE_TM][2] = pieceMWidth; pieces[PIECE_TM][3] = pieceSize;
@@ -62,25 +68,31 @@ final class WindowFrame {
         pieces[PIECE_BR][0] = startX + pieceSize + pieceMWidth; pieces[PIECE_BR][1] = pieceSize + pieceCHeight; pieces[PIECE_BR][2] = pieceSize; pieces[PIECE_BR][3] = pieceSize;
     }
 
+    public void setSkin(WindowVersion version, BufferedImage skinImage) {
+        this.version = version;
+        this.skinImage = skinImage;
+        initPieces();
+    }
+
     public void paint(Graphics g, int x, int y, int width, int height, ImageObserver observer) {
         final int rightX = x + width - pieceSize;
 
-        drawPiece(g, PIECE_TL, x, y, pieceSize, pieceSize, observer);
-        drawPiece(g, PIECE_TM, x + pieceSize, y, width - pieceMWidth, pieceSize, observer);
-        drawPiece(g, PIECE_TR, rightX, y, pieceSize, pieceSize, observer);
+        paintPiece(g, PIECE_TL, x, y, pieceSize, pieceSize, observer);
+        paintPiece(g, PIECE_TM, x + pieceSize, y, width - pieceMWidth, pieceSize, observer);
+        paintPiece(g, PIECE_TR, rightX, y, pieceSize, pieceSize, observer);
 
         final int centerY = y + pieceSize;
         final int centerHeight = height - pieceCHeight;
-        drawPiece(g, PIECE_CL, x, centerY, pieceSize, centerHeight, observer);
-        drawPiece(g, PIECE_CR, rightX, centerY, pieceSize, centerHeight, observer);
+        paintPiece(g, PIECE_CL, x, centerY, pieceSize, centerHeight, observer);
+        paintPiece(g, PIECE_CR, rightX, centerY, pieceSize, centerHeight, observer);
 
         final int bottomY = height - pieceSize;
-        drawPiece(g, PIECE_BL, x, bottomY, pieceSize, pieceSize, observer);
-        drawPiece(g, PIECE_BM, x + pieceSize, bottomY, width - pieceMWidth, pieceSize, observer);
-        drawPiece(g, PIECE_BR, rightX, bottomY, pieceSize, pieceSize, observer);
+        paintPiece(g, PIECE_BL, x, bottomY, pieceSize, pieceSize, observer);
+        paintPiece(g, PIECE_BM, x + pieceSize, bottomY, width - pieceMWidth, pieceSize, observer);
+        paintPiece(g, PIECE_BR, rightX, bottomY, pieceSize, pieceSize, observer);
     }
 
-    private void drawPiece(Graphics g, int i, int x, int y, int width, int height, ImageObserver observer) {
+    private void paintPiece(Graphics g, int i, int x, int y, int width, int height, ImageObserver observer) {
         final int[] piece = pieces[i];
         g.drawImage(skinImage,
                 x, y, x + width, x + height,

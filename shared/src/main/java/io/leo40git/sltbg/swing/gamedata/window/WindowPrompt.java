@@ -24,15 +24,22 @@ final class WindowPrompt {
     private static final int SRC_START_X = 96;
     private static final int SRC_START_Y = 64;
 
-    private final BufferedImage skinImage;
-    private final int frameSize;
+    private WindowVersion version;
+    private BufferedImage skinImage;
+
+    private int frameSize;
     private final int[][] frameOrigins;
 
     public WindowPrompt(WindowVersion version, BufferedImage skinImage) {
+        this.version = version;
         this.skinImage = skinImage;
 
-        frameSize = version.scale(SRC_FRAME_SIZE);
         frameOrigins = new int[FRAME_COUNT][2];
+        initFrames();
+    }
+
+    private void initFrames() {
+        frameSize = version.scale(SRC_FRAME_SIZE);
 
         final int startX = version.scale(SRC_START_X);
         int y = version.scale(SRC_START_Y);
@@ -49,6 +56,12 @@ final class WindowPrompt {
                 y += frameSize;
             }
         }
+    }
+
+    public void setSkin(WindowVersion version, BufferedImage skinImage) {
+        this.version = version;
+        this.skinImage = skinImage;
+        initFrames();
     }
 
     public int getFrameSize() {

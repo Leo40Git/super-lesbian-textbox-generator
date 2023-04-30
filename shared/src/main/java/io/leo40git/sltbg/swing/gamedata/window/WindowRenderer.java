@@ -24,29 +24,19 @@ public final class WindowRenderer {
 
     private static final int SRC_IMAGE_SIZE = 128;
 
-    private final @NotNull WindowVersion version;
-    private final @NotNull WindowTone tone;
-    private final @NotNull BufferedImage skinImage;
+    private @NotNull WindowVersion version;
+    private @NotNull BufferedImage skinImage;
 
     private final WindowBackground background;
     private final WindowFrame frame;
     private final WindowPrompt prompt;
     private final WindowColors colors;
 
-    public WindowRenderer(@NotNull WindowVersion version, @NotNull WindowTone tone, float opacity, @NotNull BufferedImage skinImage) {
-        if (opacity < 0 || opacity > 1) {
-            throw new IllegalArgumentException("opacity is out of bounds: must be between 0 and 1 (inclusive), but was %g"
-                    .formatted(opacity));
-        }
-
-        int imageSize = version.scale(SRC_IMAGE_SIZE);
-        if (skinImage.getWidth() != imageSize || skinImage.getHeight() != imageSize) {
-            throw new IllegalArgumentException("skinImage has incorrect dimensions: expected %d x %1$d, got %d x %d"
-                    .formatted(imageSize, skinImage.getWidth(), skinImage.getHeight()));
-        }
+    public WindowRenderer(@NotNull WindowVersion version, @NotNull BufferedImage skinImage, @NotNull WindowTone tone, float opacity) {
+        checkOpacity(opacity);
+        checkSkin(version, skinImage);
 
         this.version = version;
-        this.tone = tone;
         this.skinImage = skinImage;
 
         background = new WindowBackground(version, tone, opacity, skinImage);
@@ -55,16 +45,55 @@ public final class WindowRenderer {
         colors = new WindowColors(version, skinImage);
     }
 
+    private static void checkOpacity(float opacity) {
+        if (opacity < 0 || opacity > 1) {
+            throw new IllegalArgumentException("opacity is out of bounds: must be between 0 and 1 (inclusive), but was %g"
+                    .formatted(opacity));
+        }
+    }
+
+    private static void checkSkin(@NotNull WindowVersion version, @NotNull BufferedImage skinImage) {
+        int imageSize = version.scale(SRC_IMAGE_SIZE);
+        if (skinImage.getWidth() != imageSize || skinImage.getHeight() != imageSize) {
+            throw new IllegalArgumentException("skinImage has incorrect dimensions: expected %d x %1$d, got %d x %d"
+                    .formatted(imageSize, skinImage.getWidth(), skinImage.getHeight()));
+        }
+    }
+
     public @NotNull WindowVersion getVersion() {
         return version;
     }
 
-    public @NotNull WindowTone getTone() {
-        return tone;
-    }
-
     public @NotNull BufferedImage getSkinImage() {
         return skinImage;
+    }
+
+    public @NotNull WindowTone getTone() {
+        return background.getTone();
+    }
+
+    public float getOpacity() {
+        return background.getOpacity();
+    }
+
+    public void setSkin(@NotNull WindowVersion version, @NotNull BufferedImage skinImage) {
+        checkSkin(version, skinImage);
+
+        this.version = version;
+        this.skinImage = skinImage;
+
+        background.setSkin(version, skinImage);
+        frame.setSkin(version, skinImage);
+        prompt.setSkin(version, skinImage);
+    }
+
+    public void setTone(@NotNull WindowTone tone) {
+        background.setTone(tone);
+    }
+
+    public void setOpacity(float opacity) {
+        checkOpacity(opacity);
+        background.setOpacity(opacity);
     }
 
     public int getMargin() {
