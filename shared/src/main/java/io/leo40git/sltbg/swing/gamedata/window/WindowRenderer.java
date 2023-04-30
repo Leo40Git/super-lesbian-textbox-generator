@@ -33,10 +33,15 @@ public final class WindowRenderer {
     private final WindowPrompt prompt;
     private final WindowColors colors;
 
-    public WindowRenderer(@NotNull WindowVersion version, @NotNull WindowTone tone, @NotNull BufferedImage skinImage) {
+    public WindowRenderer(@NotNull WindowVersion version, @NotNull WindowTone tone, float opacity, @NotNull BufferedImage skinImage) {
+        if (opacity < 0 || opacity > 1) {
+            throw new IllegalArgumentException("opacity is out of bounds: must be between 0 and 1 (inclusive), but was %g"
+                    .formatted(opacity));
+        }
+
         int imageSize = version.scale(SRC_IMAGE_SIZE);
         if (skinImage.getWidth() != imageSize || skinImage.getHeight() != imageSize) {
-            throw new IllegalArgumentException("skin image has incorrect dimensions: expected %d x %1$d, got %d x %d"
+            throw new IllegalArgumentException("skinImage has incorrect dimensions: expected %d x %1$d, got %d x %d"
                     .formatted(imageSize, skinImage.getWidth(), skinImage.getHeight()));
         }
 
@@ -44,7 +49,7 @@ public final class WindowRenderer {
         this.tone = tone;
         this.skinImage = skinImage;
 
-        background = new WindowBackground(version, tone, skinImage);
+        background = new WindowBackground(version, tone, opacity, skinImage);
         frame = new WindowFrame(version, skinImage);
         prompt = new WindowPrompt(version, skinImage);
         colors = new WindowColors(version, skinImage);

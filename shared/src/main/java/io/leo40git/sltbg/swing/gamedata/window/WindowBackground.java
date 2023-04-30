@@ -31,25 +31,31 @@ final class WindowBackground {
     private static final int SRC_TILE_SIZE = 64;
 
     private final WindowTone tone;
+    private final float opacity;
     private final BufferedImage skinImage;
+
     private final int tileSize;
     private final ThreadLocal<BufferedImage> tlScratch;
 
-    public WindowBackground(WindowVersion version, WindowTone tone, BufferedImage skinImage) {
+    public WindowBackground(WindowVersion version, WindowTone tone, float opacity, BufferedImage skinImage) {
         this.tone = tone;
+        this.opacity = opacity;
         this.skinImage = skinImage;
+
         tileSize = version.scale(SRC_TILE_SIZE);
         tlScratch = new ThreadLocal<>();
     }
 
     public void draw(Graphics g, int x, int y, int width, int height, ImageObserver observer) {
+        if (opacity <= 0) {
+            return;
+        }
+
         g.drawImage(getScratch(width, height),
                 x, y, x + width, y + height,
                 0, 0, width, height,
                 observer);
     }
-
-    private static final AlphaComposite OPACITY_COMP = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .75f);
 
     private BufferedImage getScratch(int width, int height) {
         var scratch = tlScratch.get();
@@ -57,7 +63,6 @@ final class WindowBackground {
             if (scratch != null) {
                 scratch.flush();
             }
-            scratch = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
             var scratch2 = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             var g = scratch2.createGraphics();
@@ -84,16 +89,21 @@ final class WindowBackground {
                 g.dispose();
             }
 
-            g = scratch.createGraphics();
-            try {
-                // render image is at 75% opacity
-                //  (this could've been done in draw to avoid allocating another BufferedImage,
-                //   but that would require passing in Graphics2D to draw, which seems pointless)
-                g.setComposite(OPACITY_COMP);
-                g.drawImage(scratch2, 0, 0, null);
-            } finally {
-                g.dispose();
-                scratch2.flush();
+            if (opacity >= 1) {
+                scratch = scratch2;
+            } else {
+                scratch = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                g = scratch.createGraphics();
+                try {
+                    // render image at the requested opacity
+                    //  (this could've been done in draw to avoid allocating another BufferedImage,
+                    //   but that would require passing in Graphics2D to draw, which seems pointless)
+                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+                    g.drawImage(scratch2, 0, 0, null);
+                } finally {
+                    g.dispose();
+                    scratch2.flush();
+                }
             }
 
             tlScratch.set(scratch);
