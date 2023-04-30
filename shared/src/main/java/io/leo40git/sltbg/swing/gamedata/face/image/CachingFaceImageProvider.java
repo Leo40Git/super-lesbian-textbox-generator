@@ -191,8 +191,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
     @Override
     public @NotNull Icon getFaceIcon(@NotNull Face face) {
-        var data = iconCache.get(face.getImagePath());
-        var icon = new IconImpl(data);
+        var icon = new IconImpl(face.getImagePath());
         icon.setDescription(face.toString());
         return icon;
     }
@@ -245,6 +244,10 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         public IconDelegate(@NotNull Path path) {
             this.path = path;
             alive = true;
+        }
+
+        public boolean isAlive() {
+            return alive;
         }
 
         public void paintIcon(Component c, Graphics g, int x, int y) {
@@ -333,11 +336,12 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     private final class IconImpl implements Icon, Accessible {
-        private final @NotNull IconDelegate delegate;
+        private final @NotNull Path imagePath;
+        private @Nullable IconDelegate delegate;
         private @Nullable String description;
 
-        private IconImpl(@NotNull IconDelegate delegate) {
-            this.delegate = delegate;
+        private IconImpl(@NotNull Path imagePath) {
+            this.imagePath = imagePath;
         }
 
         public @Nullable String getDescription() {
@@ -350,6 +354,9 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
+            if (delegate == null || !delegate.isAlive()) {
+                delegate = CachingFaceImageProvider.this.iconCache.get(imagePath);
+            }
             delegate.paintIcon(c, g, x, y);
         }
 
