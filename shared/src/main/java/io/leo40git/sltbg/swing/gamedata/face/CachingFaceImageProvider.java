@@ -41,7 +41,6 @@ import com.github.benmanes.caffeine.cache.CaffeineSpec;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.Scheduler;
-import com.github.benmanes.caffeine.cache.Weigher;
 import io.leo40git.sltbg.gamedata.face.Face;
 import io.leo40git.sltbg.gamedata.face.FaceCategory;
 import io.leo40git.sltbg.swing.ErrorIcon;
@@ -52,9 +51,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CachingFaceImageProvider implements FaceImageProvider {
-    private static final Weigher<Path, BufferedImage> IMAGE_WEIGHER =
-            (ignored, image) -> ImageUtils.getApproximateMemoryFootprint(image);
-
     public static final class Builder {
         private final int imageSize;
         private int iconSize;
@@ -141,7 +137,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     private final int imageSize, iconSize;
-    private final @NotNull AsyncLoadingCache<Path, BufferedImage> imageCache;
+    private final @NotNull AsyncLoadingCache<Path, ImageReference> imageCache;
     private final @NotNull LoadingCache<Path, IconDelegate> iconCache;
 
     private CachingFaceImageProvider(int imageSize, int iconSize,
@@ -151,7 +147,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         this.iconSize = iconSize;
 
         this.imageCache = imageCacheBuilder
-                .weigher(IMAGE_WEIGHER)
+                .weigher(this::weighImage)
                 .removalListener(this::onImageRemoved)
                 .buildAsync(this::loadImage);
 
@@ -160,7 +156,12 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
                 .build(IconDelegate::new);
     }
 
-    private @NotNull BufferedImage loadImage(@NotNull Path path) throws IOException {
+    private int weighImage(Path ignored, @NotNull ImageReference image) {
+        assert image.value != null;
+        return ImageUtils.getApproximateMemoryFootprint(image.value);
+    }
+
+    private @NotNull ImageReference loadImage(@NotNull Path path) throws IOException {
         BufferedImage image;
         try (var input = Files.newInputStream(path)) {
             image = ImageIO.read(input);
@@ -170,24 +171,25 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             throw new IOException("Image at \"%s\" has incorrect dimensions: should be %d x %2$d, but was %d x %d"
                     .formatted(path, imageSize, image.getWidth(), image.getHeight()));
         }
-        return image;
+
+        return new ImageReference(image);
     }
 
-    private void onImageRemoved(@Nullable Path path, @Nullable BufferedImage image, RemovalCause cause) {
+    private void onImageRemoved(@Nullable Path path, @Nullable ImageReference image, RemovalCause cause) {
         if (image != null) {
-            image.flush();
+            image.clear();
         }
     }
 
     private void onIconRemoved(@Nullable Path path, @Nullable IconDelegate delegate, RemovalCause cause) {
         if (delegate != null) {
-            delegate.cleanup();
+            delegate.clear();
         }
     }
 
     @Override
     public @NotNull CompletableFuture<BufferedImage> getFaceImage(@NotNull Face face) {
-        return imageCache.get(face.getImagePath());
+        return imageCache.get(face.getImagePath()).thenApply(ImageReference::get);
     }
 
     @Override
@@ -230,6 +232,32 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         iconCache.invalidateAll();
     }
 
+    private static final class ImageReference {
+        private @Nullable BufferedImage value;
+
+        public ImageReference(@NotNull BufferedImage value) {
+            this.value = value;
+        }
+
+        public boolean isAlive() {
+            return value != null;
+        }
+
+        public @NotNull BufferedImage get() {
+            if (value == null) {
+                throw new IllegalStateException("Reference is dead");
+            }
+            return value;
+        }
+
+        public void clear() {
+            if (value != null) {
+                value.flush();
+                value = null;
+            }
+        }
+    }
+
     private final class IconDelegate {
         private static final int STATE_ERROR = -1;
         private static final int STATE_LOADING = 0;
@@ -238,7 +266,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         private static final ImageCapabilities ACCELERATED_CAPS = new ImageCapabilities(true);
 
         private final @NotNull Path path;
-        private @Nullable BufferedImage image;
+        private @Nullable ImageReference image;
         private @Nullable VolatileImage scaledImage;
         private @Nullable String detailString;
         private boolean alive;
@@ -267,7 +295,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             if (alive && c != null && gc != null) {
                 boolean forceRedraw = false;
 
-                if (image == null) {
+                if (image == null || !image.isAlive()) {
                     var future = imageCache.get(path);
                     if (future.isDone()) {
                         try {
@@ -320,7 +348,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
                         scaledImageG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
                         scaledImageG.setBackground(ColorUtils.TRANSPARENT);
                         scaledImageG.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                        scaledImageG.drawImage(image, 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
+                        scaledImageG.drawImage(image.get(), 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
                         scaledImageG.dispose();
                     }
 
@@ -338,13 +366,10 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             }
         }
 
-        public void cleanup() {
+        public void clear() {
             alive = false;
 
-            if (image != null) {
-                image.flush();
-                image = null;
-            }
+            image = null;
 
             if (scaledImage != null) {
                 scaledImage.flush();
