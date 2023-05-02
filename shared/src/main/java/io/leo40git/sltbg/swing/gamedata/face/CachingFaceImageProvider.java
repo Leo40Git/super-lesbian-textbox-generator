@@ -338,10 +338,14 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
                     if (redraw) {
                         var scaledImageG = scaledImage.createGraphics();
-                        scaledImageG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                        scaledImageG.setBackground(ColorUtils.TRANSPARENT);
-                        scaledImageG.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                        scaledImageG.drawImage(image.get(), 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
+                        if (CachingFaceImageProvider.this.iconSize != CachingFaceImageProvider.this.imageSize) {
+                            scaledImageG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                            scaledImageG.setBackground(ColorUtils.TRANSPARENT);
+                            scaledImageG.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
+                            scaledImageG.drawImage(image.get(), 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
+                        } else {
+                            scaledImageG.drawImage(image.get(), 0, 0, null);
+                        }
                         scaledImageG.dispose();
                     }
 
