@@ -49,28 +49,21 @@ import io.leo40git.sltbg.swing.util.ImageUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 public final class CachingFaceImageProvider implements FaceImageProvider {
     public static final class Builder {
-        private final int imageSize;
-        private int iconSize;
+        private final @Range(from = 1, to = Integer.MAX_VALUE) int imageSize;
+        private @Range(from = 1, to = Integer.MAX_VALUE) int iconSize;
         private @Nullable Caffeine<Object, Object> imageCacheBuilder, iconCacheBuilder;
 
-        private Builder(int imageSize) {
-            if (imageSize <= 0) {
-                throw new IllegalArgumentException("Image size must be a positive non-zero number");
-            }
-
+        private Builder(@Range(from = 1, to = Integer.MAX_VALUE) int imageSize) {
             this.imageSize = imageSize;
-            iconSize = imageSize / 2;
+            iconSize = Math.max(imageSize / 2, 1);
         }
 
-        public Builder setIconSize(int iconSize) {
-            if (iconSize <= 0) {
-                throw new IllegalArgumentException("Icon size must be a positive non-zero number");
-            }
-
-            if (iconSize < imageSize) {
+        public Builder setIconSize(@Range(from = 1, to = Integer.MAX_VALUE) int iconSize) {
+            if (iconSize > imageSize) {
                 throw new IllegalArgumentException("Icon size (%d x %1$d) cannot be larger than image size (%d x %2$d)"
                         .formatted(iconSize, imageSize));
             }
