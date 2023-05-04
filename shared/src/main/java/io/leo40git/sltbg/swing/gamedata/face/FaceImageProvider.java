@@ -25,7 +25,14 @@ public interface FaceImageProvider {
 
     @NotNull Icon getFaceIcon(@NotNull Face face);
 
-    @NotNull Icon getFaceCategoryIcon(@NotNull FaceCategory category);
+    default @NotNull Icon getFaceCategoryIcon(@NotNull FaceCategory category) {
+        var iconFace = category.getIconFace();
+        if (iconFace != null) {
+            return getFaceIcon(iconFace);
+        } else {
+            throw new IllegalArgumentException("category has no icon face");
+        }
+    }
 
     default void paintFaceIcon(@NotNull Face face, Component c, Graphics g, int x, int y) {
         getFaceIcon(face).paintIcon(c, g, x, y);
@@ -35,5 +42,5 @@ public interface FaceImageProvider {
         getFaceCategoryIcon(category).paintIcon(c, g, x, y);
     }
 
-    default void invalidate() { }
+    default void invalidateAll() { }
 }

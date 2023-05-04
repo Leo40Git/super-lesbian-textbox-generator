@@ -10,19 +10,20 @@
 package io.leo40git.sltbg.swing.gamedata.face;
 
 import java.awt.AWTException;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.GraphicsConfiguration;
 import java.awt.ImageCapabilities;
 import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.awt.image.VolatileImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.CancellationException;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -30,12 +31,10 @@ import javax.swing.Icon;
 
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.CaffeineSpec;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.Scheduler;
 import io.leo40git.sltbg.gamedata.face.Face;
-import io.leo40git.sltbg.gamedata.face.FaceCategory;
 import io.leo40git.sltbg.swing.AbstractIcon;
 import io.leo40git.sltbg.swing.ErrorIcon;
 import io.leo40git.sltbg.swing.util.ColorUtils;
@@ -46,132 +45,25 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 public final class CachingFaceImageProvider implements FaceImageProvider {
-    public static final class Builder {
-        private final @Range(from = 1, to = Integer.MAX_VALUE) int imageSize;
-        private @Range(from = 1, to = Integer.MAX_VALUE) int iconSize;
-        private @Nullable Caffeine<Object, Object> imageCacheBuilder, iconCacheBuilder;
-
-        private Builder(@Range(from = 1, to = Integer.MAX_VALUE) int imageSize) {
-            this.imageSize = imageSize;
-            iconSize = Math.max(imageSize / 2, 1);
-        }
-
-        public Builder setIconSize(@Range(from = 1, to = Integer.MAX_VALUE) int iconSize) {
-            if (iconSize > imageSize) {
-                throw new IllegalArgumentException("Icon size (%d x %1$d) cannot be larger than image size (%d x %2$d)"
-                        .formatted(iconSize, imageSize));
-            }
-
-            this.iconSize = iconSize;
-            return this;
-        }
-
-        public Builder setImageCacheBuilder(Caffeine<Object, Object> imageCacheBuilder) {
-            this.imageCacheBuilder = imageCacheBuilder;
-            return this;
-        }
-
-        public Builder setImageCacheSpec(@NotNull CaffeineSpec spec) {
-            this.imageCacheBuilder = Caffeine.from(spec)
-                    .scheduler(Scheduler.systemScheduler());
-            return this;
-        }
-
-        public Builder setIconCacheBuilder(Caffeine<Object, Object> iconCacheBuilder) {
-            this.iconCacheBuilder = iconCacheBuilder;
-            return this;
-        }
-
-        public Builder setIconCacheSpec(@NotNull CaffeineSpec spec) {
-            this.iconCacheBuilder = Caffeine.from(spec);
-            return this;
-        }
-
-        @Contract(" -> new")
-        public @NotNull CachingFaceImageProvider build() {
-            var imageCacheBuilder = this.imageCacheBuilder;
-            if (imageCacheBuilder == null) {
-                imageCacheBuilder = createDefaultImageCacheBuilder(imageSize);
-            }
-
-            var iconCacheBuilder = this.iconCacheBuilder;
-            if (iconCacheBuilder == null) {
-                iconCacheBuilder = createDefaultIconCacheBuilder();
-            }
-
-            return new CachingFaceImageProvider(imageSize, iconSize, imageCacheBuilder, iconCacheBuilder);
-        }
-    }
-
-    @Contract("_ -> new")
-    public static @NotNull Builder builder(int imageSize) {
-        return new Builder(imageSize);
-    }
-
-    @Contract("_ -> new")
-    public static @NotNull Caffeine<Object, Object> createDefaultImageCacheBuilder(int imageSize) {
-        return Caffeine.newBuilder()
-                .scheduler(Scheduler.systemScheduler())
-                .expireAfterAccess(1, TimeUnit.HOURS)
-                .maximumWeight(imageSize * imageSize * 8L * 80); // 80 images with int data type (most common)
-    }
-
-    @Contract(" -> new")
-    public static Caffeine<Object, Object> createDefaultIconCacheBuilder() {
-        return Caffeine.newBuilder()
-                .maximumSize(128)
-                .expireAfterAccess(1, TimeUnit.MINUTES);
-    }
-
-    private final int imageSize, iconSize;
+    private final int imageWidth, imageHeight;
+    private final int iconWidth, iconHeight;
     private final @NotNull AsyncLoadingCache<Path, ImageReference> imageCache;
-    private final @NotNull LoadingCache<Path, IconDelegate> iconCache;
+    private final @NotNull LoadingCache<Path, IconPainter> iconCache;
 
-    private CachingFaceImageProvider(int imageSize, int iconSize,
-                                     Caffeine<Object, Object> imageCacheBuilder,
-                                     Caffeine<Object, Object> iconCacheBuilder) {
-        this.imageSize = imageSize;
-        this.iconSize = iconSize;
+    public CachingFaceImageProvider(@NotNull Builder builder) {
+        this.imageWidth = builder.imageWidth;
+        this.imageHeight = builder.imageHeight;
+        this.iconWidth = builder.iconWidth;
+        this.iconHeight = builder.iconHeight;
 
-        this.imageCache = imageCacheBuilder
+        this.imageCache = builder.getImageCacheBuilder()
                 .weigher(this::weighImage)
                 .removalListener(this::onImageRemoved)
                 .buildAsync(this::loadImage);
 
-        this.iconCache = iconCacheBuilder
+        this.iconCache = builder.getIconCacheBuilder()
                 .removalListener(this::onIconRemoved)
-                .build(IconDelegate::new);
-    }
-
-    private int weighImage(Path ignored, @NotNull ImageReference image) {
-        assert image.value != null;
-        return ImageUtils.getApproximateMemoryFootprint(image.value);
-    }
-
-    private @NotNull ImageReference loadImage(@NotNull Path path) throws IOException {
-        BufferedImage image;
-        try (var input = Files.newInputStream(path)) {
-            image = ImageIO.read(input);
-        }
-
-        if (image.getWidth() != imageSize || image.getHeight() != imageSize) {
-            throw new IOException("Image at \"%s\" has incorrect dimensions: should be %d x %2$d, but was %d x %d"
-                    .formatted(path, imageSize, image.getWidth(), image.getHeight()));
-        }
-
-        return new ImageReference(image);
-    }
-
-    private void onImageRemoved(@Nullable Path path, @Nullable ImageReference image, RemovalCause cause) {
-        if (image != null) {
-            image.clear();
-        }
-    }
-
-    private void onIconRemoved(@Nullable Path path, @Nullable IconDelegate delegate, RemovalCause cause) {
-        if (delegate != null) {
-            delegate.clear();
-        }
+                .build(IconPainter::new);
     }
 
     @Override
@@ -187,36 +79,151 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     @Override
-    public @NotNull Icon getFaceCategoryIcon(@NotNull FaceCategory category) {
-        var iconFace = category.getIconFace();
-        if (iconFace != null) {
-            return getFaceIcon(iconFace);
-        } else {
-            var icon = new ErrorIcon(iconSize, iconSize);
-            icon.setDescription("Category '" + category.getName() + "' is empty!");
-            return icon;
-        }
-    }
-
-    @Override
-    public void paintFaceIcon(@NotNull Face face, Component c, Graphics g, int x, int y) {
-        iconCache.get(face.getImagePath()).paintIcon(c, g, x, y);
-    }
-
-    @Override
-    public void paintFaceCategoryIcon(@NotNull FaceCategory category, Component c, Graphics g, int x, int y) {
-        var iconFace = category.getIconFace();
-        if (iconFace != null) {
-            paintFaceIcon(iconFace, c, g, x, y);
-        } else {
-            ErrorIcon.paintIcon(c, g, x, y, iconSize, iconSize);
-        }
-    }
-
-    @Override
-    public void invalidate() {
+    public void invalidateAll() {
         imageCache.synchronous().invalidateAll();
         iconCache.invalidateAll();
+    }
+
+    private int weighImage(Path ignored, @NotNull ImageReference image) {
+        assert image.value != null;
+        return ImageUtils.getApproximateMemoryFootprint(image.value);
+    }
+
+    private @NotNull ImageReference loadImage(@NotNull Path path) throws IOException {
+        BufferedImage image;
+        try (var input = Files.newInputStream(path)) {
+            image = ImageIO.read(input);
+        }
+
+        if (image.getWidth() != imageWidth || image.getHeight() != imageHeight) {
+            throw new IOException("Image at \"%s\" has incorrect dimensions: should be %d x %d, but was %d x %d"
+                    .formatted(path, imageWidth, imageHeight, image.getWidth(), image.getHeight()));
+        }
+
+        return new ImageReference(image);
+    }
+
+    private void onImageRemoved(@Nullable Path path, @Nullable ImageReference image, RemovalCause cause) {
+        if (image != null) {
+            image.clear();
+        }
+    }
+
+    private void onIconRemoved(@Nullable Path path, @Nullable CachingFaceImageProvider.IconPainter painter, RemovalCause cause) {
+        if (painter != null) {
+            painter.clear();
+        }
+    }
+
+    public static final class Builder {
+        private final @Range(from = 1, to = Integer.MAX_VALUE) int imageWidth, imageHeight;
+        private @Range(from = 1, to = Integer.MAX_VALUE) int iconWidth, iconHeight;
+        private @Nullable Caffeine<Object, Object> imageCacheBuilder, iconCacheBuilder;
+
+        private Builder(@Range(from = 1, to = Integer.MAX_VALUE) int imageWidth, @Range(from = 1, to = Integer.MAX_VALUE) int imageHeight) {
+            this.imageWidth = imageWidth;
+            this.imageHeight = imageHeight;
+
+            iconWidth = Math.max(1, imageWidth / 2);
+            iconHeight = Math.max(1, imageHeight / 2);
+        }
+
+        public Builder setIconWidth(@Range(from = 1, to = Integer.MAX_VALUE) int iconWidth) {
+            if (iconWidth > imageWidth) {
+                throw new IllegalArgumentException("iconWidth (%d) cannot be larger than imageWidth (%d)"
+                        .formatted(iconWidth, imageWidth));
+            }
+
+            this.iconWidth = iconWidth;
+            return this;
+        }
+
+        public Builder setIconHeight(@Range(from = 1, to = Integer.MAX_VALUE) int iconHeight) {
+            if (iconHeight > imageHeight) {
+                throw new IllegalArgumentException("iconHeight (%d) cannot be larger than imageHeight (%d)"
+                        .formatted(iconHeight, imageHeight));
+            }
+
+            this.iconHeight = iconHeight;
+            return this;
+        }
+
+        public Builder setIconSize(@Range(from = 1, to = Integer.MAX_VALUE) int iconSize) {
+            if (iconSize > imageWidth || iconSize > imageHeight) {
+                throw new IllegalArgumentException("iconSize (%d x %2$d) cannot be larger than image size (%d x %d)"
+                        .formatted(iconSize, imageWidth, imageHeight));
+            }
+
+            this.iconWidth = iconSize;
+            this.iconHeight = iconSize;
+            return this;
+        }
+
+        public Builder setImageCacheBuilder(@NotNull Caffeine<Object, Object> imageCacheBuilder) {
+            this.imageCacheBuilder = imageCacheBuilder;
+            return this;
+        }
+
+        public Builder setIconCacheBuilder(@NotNull Caffeine<Object, Object> iconCacheBuilder) {
+            this.iconCacheBuilder = iconCacheBuilder;
+            return this;
+        }
+
+        private @NotNull Caffeine<Object, Object> getImageCacheBuilder() {
+            return Objects.requireNonNullElseGet(imageCacheBuilder, () -> createDefaultImageCacheBuilder(imageWidth, imageHeight));
+        }
+
+        private @NotNull Caffeine<Object, Object> getIconCacheBuilder() {
+            return Objects.requireNonNullElseGet(iconCacheBuilder, CachingFaceImageProvider::createDefaultIconCacheBuilder);
+        }
+
+        @Contract(" -> new")
+        public @NotNull CachingFaceImageProvider build() {
+            return new CachingFaceImageProvider(this);
+        }
+    }
+
+    @Contract("_, _ -> new")
+    public static @NotNull Builder builder(
+            @Range(from = 1, to = Integer.MAX_VALUE) int imageWidth, @Range(from = 1, to = Integer.MAX_VALUE) int imageHeight) {
+        return new Builder(imageWidth, imageHeight);
+    }
+
+    @Contract("_ -> new")
+    public static @NotNull Builder builder(@Range(from = 1, to = Integer.MAX_VALUE) int imageSize) {
+        return new Builder(imageSize, imageSize);
+    }
+
+    @Contract("_, _ -> new")
+    public static @NotNull CachingFaceImageProvider create(
+            @Range(from = 1, to = Integer.MAX_VALUE) int imageWidth, @Range(from = 1, to = Integer.MAX_VALUE) int imageHeight) {
+        return new CachingFaceImageProvider(new Builder(imageWidth, imageHeight));
+    }
+
+    @Contract("_ -> new")
+    public static @NotNull CachingFaceImageProvider create(@Range(from = 1, to = Integer.MAX_VALUE) int imageSize) {
+        return new CachingFaceImageProvider(new Builder(imageSize, imageSize));
+    }
+
+    @Contract("_, _ -> new")
+    public static @NotNull Caffeine<Object, Object> createDefaultImageCacheBuilder(
+            @Range(from = 1, to = Integer.MAX_VALUE) int imageWidth, @Range(from = 1, to = Integer.MAX_VALUE) int imageHeight) {
+        return Caffeine.newBuilder()
+                .scheduler(Scheduler.systemScheduler())
+                .expireAfterAccess(1, TimeUnit.HOURS)
+                .maximumWeight(imageWidth * imageHeight * 8L * 80); // 80 images with int data type (most common)
+    }
+
+    @Contract("_ -> new")
+    public static @NotNull Caffeine<Object, Object> createDefaultImageCacheBuilder(@Range(from = 1, to = Integer.MAX_VALUE) int imageSize) {
+        return createDefaultImageCacheBuilder(imageSize, imageSize);
+    }
+
+    @Contract(" -> new")
+    public static Caffeine<Object, Object> createDefaultIconCacheBuilder() {
+        return Caffeine.newBuilder()
+                .maximumSize(128)
+                .expireAfterAccess(1, TimeUnit.MINUTES);
     }
 
     private static final class ImageReference {
@@ -226,13 +233,13 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
             this.value = value;
         }
 
-        public boolean isAlive() {
-            return value != null;
+        public boolean isExpired() {
+            return value == null;
         }
 
         public @NotNull BufferedImage get() {
             if (value == null) {
-                throw new IllegalStateException("Reference is dead");
+                throw new IllegalStateException("Reference is expired");
             }
             return value;
         }
@@ -245,120 +252,116 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         }
     }
 
-    private final class IconDelegate {
+    private final class IconPainter {
         private static final int STATE_ERROR = -1;
         private static final int STATE_LOADING = 0;
         private static final int STATE_READY = 1;
 
         private static final ImageCapabilities ACCELERATED_CAPS = new ImageCapabilities(true);
 
-        private final @NotNull Path path;
+        private final @NotNull Path imagePath;
+
+        private boolean expired;
         private @Nullable ImageReference image;
         private @Nullable VolatileImage scaledImage;
-        private @Nullable String detailString;
-        private boolean alive;
 
-        public IconDelegate(@NotNull Path path) {
-            this.path = path;
-            alive = true;
+        public IconPainter(@NotNull Path imagePath) {
+            this.imagePath = imagePath;
+            expired = false;
         }
 
-        public boolean isAlive() {
-            return alive;
+        public boolean isExpired() {
+            return expired;
         }
 
-        public @Nullable String getDetailString() {
-            return detailString;
-        }
-
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-            GraphicsConfiguration gc = null;
-            if (c != null) {
-                gc = c.getGraphicsConfiguration();
+        public void paintIcon(@Nullable Component c, @NotNull Graphics g, int x, int y) {
+            if (expired || c == null) {
+                ErrorIcon.paintIcon(c, g, x, y, CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight);
+                return;
             }
 
-            int state = STATE_ERROR;
+            final var gc = c.getGraphicsConfiguration();
+            if (gc == null) {
+                ErrorIcon.paintIcon(c, g, x, y, CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight);
+                return;
+            }
 
-            if (alive && c != null && gc != null) {
-                boolean forceRedraw = false;
+            do {
+                if (scaledImage == null || scaledImage.validate(gc) != VolatileImage.IMAGE_OK) {
+                    int state = paintScaledImage(gc);
+                    if (state == STATE_LOADING) {
+                        // TODO loading icon
+                        var oldColor = g.getColor();
+                        try {
+                            g.setColor(Color.BLUE);
+                            g.fillRect(x, y, CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight);
+                        } finally {
+                            g.setColor(oldColor);
+                        }
+                        return;
+                    } else if (state == STATE_ERROR) {
+                        ErrorIcon.paintIcon(c, g, x, y, CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight);
+                        return;
+                    }
+                }
 
-                if (image == null || !image.isAlive()) {
-                    var future = imageCache.get(path);
+                g.drawImage(scaledImage, x, y, c);
+            } while (scaledImage == null || scaledImage.contentsLost());
+        }
+
+        private int paintScaledImage(@NotNull GraphicsConfiguration gc) {
+            if (image == null || image.isExpired()) {
+                image = null;
+                try {
+                    var future = CachingFaceImageProvider.this.imageCache.get(imagePath);
                     if (future.isDone()) {
-                        try {
-                            image = future.get();
-                            forceRedraw = true;
-                        } catch (InterruptedException e) {
-                            detailString = "Image loading interrupted";
-                        }
-                        catch (CancellationException e) {
-                            detailString = "Image loading cancelled";
-                        }
-                        catch (ExecutionException e) {
-                            detailString = "Image loading failed";
-                            var cause = e.getCause();
-                            if (cause != null) {
-                                detailString += ":\n" + cause;
-                            }
-                        }
+                        image = future.get();
                     } else {
-                        detailString = "Loading...";
-                        state = STATE_LOADING;
+                        return STATE_LOADING;
                     }
-                }
+                } catch (Exception ignored) { }
+            }
 
-                if (image != null) {
-                    int scaledImageState = VolatileImage.IMAGE_INCOMPATIBLE;
+            if (image == null) {
+                return STATE_ERROR;
+            }
+
+            // hold onto full image, in case it takes us so long to draw that the image expires in the meantime
+            var fullImage = image.get();
+
+            do {
+                if (scaledImage == null || scaledImage.validate(gc) == VolatileImage.IMAGE_INCOMPATIBLE) {
                     if (scaledImage != null) {
-                        scaledImageState = scaledImage.validate(gc);
+                        scaledImage.flush();
                     }
 
-                    boolean redraw = false;
-                    if (scaledImageState == VolatileImage.IMAGE_INCOMPATIBLE) {
-                        if (scaledImage != null) {
-                            scaledImage.flush();
-                        }
-
-                        try {
-                            scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, ACCELERATED_CAPS);
-                        } catch (AWTException ignored) {
-                            scaledImage = gc.createCompatibleVolatileImage(CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                        }
-
-                        redraw = true;
-                    } else if (forceRedraw || scaledImageState == VolatileImage.IMAGE_RESTORED) {
-                        redraw = true;
+                    try {
+                        scaledImage = gc.createCompatibleVolatileImage(
+                                CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight,
+                                ACCELERATED_CAPS, Transparency.TRANSLUCENT);
+                    } catch (AWTException e) {
+                        scaledImage = gc.createCompatibleVolatileImage(
+                                CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight,
+                                Transparency.TRANSLUCENT);
                     }
-
-                    if (redraw) {
-                        var scaledImageG = scaledImage.createGraphics();
-                        if (CachingFaceImageProvider.this.iconSize != CachingFaceImageProvider.this.imageSize) {
-                            scaledImageG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                            scaledImageG.setBackground(ColorUtils.TRANSPARENT);
-                            scaledImageG.clearRect(0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                            scaledImageG.drawImage(image.get(), 0, 0, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize, null);
-                        } else {
-                            scaledImageG.drawImage(image.get(), 0, 0, null);
-                        }
-                        scaledImageG.dispose();
-                    }
-
-                    detailString = null;
-                    state = STATE_READY;
                 }
-            }
 
-            switch (state) {
-                case IconDelegate.STATE_ERROR -> ErrorIcon.paintIcon(c, g, x, y, CachingFaceImageProvider.this.iconSize, CachingFaceImageProvider.this.iconSize);
-                case IconDelegate.STATE_LOADING -> {
-                    // TODO paint loading icon
-                }
-                case IconDelegate.STATE_READY -> g.drawImage(scaledImage, x, y, c);
-            }
+                var g = scaledImage.createGraphics();
+                g.setBackground(ColorUtils.TRANSPARENT);
+                g.clearRect(0, 0, CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight);
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                g.drawImage(fullImage,
+                        0, 0,
+                        CachingFaceImageProvider.this.iconWidth, CachingFaceImageProvider.this.iconHeight,
+                        null);
+                g.dispose();
+            } while (scaledImage.contentsLost());
+
+            return STATE_READY;
         }
 
         public void clear() {
-            alive = false;
+            expired = true;
 
             image = null;
 
@@ -371,28 +374,28 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
     private final class IconImpl extends AbstractIcon {
         private final @NotNull Path imagePath;
-        private @Nullable IconDelegate delegate;
+        private @Nullable CachingFaceImageProvider.IconPainter painter;
 
-        private IconImpl(@NotNull Path imagePath) {
+        public IconImpl(@NotNull Path imagePath) {
             this.imagePath = imagePath;
         }
 
         @Override
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-            if (delegate == null || !delegate.isAlive()) {
-                delegate = CachingFaceImageProvider.this.iconCache.get(imagePath);
-            }
-            delegate.paintIcon(c, g, x, y);
-        }
-
-        @Override
         public int getIconWidth() {
-            return CachingFaceImageProvider.this.iconSize;
+            return CachingFaceImageProvider.this.iconWidth;
         }
 
         @Override
         public int getIconHeight() {
-            return CachingFaceImageProvider.this.iconSize;
+            return CachingFaceImageProvider.this.iconHeight;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            if (painter == null || painter.isExpired()) {
+                painter = CachingFaceImageProvider.this.iconCache.get(imagePath);
+            }
+            painter.paintIcon(c, g, x, y);
         }
     }
 }
