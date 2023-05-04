@@ -13,7 +13,6 @@ import java.awt.AWTException;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.GraphicsConfiguration;
-import java.awt.IllegalComponentStateException;
 import java.awt.ImageCapabilities;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -21,17 +20,11 @@ import java.awt.image.VolatileImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.accessibility.Accessible;
-import javax.accessibility.AccessibleContext;
-import javax.accessibility.AccessibleIcon;
-import javax.accessibility.AccessibleRole;
-import javax.accessibility.AccessibleStateSet;
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
 
@@ -43,6 +36,7 @@ import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.Scheduler;
 import io.leo40git.sltbg.gamedata.face.Face;
 import io.leo40git.sltbg.gamedata.face.FaceCategory;
+import io.leo40git.sltbg.swing.AbstractIcon;
 import io.leo40git.sltbg.swing.ErrorIcon;
 import io.leo40git.sltbg.swing.util.ColorUtils;
 import io.leo40git.sltbg.swing.util.ImageUtils;
@@ -375,34 +369,12 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         }
     }
 
-    private final class IconImpl implements Icon, Accessible {
+    private final class IconImpl extends AbstractIcon {
         private final @NotNull Path imagePath;
         private @Nullable IconDelegate delegate;
-        private @Nullable String description;
 
         private IconImpl(@NotNull Path imagePath) {
             this.imagePath = imagePath;
-        }
-
-        public @Nullable String getDescription() {
-            String detail = null;
-            if (delegate != null && delegate.isAlive()) {
-                detail = delegate.getDetailString();
-            }
-
-            if (description != null) {
-                if (detail != null) {
-                    return description + "\n" + detail;
-                } else {
-                    return description;
-                }
-            } else {
-                return detail;
-            }
-        }
-
-        public void setDescription(@Nullable String description) {
-            this.description = description;
         }
 
         @Override
@@ -422,69 +394,5 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         public int getIconHeight() {
             return CachingFaceImageProvider.this.iconSize;
         }
-
-        /// region Accessible junk
-        private @Nullable AccessibleIconImpl accessibleContext;
-
-        @Override
-        public AccessibleContext getAccessibleContext() {
-            if (accessibleContext == null) {
-                accessibleContext = new AccessibleIconImpl();
-            }
-            return accessibleContext;
-        }
-
-        private final class AccessibleIconImpl extends AccessibleContext implements AccessibleIcon {
-            @Override
-            public AccessibleRole getAccessibleRole() {
-                return AccessibleRole.ICON;
-            }
-
-            @Override
-            public String getAccessibleIconDescription() {
-                return IconImpl.this.getDescription();
-            }
-
-            @Override
-            public void setAccessibleIconDescription(String description) {
-                IconImpl.this.setDescription(description);
-            }
-
-            @Override
-            public int getAccessibleIconWidth() {
-                return CachingFaceImageProvider.this.iconSize;
-            }
-
-            @Override
-            public int getAccessibleIconHeight() {
-                return CachingFaceImageProvider.this.iconSize;
-            }
-
-            @Override
-            public AccessibleStateSet getAccessibleStateSet() {
-                return null;
-            }
-
-            @Override
-            public int getAccessibleIndexInParent() {
-                return -1;
-            }
-
-            @Override
-            public int getAccessibleChildrenCount() {
-                return 0;
-            }
-
-            @Override
-            public Accessible getAccessibleChild(int i) {
-                return null;
-            }
-
-            @Override
-            public Locale getLocale() throws IllegalComponentStateException {
-                return null;
-            }
-        }
-        /// endregion
     }
 }

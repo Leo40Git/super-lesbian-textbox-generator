@@ -12,22 +12,14 @@ package io.leo40git.sltbg.swing;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.IllegalComponentStateException;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.accessibility.Accessible;
-import javax.accessibility.AccessibleContext;
-import javax.accessibility.AccessibleIcon;
-import javax.accessibility.AccessibleRole;
-import javax.accessibility.AccessibleStateSet;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
-public final class ErrorIcon implements Icon, Accessible {
+public final class ErrorIcon extends AbstractIcon {
     private static final class Images {
         private static final AtomicBoolean ready = new AtomicBoolean(false);
         private static ImageIcon img16, img24, img32, img64, img128;
@@ -103,7 +95,6 @@ public final class ErrorIcon implements Icon, Accessible {
 
     private final int width, height, size;
     private final @NotNull ImageIcon image;
-    private String description;
 
     public ErrorIcon(@Range(from = 16, to = Integer.MAX_VALUE) int width, @Range(from = 16, to = Integer.MAX_VALUE) int height) {
         this.width = width;
@@ -122,81 +113,9 @@ public final class ErrorIcon implements Icon, Accessible {
         return height;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
         paintIconFrame(g, x, y, width, height, size);
         image.paintIcon(c, g, x + width / 2 - image.getIconWidth() / 2, y + height / 2 - image.getIconHeight() / 2);
     }
-
-    /// region Accessible junk
-    private AccessibleIconImpl accessibleContext;
-
-    @Override
-    public AccessibleContext getAccessibleContext() {
-        if (accessibleContext == null) {
-            accessibleContext = new AccessibleIconImpl();
-        }
-        return accessibleContext;
-    }
-
-    private final class AccessibleIconImpl extends AccessibleContext implements AccessibleIcon {
-        @Override
-        public AccessibleRole getAccessibleRole() {
-            return AccessibleRole.ICON;
-        }
-
-        @Override
-        public String getAccessibleIconDescription() {
-            return ErrorIcon.this.getDescription();
-        }
-
-        @Override
-        public void setAccessibleIconDescription(String description) {
-            ErrorIcon.this.setDescription(description);
-        }
-
-        @Override
-        public int getAccessibleIconWidth() {
-            return ErrorIcon.this.width;
-        }
-
-        @Override
-        public int getAccessibleIconHeight() {
-            return ErrorIcon.this.height;
-        }
-
-        @Override
-        public AccessibleStateSet getAccessibleStateSet() {
-            return null;
-        }
-
-        @Override
-        public int getAccessibleIndexInParent() {
-            return -1;
-        }
-
-        @Override
-        public int getAccessibleChildrenCount() {
-            return 0;
-        }
-
-        @Override
-        public Accessible getAccessibleChild(int i) {
-            return null;
-        }
-
-        @Override
-        public Locale getLocale() throws IllegalComponentStateException {
-            return null;
-        }
-    }
-    /// endregion
 }
