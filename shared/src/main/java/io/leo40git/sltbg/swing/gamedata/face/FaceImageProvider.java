@@ -19,6 +19,7 @@ import javax.swing.Icon;
 import io.leo40git.sltbg.gamedata.face.Face;
 import io.leo40git.sltbg.gamedata.face.FaceCategory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface FaceImageProvider {
     @NotNull CompletableFuture<BufferedImage> getFaceImage(@NotNull Face face);
@@ -34,11 +35,11 @@ public interface FaceImageProvider {
         }
     }
 
-    default void paintFaceIcon(@NotNull Face face, Component c, Graphics g, int x, int y) {
+    default void paintFaceIcon(@NotNull Face face, @Nullable Component c, @NotNull Graphics g, int x, int y) {
         getFaceIcon(face).paintIcon(c, g, x, y);
     }
 
-    default void paintFaceCategoryIcon(@NotNull FaceCategory category, Component c, Graphics g, int x, int y) {
+    default void paintFaceCategoryIcon(@NotNull FaceCategory category, @Nullable Component c, @NotNull Graphics g, int x, int y) {
         getFaceCategoryIcon(category).paintIcon(c, g, x, y);
     }
 

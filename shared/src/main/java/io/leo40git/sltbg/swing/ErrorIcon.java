@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.ImageIcon;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
 public final class ErrorIcon extends AbstractIcon {
@@ -60,7 +61,7 @@ public final class ErrorIcon extends AbstractIcon {
         }
     }
 
-    public static void paintIcon(Component c, Graphics g, int x, int y,
+    public static void paintIcon(@Nullable Component c, @NotNull Graphics g, int x, int y,
                                  @Range(from = 16, to = Integer.MAX_VALUE) int width,
                                  @Range(from = 16, to = Integer.MAX_VALUE) int height) {
         final int size = Math.max(Math.min(width, height) - 4, 16);
@@ -114,7 +115,7 @@ public final class ErrorIcon extends AbstractIcon {
     }
 
     @Override
-    public void paintIcon(Component c, Graphics g, int x, int y) {
+    public void paintIcon(@Nullable Component c, @NotNull Graphics g, int x, int y) {
         paintIconFrame(g, x, y, width, height, size);
         image.paintIcon(c, g, x + width / 2 - image.getIconWidth() / 2, y + height / 2 - image.getIconHeight() / 2);
     }

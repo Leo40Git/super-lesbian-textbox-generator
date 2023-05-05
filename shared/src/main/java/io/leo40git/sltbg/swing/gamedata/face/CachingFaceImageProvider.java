@@ -80,12 +80,12 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     @Override
-    public void paintFaceIcon(@NotNull Face face, Component c, Graphics g, int x, int y) {
+    public void paintFaceIcon(@NotNull Face face, @Nullable Component c, @NotNull Graphics g, int x, int y) {
         iconCache.get(face.getImagePath()).paintIcon(c, g, x, y);
     }
 
     @Override
-    public void paintFaceCategoryIcon(@NotNull FaceCategory category, Component c, Graphics g, int x, int y) {
+    public void paintFaceCategoryIcon(@NotNull FaceCategory category, @Nullable Component c, @NotNull Graphics g, int x, int y) {
         var iconFace = category.getIconFace();
         if (iconFace != null) {
             paintFaceIcon(iconFace, c, g, x, y);
