@@ -35,6 +35,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.Scheduler;
 import io.leo40git.sltbg.gamedata.face.Face;
+import io.leo40git.sltbg.gamedata.face.FaceCategory;
 import io.leo40git.sltbg.swing.AbstractIcon;
 import io.leo40git.sltbg.swing.ErrorIcon;
 import io.leo40git.sltbg.swing.util.ColorUtils;
@@ -76,6 +77,21 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         var icon = new IconImpl(face.getImagePath());
         icon.setDescription(face.toString());
         return icon;
+    }
+
+    @Override
+    public void paintFaceIcon(@NotNull Face face, Component c, Graphics g, int x, int y) {
+        iconCache.get(face.getImagePath()).paintIcon(c, g, x, y);
+    }
+
+    @Override
+    public void paintFaceCategoryIcon(@NotNull FaceCategory category, Component c, Graphics g, int x, int y) {
+        var iconFace = category.getIconFace();
+        if (iconFace != null) {
+            paintFaceIcon(iconFace, c, g, x, y);
+        } else {
+            throw new IllegalArgumentException("category has no icon face");
+        }
     }
 
     @Override
