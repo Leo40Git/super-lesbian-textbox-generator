@@ -49,7 +49,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     private final int imageWidth, imageHeight;
     private final int iconWidth, iconHeight;
     private final @NotNull AsyncLoadingCache<Path, ImageReference> imageCache;
-    private final @NotNull LoadingCache<Path, IconPainter> iconCache;
+    private final @NotNull LoadingCache<Path, IconDelegate> iconCache;
 
     public CachingFaceImageProvider(@NotNull Builder builder) {
         this.imageWidth = builder.imageWidth;
@@ -64,7 +64,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
         this.iconCache = builder.getIconCacheBuilder()
                 .removalListener(this::onIconRemoved)
-                .build(IconPainter::new);
+                .build(IconDelegate::new);
     }
 
     @Override
@@ -125,9 +125,9 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         }
     }
 
-    private void onIconRemoved(@Nullable Path path, @Nullable CachingFaceImageProvider.IconPainter painter, RemovalCause cause) {
-        if (painter != null) {
-            painter.clear();
+    private void onIconRemoved(@Nullable Path path, @Nullable IconDelegate delegate, RemovalCause cause) {
+        if (delegate != null) {
+            delegate.clear();
         }
     }
 
@@ -268,7 +268,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         }
     }
 
-    private final class IconPainter {
+    private final class IconDelegate {
         private static final int STATE_ERROR = -1;
         private static final int STATE_LOADING = 0;
         private static final int STATE_READY = 1;
@@ -281,7 +281,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
         private @Nullable ImageReference image;
         private @Nullable VolatileImage scaledImage;
 
-        public IconPainter(@NotNull Path imagePath) {
+        public IconDelegate(@NotNull Path imagePath) {
             this.imagePath = imagePath;
             expired = false;
         }
@@ -390,7 +390,7 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
     private final class IconImpl extends AbstractIcon {
         private final @NotNull Path imagePath;
-        private @Nullable CachingFaceImageProvider.IconPainter painter;
+        private @Nullable IconDelegate delegate;
 
         public IconImpl(@NotNull Path imagePath) {
             this.imagePath = imagePath;
@@ -408,10 +408,10 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
 
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
-            if (painter == null || painter.isExpired()) {
-                painter = CachingFaceImageProvider.this.iconCache.get(imagePath);
+            if (delegate == null || delegate.isExpired()) {
+                delegate = CachingFaceImageProvider.this.iconCache.get(imagePath);
             }
-            painter.paintIcon(c, g, x, y);
+            delegate.paintIcon(c, g, x, y);
         }
     }
 }
