@@ -14,59 +14,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Face implements Comparable<Face> {
+public final class Face implements Cloneable {
     public static final String PATH_DELIMITER = "/";
 
-    private @Nullable FacePalette palette;
-    private @Nullable FaceCategory category;
     private @NotNull String name;
     private @NotNull Path imagePath;
-    private long order;
     private @Nullable String characterName;
     private boolean characterNameSet;
     private boolean icon;
     private @Nullable List<String> description;
+    private @Nullable FaceGroup group;
 
-    public Face(@NotNull String name, @NotNull Path imagePath, long order) {
+    public Face(@NotNull String name, @NotNull Path imagePath) {
         this.name = name;
         this.imagePath = imagePath;
-        this.order = order;
-    }
-
-    public @Nullable FacePalette getPalette() {
-        return palette;
-    }
-
-    public @Nullable FaceCategory getCategory() {
-        return category;
-    }
-
-    void onCategoryRenamed() {
-    }
-
-    void onAddedToPalette(@NotNull FacePalette palette) {
-        this.palette = palette;
-    }
-
-    void onAddedToCategory(@NotNull FaceCategory category) {
-        if (category.getPalette() != null) {
-            onAddedToPalette(category.getPalette());
-        }
-        this.category = category;
-        onCategoryRenamed();
-    }
-
-    void onRemovedFromPalette() {
-        palette = null;
-    }
-
-    void onRemovedFromCategory() {
-        onRemovedFromPalette();
-        category = null;
     }
 
     public @NotNull String getName() {
@@ -74,12 +38,12 @@ public final class Face implements Comparable<Face> {
     }
 
     public void setName(@NotNull String name) {
-        if (category != null) {
-            category.rename(this, name);
-            category.markDirty();
+        if (group != null) {
+            group.rename(this, name);
         }
 
         this.name = name;
+
         if (!characterNameSet) {
             characterName = null;
         }
@@ -93,38 +57,26 @@ public final class Face implements Comparable<Face> {
         this.imagePath = imagePath;
     }
 
-    public long getOrder() {
-        return order;
-    }
-
-    public void setOrder(long order) {
-        if (this.order != order) {
-            this.order = order;
-            if (category != null) {
-                category.markDirty();
-            }
-        }
-    }
-
-    public boolean isCharacterNameSet() {
-        return characterNameSet;
-    }
-
     public @NotNull String getCharacterName() {
         if (characterNameSet) {
             assert characterName != null;
             return characterName;
-        } else if (category != null && category.getCharacterName() != null) {
-            return category.getCharacterName();
-        } else {
+        }
+
+        if (group != null && group.getCharacterName() != null) {
+            return group.getCharacterName();
+        }
+
+        if (characterName == null) {
             int commaIndex = name.indexOf(',');
             if (commaIndex < 0) {
                 characterName = name;
             } else {
                 characterName = name.substring(0, commaIndex);
             }
-            return characterName;
         }
+
+        return characterName;
     }
 
     public void setCharacterName(@NotNull String characterName) {
@@ -143,9 +95,6 @@ public final class Face implements Comparable<Face> {
 
     public void setIcon(boolean icon) {
         this.icon = icon;
-        if (category != null) {
-            category.markDirty();
-        }
     }
 
     public boolean hasDescription() {
@@ -167,33 +116,38 @@ public final class Face implements Comparable<Face> {
         description = null;
     }
 
-    @Contract(" -> new")
-    public @NotNull Face copy() {
-        var clone = new Face(name, imagePath, order);
+    public @Nullable FaceGroup getGroup() {
+        return group;
+    }
 
-        if (characterNameSet) {
-            clone.characterName = characterName;
-            clone.characterNameSet = true;
+    void setGroup(@Nullable FaceGroup group) {
+        this.group = group;
+    }
+
+    @Override
+    public @NotNull Face clone() {
+        Face clone;
+        try {
+            clone = (Face) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError("Object.clone threw CloneNotSupportedException?!", e);
         }
-        if (description != null) {
-            clone.description = new ArrayList<>(description);
+
+        clone.group = null;
+
+        if (hasDescription()) {
+            clone.setDescription(getDescription());
+        } else {
+            clone.description = null;
         }
+
         return clone;
     }
 
     @Override
-    public int compareTo(@NotNull Face o) {
-        if (order != o.order) {
-            return Long.compare(order, o.getOrder());
-        } else {
-            return name.compareTo(o.getName());
-        }
-    }
-
-    @Override
     public String toString() {
-        if (category != null) {
-            return category.getName() + PATH_DELIMITER + name;
+        if (group != null) {
+            return group.getName() + PATH_DELIMITER + name;
         } else {
             return name;
         }

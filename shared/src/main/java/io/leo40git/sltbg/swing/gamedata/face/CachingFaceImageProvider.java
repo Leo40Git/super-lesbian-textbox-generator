@@ -35,7 +35,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.github.benmanes.caffeine.cache.Scheduler;
 import io.leo40git.sltbg.gamedata.face.Face;
-import io.leo40git.sltbg.gamedata.face.FaceCategory;
+import io.leo40git.sltbg.gamedata.face.FaceGroup;
 import io.leo40git.sltbg.swing.AbstractIcon;
 import io.leo40git.sltbg.swing.ErrorIcon;
 import io.leo40git.sltbg.swing.util.ColorUtils;
@@ -85,8 +85,8 @@ public final class CachingFaceImageProvider implements FaceImageProvider {
     }
 
     @Override
-    public void paintFaceCategoryIcon(@NotNull FaceCategory category, @Nullable Component c, @NotNull Graphics g, int x, int y) {
-        var iconFace = category.getIconFace();
+    public void paintFaceGroupIcon(@NotNull FaceGroup group, @Nullable Component c, @NotNull Graphics g, int x, int y) {
+        var iconFace = group.getIconFace();
         if (iconFace != null) {
             paintFaceIcon(iconFace, c, g, x, y);
         } else {

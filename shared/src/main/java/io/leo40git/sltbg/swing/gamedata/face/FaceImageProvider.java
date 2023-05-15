@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.swing.Icon;
 
 import io.leo40git.sltbg.gamedata.face.Face;
-import io.leo40git.sltbg.gamedata.face.FaceCategory;
+import io.leo40git.sltbg.gamedata.face.FaceGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,8 +26,8 @@ public interface FaceImageProvider {
 
     @NotNull Icon getFaceIcon(@NotNull Face face);
 
-    default @NotNull Icon getFaceCategoryIcon(@NotNull FaceCategory category) {
-        var iconFace = category.getIconFace();
+    default @NotNull Icon getFaceGroupIcon(@NotNull FaceGroup group) {
+        var iconFace = group.getIconFace();
         if (iconFace != null) {
             return getFaceIcon(iconFace);
         } else {
@@ -39,8 +39,8 @@ public interface FaceImageProvider {
         getFaceIcon(face).paintIcon(c, g, x, y);
     }
 
-    default void paintFaceCategoryIcon(@NotNull FaceCategory category, @Nullable Component c, @NotNull Graphics g, int x, int y) {
-        getFaceCategoryIcon(category).paintIcon(c, g, x, y);
+    default void paintFaceGroupIcon(@NotNull FaceGroup group, @Nullable Component c, @NotNull Graphics g, int x, int y) {
+        getFaceGroupIcon(group).paintIcon(c, g, x, y);
     }
 
     default void invalidateAll() { }

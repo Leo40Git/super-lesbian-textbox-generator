@@ -9,173 +9,362 @@
 
 package io.leo40git.sltbg.gamedata.face;
 
+import java.io.IOException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.leo40git.sltbg.json.JsonReadUtils;
+import io.leo40git.sltbg.json.MalformedJsonException;
+import io.leo40git.sltbg.json.MissingFieldsException;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-public sealed class FacePalette permits FacePaletteFile {
-    public static final long DEFAULT_ORDER_BASE = 1000;
+import org.quiltmc.json5.JsonReader;
 
-    public static long getNextOrder(long order) {
-        order += DEFAULT_ORDER_BASE;
-        long rem = Math.abs(order % DEFAULT_ORDER_BASE);
-        if (rem > 0) {
-            order += DEFAULT_ORDER_BASE - rem;
+public final class FacePalette implements Cloneable {
+    private @NotNull String name;
+    private @NotNull List<FaceGroup> groups;
+    private @NotNull Map<String, FaceGroup> groupsLookup;
+    private @Nullable List<String> description, credits;
+    
+    public FacePalette(@NotNull String name) {
+        this.name = name;
+        
+        groups = new ArrayList<>();
+        groupsLookup = new HashMap<>();
+    }
+    
+    public FacePalette(@NotNull String name, int initialCapacity) {
+        this.name = name;
+        
+        groups = new ArrayList<>(initialCapacity);
+        groupsLookup = new HashMap<>(initialCapacity);
+    }
+
+    public @NotNull String getName() {
+        return name;
+    }
+
+    public void setName(@NotNull String name) {
+        this.name = name;
+    }
+
+    public boolean hasDescription() {
+        return description != null && !description.isEmpty();
+    }
+
+    public synchronized @NotNull List<String> getDescription() {
+        if (description == null) {
+            description = new ArrayList<>();
         }
-        return order;
+        return description;
     }
 
-    private final @NotNull List<FaceCategory> categories;
-    private final @NotNull Map<String, FaceCategory> categoriesLookup;
-
-    private volatile boolean needsSort = false;
-
-    public FacePalette() {
-        categories = new ArrayList<>();
-        categoriesLookup = new HashMap<>();
+    public synchronized void setDescription(@NotNull Collection<String> description) {
+        this.description = new ArrayList<>(description);
     }
 
-    public FacePalette(int initialCapacity) {
-        categories = new ArrayList<>(initialCapacity);
-        categoriesLookup = new HashMap<>(initialCapacity);
+    public synchronized void clearDescription() {
+        description = null;
     }
 
-    void markDirty() {
-        needsSort = true;
+    public boolean hasCredits() {
+        return credits != null && !credits.isEmpty();
     }
 
-    public void sortIfNeeded() {
-        if (needsSort) {
-            synchronized (categories) {
-                categories.sort(Comparator.naturalOrder());
-            }
-
-            needsSort = false;
+    public synchronized @NotNull List<String> getCredits() {
+        if (credits == null) {
+            credits = new ArrayList<>();
         }
+        return credits;
     }
 
-    public @NotNull @UnmodifiableView List<FaceCategory> getCategories() {
-        sortIfNeeded();
-        return Collections.unmodifiableList(categories);
+    public synchronized void setCredits(@NotNull Collection<String> credits) {
+        this.credits = new ArrayList<>(credits);
     }
 
-    public boolean containsCategory(@NotNull String name) {
-        return categoriesLookup.containsKey(name);
+    public synchronized void clearCredits() {
+        credits = null;
     }
 
-    public @Nullable FaceCategory getCategory(@NotNull String name) {
-        return categoriesLookup.get(name);
+    public synchronized @NotNull @UnmodifiableView List<FaceGroup> getGroups() {
+        return Collections.unmodifiableList(groups);
     }
 
-    public boolean containsFace(@NotNull String path) {
-        int delIdx = path.indexOf(Face.PATH_DELIMITER);
-        if (delIdx < 0) {
-            throw new IllegalArgumentException("Path \"%s\" is missing delimiter '%s'".formatted(path, Face.PATH_DELIMITER));
+    public synchronized boolean containsGroup(@NotNull String name) {
+        return groupsLookup.containsKey(name);
+    }
+
+    public synchronized @Nullable FaceGroup getGroup(@NotNull String name) {
+        return groupsLookup.get(name);
+    }
+
+    public synchronized void add(@NotNull FaceGroup group) {
+        if (groupsLookup.containsKey(group.getName())) {
+            throw new IllegalArgumentException("FaceGroup with name \"" + group.getName() + "\" already exists in this category");
         }
 
-        var category = getCategory(path.substring(0, delIdx));
-        if (category == null) {
+        if (group.getPalette() != null) {
+            group.getPalette().remove(group);
+        }
+
+        groups.add(group);
+        groupsLookup.put(group.getName(), group);
+        group.setPalette(this);
+    }
+
+    synchronized void rename(@NotNull FaceGroup group, @NotNull String newName) {
+        if (groupsLookup.containsKey(newName)) {
+            throw new IllegalArgumentException("FaceGroup with name \"" + newName + "\" already exists in this category");
+        }
+
+        groupsLookup.remove(group.getName());
+        groupsLookup.put(newName, group);
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public synchronized boolean remove(@NotNull FaceGroup group) {
+        if (groups.remove(group)) {
+            groupsLookup.remove(group.getName());
+            group.setPalette(null);
+            return true;
+        } else {
             return false;
         }
-
-        return category.containsFace(path.substring(delIdx + 1));
     }
 
-    public @Nullable Face getFace(@NotNull String path) {
-        int delIdx = path.indexOf(Face.PATH_DELIMITER);
-        if (delIdx < 0) {
-            throw new IllegalArgumentException("Path \"%s\" is missing delimiter '%s'".formatted(path, Face.PATH_DELIMITER));
-        }
+    @SuppressWarnings("UnusedReturnValue")
+    public synchronized @Nullable FaceGroup remove(@NotNull String name) {
+        final FaceGroup group;
 
-        var category = getCategory(path.substring(0, delIdx));
-        if (category == null) {
+        group = groupsLookup.remove(name);
+        if (group == null) {
             return null;
         }
+        groups.remove(group);
+        group.setPalette(null);
 
-        return category.getFace(path.substring(delIdx + 1));
+        return group;
     }
 
-    public void add(@NotNull FaceCategory category) {
-        if (category.getPalette() != null) {
-            throw new IllegalArgumentException("Category is already part of other palette");
+    public synchronized void clear() {
+        groups.clear();
+        groupsLookup.clear();
+    }
+
+    @Override
+    public synchronized @NotNull FacePalette clone() {
+        FacePalette clone;
+        try {
+            clone = (FacePalette) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError("Object.clone threw CloneNotSupportedException?!", e);
         }
 
-        synchronized (categories) {
-            if (categoriesLookup.put(category.getName(), category) != null) {
-                throw new IllegalArgumentException("Category with name \"" + category.getName() + "\" already exists in this palette");
-            }
-
-            categories.add(category);
-            category.onAddedToPalette(this);
+        clone.groups = new ArrayList<>(groups.size());
+        clone.groupsLookup = new HashMap<>(groups.size());
+        for (var group : groups) {
+            clone.add(group.clone());
         }
+
+        return clone;
     }
 
-    void rename(@NotNull FaceCategory category, @NotNull String newName) {
-        synchronized (categories) {
-            if (categoriesLookup.containsKey(newName)) {
-                throw new IllegalArgumentException("Category with name \"" + newName + "\" already exists in this palette");
-            }
-
-            categoriesLookup.remove(category.getName(), category);
-            categoriesLookup.put(newName, category);
-        }
-    }
-
-    public boolean contains(@NotNull String category) {
-        synchronized (categories) {
-            return categoriesLookup.containsKey(category);
-        }
-    }
-
-    protected void remove0(@NotNull FaceCategory category) {
-        category.onRemovedFromPalette();
-        markDirty();
-    }
-
-    public boolean remove(@NotNull FaceCategory category) {
-        synchronized (categories) {
-            if (categories.remove(category)) {
-                categoriesLookup.remove(category.getName());
-                remove0(category);
-                return true;
+    public synchronized void merge(@NotNull FacePalette other) {
+        for (var otherGroup : other.getGroups()) {
+            var myGroup = getGroup(otherGroup.getName());
+            if (myGroup != null) {
+                myGroup.merge(otherGroup);
             } else {
-                return false;
+                add(otherGroup.clone());
             }
         }
     }
 
-    public @Nullable FaceCategory remove(@NotNull String name) {
-        final FaceCategory category;
+    @Contract("_, _ -> new")
+    public static @NotNull FacePalette read(@NotNull JsonReader reader, @NotNull Path imageRoot) throws IOException {
+        final String startLocation = reader.locationString();
 
-        synchronized (categories) {
-            category = categoriesLookup.remove(name);
-            if (category == null) {
-                return null;
+        String name = null;
+        Map<String, FaceGroup> groups = null;
+        List<String> description = null, credits = null;
+
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String field = reader.nextName();
+            switch (field) {
+                case FaceFields.NAME -> name = reader.nextString();
+                case FaceFields.GROUPS -> {
+                    if (groups == null) {
+                        groups = new HashMap<>();
+                    }
+
+                    reader.beginObject();
+                    while (reader.hasNext()) {
+                        String groupName = reader.nextName();
+                        if (groups.containsKey(groupName)) {
+                            throw new MalformedJsonException("Duplicate group" + reader.locationString());
+                        }
+
+                        groups.put(groupName, readGroup(reader, imageRoot, groupName));
+                    }
+                    reader.endObject();
+                }
+                case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
+                case FaceFields.CREDITS -> credits = JsonReadUtils.readStringArray(reader);
+                default -> reader.skipValue();
             }
+        }
+        reader.endObject();
 
-            remove0(category);
+        if (name == null || groups == null) {
+            var missingFields = new ArrayList<String>();
+            if (name == null) {
+                missingFields.add(FaceFields.NAME);
+            }
+            if (groups == null) {
+                missingFields.add(FaceFields.GROUPS);
+            }
+            throw new MissingFieldsException("Face palette" + startLocation, missingFields);
         }
 
-        return category;
+        var palette = new FacePalette(name, groups.size());
+        for (var group : groups.values()) {
+            palette.add(group);
+        }
+
+        if (description != null) {
+            palette.setDescription(description);
+        }
+
+        if (credits != null) {
+            palette.setCredits(credits);
+        }
+
+        return palette;
     }
 
-    public void clear() {
-        synchronized (categories) {
-            for (var category : categories) {
-                category.onRemovedFromPalette();
-            }
+    @Contract("_ -> new")
+    public static @NotNull FacePalette read(@NotNull Path path) throws IOException {
+        try (var reader = JsonReader.json5(path)) {
+            return read(reader, path.getParent());
+        }
+    }
 
-            categories.clear();
-            categoriesLookup.clear();
+    @Contract("_, _, _ -> new")
+    private static @NotNull FaceGroup readGroup(@NotNull JsonReader reader, @NotNull Path imageRoot,
+                                                @NotNull String name) throws IOException {
+        final String startLocation = reader.locationString();
+
+        Map<String, Face> faces = null;
+        String characterName = null;
+        List<String> description = null;
+
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String field = reader.nextName();
+            switch (field) {
+                case FaceFields.NAME ->
+                        throw new MalformedJsonException("'" + FaceFields.NAME + "' field not allowed" + reader.locationString());
+                case FaceFields.FACES -> {
+                    if (faces == null) {
+                        faces = new HashMap<>();
+                    }
+
+                    reader.beginObject();
+                    while (reader.hasNext()) {
+                        String faceName = reader.nextName();
+                        if (faces.containsKey(faceName)) {
+                            throw new MalformedJsonException("Duplicate face" + reader.locationString());
+                        }
+
+                        faces.put(faceName, readFace(reader, imageRoot, faceName));
+                    }
+                    reader.endObject();
+                }
+                case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
+                case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
+                default -> reader.skipValue();
+            }
+        }
+        reader.endObject();
+
+        if (faces == null) {
+            throw new MissingFieldsException("Face group" + startLocation, FaceFields.FACES);
         }
 
-        needsSort = false;
+        var group = new FaceGroup(name, faces.size());
+        for (var face : faces.values()) {
+            group.add(face);
+        }
+
+        if (characterName != null) {
+            group.setCharacterName(characterName);
+        }
+
+        if (description != null) {
+            group.setDescription(description);
+        }
+
+        return group;
+    }
+
+    @Contract("_, _, _ -> new")
+    private static @NotNull Face readFace(@NotNull JsonReader reader, @NotNull Path imageRoot,
+                                          @NotNull String name) throws IOException {
+        final String startLocation = reader.locationString();
+
+        Path imagePath = null;
+        String characterName = null;
+        List<String> description = null;
+        boolean icon = false;
+
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String field = reader.nextName();
+            switch (field) {
+                case FaceFields.NAME ->
+                        throw new MalformedJsonException("'" + FaceFields.NAME + "' field not allowed" + reader.locationString());
+                case FaceFields.IMAGE_PATH -> {
+                    String relativePath = reader.nextString();
+                    try {
+                        imagePath = imageRoot.resolve(relativePath);
+                    } catch (InvalidPathException e) {
+                        throw new MalformedJsonException("Image path" + reader.locationString() + " is invalid: \"" + relativePath + "\"", e);
+                    }
+                }
+                case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
+                case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
+                case FaceFields.ICON -> icon = reader.nextBoolean();
+                default -> reader.skipValue();
+            }
+        }
+        reader.endObject();
+
+        if (imagePath == null) {
+            throw new MissingFieldsException("Face" + startLocation, FaceFields.IMAGE_PATH);
+        }
+
+        var face = new Face(name, imagePath);
+
+        if (characterName != null) {
+            face.setCharacterName(characterName);
+        }
+
+        if (description != null) {
+            face.setDescription(description);
+        }
+
+        face.setIcon(icon);
+
+        return face;
     }
 }
