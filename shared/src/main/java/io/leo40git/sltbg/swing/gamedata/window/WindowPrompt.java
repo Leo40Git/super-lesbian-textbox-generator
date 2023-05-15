@@ -13,6 +13,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 
+import io.leo40git.sltbg.gamedata.window.WindowVersion;
+
 final class WindowPrompt {
     // this animated prompt is drawn on the bottom of the window horizontally centered
     //  when there's no more text to display, and the next input will begin the next textbox

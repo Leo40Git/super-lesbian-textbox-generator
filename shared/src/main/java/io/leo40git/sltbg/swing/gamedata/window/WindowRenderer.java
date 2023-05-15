@@ -14,6 +14,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 
+import io.leo40git.sltbg.gamedata.window.WindowTone;
+import io.leo40git.sltbg.gamedata.window.WindowVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;

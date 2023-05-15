@@ -7,7 +7,7 @@
  * Alternatively, you can find it at <https://unlicense.org/>.
  */
 
-package io.leo40git.sltbg.swing.gamedata.window;
+package io.leo40git.sltbg.gamedata.window;
 
 import org.jetbrains.annotations.Range;
 

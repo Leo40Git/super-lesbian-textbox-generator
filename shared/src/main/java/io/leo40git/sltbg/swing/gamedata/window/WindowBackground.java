@@ -20,6 +20,8 @@ import java.awt.image.ImageObserver;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 
+import io.leo40git.sltbg.gamedata.window.WindowTone;
+import io.leo40git.sltbg.gamedata.window.WindowVersion;
 import org.jetbrains.annotations.NotNull;
 
 final class WindowBackground {

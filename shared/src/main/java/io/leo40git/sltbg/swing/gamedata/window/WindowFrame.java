@@ -13,6 +13,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 
+import io.leo40git.sltbg.gamedata.window.WindowVersion;
+
 final class WindowFrame {
     // in essence, this is a modified "nine patch" renderer
     //  corner pieces are 16x16
