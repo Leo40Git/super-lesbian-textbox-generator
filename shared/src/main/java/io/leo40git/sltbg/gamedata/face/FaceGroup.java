@@ -100,6 +100,19 @@ public final class FaceGroup implements Cloneable {
         return facesLookup.containsKey(name);
     }
 
+    public int indexOf(@NotNull Face face) {
+        return faces.indexOf(face);
+    }
+
+    public int indexOf(@NotNull String name) {
+        var face = getFace(name);
+        if (face != null) {
+            return indexOf(face);
+        } else {
+            return -1;
+        }
+    }
+
     public @Nullable Face getFace(@NotNull String name) {
         return facesLookup.get(name);
     }
@@ -139,6 +152,21 @@ public final class FaceGroup implements Cloneable {
         markDirty();
     }
 
+    public void add(int index, @NotNull Face face) {
+        if (facesLookup.containsKey(face.getName())) {
+            throw new IllegalArgumentException("Face with name \"" + face.getName() + "\" already exists in this category");
+        }
+
+        if (face.getGroup() != null) {
+            face.getGroup().remove(face);
+        }
+
+        faces.add(index, face);
+        facesLookup.put(face.getName(), face);
+        face.setGroup(this);
+        markDirty();
+    }
+
     void rename(@NotNull Face face, @NotNull String newName) {
         if (facesLookup.containsKey(newName)) {
             throw new IllegalArgumentException("Face with name \"" + newName + "\" already exists in this category");
@@ -169,6 +197,18 @@ public final class FaceGroup implements Cloneable {
             return null;
         }
         faces.remove(face);
+        face.setGroup(null);
+        markDirty();
+
+        return face;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public @NotNull Face remove(int index) {
+        final Face face;
+
+        face = faces.remove(index);
+        facesLookup.remove(face.getName());
         face.setGroup(null);
         markDirty();
 

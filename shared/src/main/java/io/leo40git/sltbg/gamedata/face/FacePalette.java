@@ -103,6 +103,19 @@ public final class FacePalette implements Cloneable {
         return groupsLookup.containsKey(name);
     }
 
+    public int indexOf(@NotNull FaceGroup group) {
+        return groups.indexOf(group);
+    }
+
+    public int indexOf(@NotNull String name) {
+        var group = getGroup(name);
+        if (group != null) {
+            return indexOf(group);
+        } else {
+            return -1;
+        }
+    }
+
     public @Nullable FaceGroup getGroup(@NotNull String name) {
         return groupsLookup.get(name);
     }
@@ -117,6 +130,20 @@ public final class FacePalette implements Cloneable {
         }
 
         groups.add(group);
+        groupsLookup.put(group.getName(), group);
+        group.setPalette(this);
+    }
+
+    public void add(int index, @NotNull FaceGroup group) {
+        if (groupsLookup.containsKey(group.getName())) {
+            throw new IllegalArgumentException("FaceGroup with name \"" + group.getName() + "\" already exists in this category");
+        }
+
+        if (group.getPalette() != null) {
+            group.getPalette().remove(group);
+        }
+
+        groups.add(index, group);
         groupsLookup.put(group.getName(), group);
         group.setPalette(this);
     }
@@ -150,6 +177,17 @@ public final class FacePalette implements Cloneable {
             return null;
         }
         groups.remove(group);
+        group.setPalette(null);
+
+        return group;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public @NotNull FaceGroup remove(int index) {
+        final FaceGroup group;
+
+        group = groups.remove(index);
+        groupsLookup.remove(group.getName());
         group.setPalette(null);
 
         return group;
