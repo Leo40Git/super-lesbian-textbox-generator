@@ -134,6 +134,7 @@ public final class FaceGroup implements Cloneable {
         }
 
         faces.add(face);
+        facesLookup.put(face.getName(), face);
         face.setGroup(this);
         markDirty();
     }
