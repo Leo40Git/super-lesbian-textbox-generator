@@ -61,18 +61,18 @@ public final class FacePalette implements Cloneable {
         return description != null && !description.isEmpty();
     }
 
-    public synchronized @NotNull List<String> getDescription() {
+    public @NotNull List<String> getDescription() {
         if (description == null) {
             description = new ArrayList<>();
         }
         return description;
     }
 
-    public synchronized void setDescription(@NotNull Collection<String> description) {
+    public void setDescription(@NotNull Collection<String> description) {
         this.description = new ArrayList<>(description);
     }
 
-    public synchronized void clearDescription() {
+    public void clearDescription() {
         description = null;
     }
 
@@ -80,34 +80,34 @@ public final class FacePalette implements Cloneable {
         return credits != null && !credits.isEmpty();
     }
 
-    public synchronized @NotNull List<String> getCredits() {
+    public @NotNull List<String> getCredits() {
         if (credits == null) {
             credits = new ArrayList<>();
         }
         return credits;
     }
 
-    public synchronized void setCredits(@NotNull Collection<String> credits) {
+    public void setCredits(@NotNull Collection<String> credits) {
         this.credits = new ArrayList<>(credits);
     }
 
-    public synchronized void clearCredits() {
+    public void clearCredits() {
         credits = null;
     }
 
-    public synchronized @NotNull @UnmodifiableView List<FaceGroup> getGroups() {
+    public @NotNull @UnmodifiableView List<FaceGroup> getGroups() {
         return Collections.unmodifiableList(groups);
     }
 
-    public synchronized boolean containsGroup(@NotNull String name) {
+    public boolean containsGroup(@NotNull String name) {
         return groupsLookup.containsKey(name);
     }
 
-    public synchronized @Nullable FaceGroup getGroup(@NotNull String name) {
+    public @Nullable FaceGroup getGroup(@NotNull String name) {
         return groupsLookup.get(name);
     }
 
-    public synchronized void add(@NotNull FaceGroup group) {
+    public void add(@NotNull FaceGroup group) {
         if (groupsLookup.containsKey(group.getName())) {
             throw new IllegalArgumentException("FaceGroup with name \"" + group.getName() + "\" already exists in this category");
         }
@@ -121,7 +121,7 @@ public final class FacePalette implements Cloneable {
         group.setPalette(this);
     }
 
-    synchronized void rename(@NotNull FaceGroup group, @NotNull String newName) {
+    void rename(@NotNull FaceGroup group, @NotNull String newName) {
         if (groupsLookup.containsKey(newName)) {
             throw new IllegalArgumentException("FaceGroup with name \"" + newName + "\" already exists in this category");
         }
@@ -131,7 +131,7 @@ public final class FacePalette implements Cloneable {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean remove(@NotNull FaceGroup group) {
+    public boolean remove(@NotNull FaceGroup group) {
         if (groups.remove(group)) {
             groupsLookup.remove(group.getName());
             group.setPalette(null);
@@ -142,7 +142,7 @@ public final class FacePalette implements Cloneable {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized @Nullable FaceGroup remove(@NotNull String name) {
+    public @Nullable FaceGroup remove(@NotNull String name) {
         final FaceGroup group;
 
         group = groupsLookup.remove(name);
@@ -155,13 +155,13 @@ public final class FacePalette implements Cloneable {
         return group;
     }
 
-    public synchronized void clear() {
+    public void clear() {
         groups.clear();
         groupsLookup.clear();
     }
 
     @Override
-    public synchronized @NotNull FacePalette clone() {
+    public @NotNull FacePalette clone() {
         FacePalette clone;
         try {
             clone = (FacePalette) super.clone();
@@ -178,7 +178,7 @@ public final class FacePalette implements Cloneable {
         return clone;
     }
 
-    public synchronized void merge(@NotNull FacePalette other) {
+    public void merge(@NotNull FacePalette other) {
         for (var otherGroup : other.getGroups()) {
             var myGroup = getGroup(otherGroup.getName());
             if (myGroup != null) {

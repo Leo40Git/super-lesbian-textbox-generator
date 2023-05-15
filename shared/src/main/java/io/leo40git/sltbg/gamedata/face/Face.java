@@ -101,18 +101,18 @@ public final class Face implements Cloneable {
         return description != null && !description.isEmpty();
     }
 
-    public synchronized @NotNull List<String> getDescription() {
+    public @NotNull List<String> getDescription() {
         if (description == null) {
             description = new ArrayList<>();
         }
         return description;
     }
 
-    public synchronized void setDescription(@NotNull Collection<String> description) {
+    public void setDescription(@NotNull Collection<String> description) {
         this.description = new ArrayList<>(description);
     }
 
-    public synchronized void clearDescription() {
+    public void clearDescription() {
         description = null;
     }
 

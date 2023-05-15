@@ -69,18 +69,18 @@ public final class FaceGroup implements Cloneable {
         return description != null && !description.isEmpty();
     }
 
-    public synchronized @NotNull List<String> getDescription() {
+    public @NotNull List<String> getDescription() {
         if (description == null) {
             description = new ArrayList<>();
         }
         return description;
     }
 
-    public synchronized void setDescription(@NotNull Collection<String> description) {
+    public void setDescription(@NotNull Collection<String> description) {
         this.description = new ArrayList<>(description);
     }
 
-    public synchronized void clearDescription() {
+    public void clearDescription() {
         description = null;
     }
 
@@ -92,15 +92,15 @@ public final class FaceGroup implements Cloneable {
         this.palette = palette;
     }
 
-    public synchronized @NotNull @UnmodifiableView List<Face> getFaces() {
+    public @NotNull @UnmodifiableView List<Face> getFaces() {
         return Collections.unmodifiableList(faces);
     }
 
-    public synchronized boolean containsFace(@NotNull String name) {
+    public boolean containsFace(@NotNull String name) {
         return facesLookup.containsKey(name);
     }
 
-    public synchronized @Nullable Face getFace(@NotNull String name) {
+    public @Nullable Face getFace(@NotNull String name) {
         return facesLookup.get(name);
     }
 
@@ -119,12 +119,12 @@ public final class FaceGroup implements Cloneable {
         return iconFace;
     }
 
-    private synchronized void markDirty() {
+    private void markDirty() {
         iconFace = null;
         iconFaceSet = false;
     }
 
-    public synchronized void add(@NotNull Face face) {
+    public void add(@NotNull Face face) {
         if (facesLookup.containsKey(face.getName())) {
             throw new IllegalArgumentException("Face with name \"" + face.getName() + "\" already exists in this category");
         }
@@ -138,7 +138,7 @@ public final class FaceGroup implements Cloneable {
         markDirty();
     }
 
-    synchronized void rename(@NotNull Face face, @NotNull String newName) {
+    void rename(@NotNull Face face, @NotNull String newName) {
         if (facesLookup.containsKey(newName)) {
             throw new IllegalArgumentException("Face with name \"" + newName + "\" already exists in this category");
         }
@@ -148,7 +148,7 @@ public final class FaceGroup implements Cloneable {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized boolean remove(@NotNull Face face) {
+    public boolean remove(@NotNull Face face) {
         if (faces.remove(face)) {
             facesLookup.remove(face.getName());
             face.setGroup(null);
@@ -160,7 +160,7 @@ public final class FaceGroup implements Cloneable {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public synchronized @Nullable Face remove(@NotNull String name) {
+    public @Nullable Face remove(@NotNull String name) {
         final Face face;
 
         face = facesLookup.remove(name);
@@ -174,14 +174,14 @@ public final class FaceGroup implements Cloneable {
         return face;
     }
 
-    public synchronized void clear() {
+    public void clear() {
         faces.clear();
         facesLookup.clear();
         markDirty();
     }
 
     @Override
-    public synchronized @NotNull FaceGroup clone() {
+    public @NotNull FaceGroup clone() {
         FaceGroup clone;
         try {
             clone = (FaceGroup) super.clone();
@@ -201,7 +201,7 @@ public final class FaceGroup implements Cloneable {
         return clone;
     }
 
-    public synchronized void merge(@NotNull FaceGroup other) {
+    public void merge(@NotNull FaceGroup other) {
         for (var otherFace : other.getFaces()) {
             if (facesLookup.containsKey(otherFace.getName())) {
                 throw new IllegalArgumentException("Face with name \"" + otherFace.getName() + "\" already exists in this category");
