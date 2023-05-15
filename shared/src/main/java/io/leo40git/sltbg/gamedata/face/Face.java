@@ -25,6 +25,7 @@ public final class Face implements Cloneable {
     private @Nullable String characterName;
     private boolean characterNameSet;
     private boolean icon;
+    private @Nullable String before, after;
     private @Nullable List<String> description;
     private @Nullable FaceGroup group;
 
@@ -95,6 +96,22 @@ public final class Face implements Cloneable {
 
     public void setIcon(boolean icon) {
         this.icon = icon;
+    }
+
+    public @Nullable String getBefore() {
+        return before;
+    }
+
+    public void setBefore(@Nullable String before) {
+        this.before = before;
+    }
+
+    public @Nullable String getAfter() {
+        return after;
+    }
+
+    public void setAfter(@Nullable String after) {
+        this.after = after;
     }
 
     public boolean hasDescription() {

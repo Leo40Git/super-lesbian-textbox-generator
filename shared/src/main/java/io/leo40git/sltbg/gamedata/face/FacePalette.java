@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import io.leo40git.sltbg.json.JsonReadUtils;
 import io.leo40git.sltbg.json.MalformedJsonException;
@@ -227,6 +229,36 @@ public final class FacePalette implements Cloneable {
         }
     }
 
+    public void sort() {
+        for (var group : groups) {
+            group.sort();
+        }
+
+        var sortHelper = new FaceSortHelper<FaceGroup>(groups.size());
+        for (var group : groups) {
+            sortHelper.add(group.getName(), group, group.getBefore(), group.getAfter());
+        }
+        groups = sortHelper.sort();
+    }
+
+    public @NotNull CompletableFuture<Void> sortAsync(@NotNull Executor executor) {
+        var futures = new CompletableFuture[groups.size()];
+        int index = 0;
+        for (var group : groups) {
+            futures[index++] = CompletableFuture.runAsync(group::sort, executor);
+        }
+
+        return CompletableFuture.allOf(futures)
+                .thenApply(ignored -> {
+                    var sortHelper = new FaceSortHelper<FaceGroup>(groups.size());
+                    for (var group : groups) {
+                        sortHelper.add(group.getName(), group, group.getBefore(), group.getAfter());
+                    }
+                    groups = sortHelper.sort();
+                    return null;
+                });
+    }
+
     @Contract("_, _ -> new")
     public static @NotNull FacePalette read(@NotNull JsonReader reader, @NotNull Path imageRoot) throws IOException {
         final String startLocation = reader.locationString();
@@ -304,6 +336,7 @@ public final class FacePalette implements Cloneable {
 
         Map<String, Face> faces = null;
         String characterName = null;
+        String before = null, after = null;
         List<String> description = null;
 
         reader.beginObject();
@@ -329,6 +362,8 @@ public final class FacePalette implements Cloneable {
                     reader.endObject();
                 }
                 case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
+                case FaceFields.BEFORE -> before = reader.nextString();
+                case FaceFields.AFTER -> after = reader.nextString();
                 case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
                 default -> reader.skipValue();
             }
@@ -352,6 +387,9 @@ public final class FacePalette implements Cloneable {
             group.setDescription(description);
         }
 
+        group.setBefore(before);
+        group.setAfter(after);
+
         return group;
     }
 
@@ -362,6 +400,7 @@ public final class FacePalette implements Cloneable {
 
         Path imagePath = null;
         String characterName = null;
+        String before = null, after = null;
         List<String> description = null;
         boolean icon = false;
 
@@ -380,6 +419,8 @@ public final class FacePalette implements Cloneable {
                     }
                 }
                 case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
+                case FaceFields.BEFORE -> before = reader.nextString();
+                case FaceFields.AFTER -> after = reader.nextString();
                 case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
                 case FaceFields.ICON -> icon = reader.nextBoolean();
                 default -> reader.skipValue();
@@ -401,6 +442,8 @@ public final class FacePalette implements Cloneable {
             face.setDescription(description);
         }
 
+        face.setBefore(before);
+        face.setAfter(after);
         face.setIcon(icon);
 
         return face;
