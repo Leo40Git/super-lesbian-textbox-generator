@@ -65,23 +65,20 @@ public final class FaceGroup implements Cloneable {
         this.characterName = characterName;
     }
 
-    public boolean hasDescription() {
-        return description != null && !description.isEmpty();
-    }
-
-    public @NotNull List<String> getDescription() {
+    public @NotNull @UnmodifiableView List<String> getDescription() {
         if (description == null) {
-            description = new ArrayList<>();
+            return Collections.emptyList();
+        } else {
+            return Collections.unmodifiableList(description);
         }
-        return description;
     }
 
-    public void setDescription(@NotNull Collection<String> description) {
-        this.description = new ArrayList<>(description);
-    }
-
-    public void clearDescription() {
-        description = null;
+    public void setDescription(@Nullable Collection<String> description) {
+        if (description != null && !description.isEmpty()) {
+            this.description = new ArrayList<>(description);
+        } else {
+            this.description = null;
+        }
     }
 
     public @Nullable FacePalette getPalette() {
@@ -96,7 +93,15 @@ public final class FaceGroup implements Cloneable {
         return Collections.unmodifiableList(faces);
     }
 
-    public boolean containsFace(@NotNull String name) {
+    public int size() {
+        return faces.size();
+    }
+
+    public boolean containsFace(@NotNull Face face) {
+        return faces.contains(face);
+    }
+
+    public boolean containsName(@NotNull String name) {
         return facesLookup.containsKey(name);
     }
 

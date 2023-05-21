@@ -26,9 +26,7 @@ public final class FacePaletteMerger {
                 var myGroup = merged.getGroup(otherGroup.getName());
                 if (myGroup == null) {
                     myGroup = new FaceGroup(otherGroup.getName(), otherGroup.getFaces().size());
-                    if (otherGroup.hasDescription()) {
-                        myGroup.setDescription(otherGroup.getDescription());
-                    }
+                    myGroup.setDescription(otherGroup.getDescription());
                     merged.add(myGroup);
                 }
 

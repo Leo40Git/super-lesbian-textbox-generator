@@ -12,10 +12,12 @@ package io.leo40git.sltbg.gamedata.face;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnmodifiableView;
 
 public final class Face implements Cloneable {
     public static final String PATH_DELIMITER = "/";
@@ -79,14 +81,9 @@ public final class Face implements Cloneable {
         return characterName;
     }
 
-    public void setCharacterName(@NotNull String characterName) {
+    public void setCharacterName(@Nullable String characterName) {
         this.characterName = characterName;
-        characterNameSet = true;
-    }
-
-    public void clearCharacterName() {
-        characterName = null;
-        characterNameSet = false;
+        characterNameSet = characterName != null;
     }
 
     public boolean isIcon() {
@@ -97,23 +94,20 @@ public final class Face implements Cloneable {
         this.icon = icon;
     }
 
-    public boolean hasDescription() {
-        return description != null && !description.isEmpty();
-    }
-
-    public @NotNull List<String> getDescription() {
+    public @NotNull @UnmodifiableView List<String> getDescription() {
         if (description == null) {
-            description = new ArrayList<>();
+            return Collections.emptyList();
+        } else {
+            return Collections.unmodifiableList(description);
         }
-        return description;
     }
 
-    public void setDescription(@NotNull Collection<String> description) {
-        this.description = new ArrayList<>(description);
-    }
-
-    public void clearDescription() {
-        description = null;
+    public void setDescription(@Nullable Collection<String> description) {
+        if (description != null && !description.isEmpty()) {
+            this.description = new ArrayList<>(description);
+        } else {
+            this.description = null;
+        }
     }
 
     public @Nullable FaceGroup getGroup() {
@@ -134,13 +128,7 @@ public final class Face implements Cloneable {
         }
 
         clone.group = null;
-
-        if (hasDescription()) {
-            clone.setDescription(getDescription());
-        } else {
-            clone.description = null;
-        }
-
+        clone.setDescription(description);
         return clone;
     }
 

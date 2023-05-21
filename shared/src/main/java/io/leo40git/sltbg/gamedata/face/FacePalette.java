@@ -57,49 +57,51 @@ public final class FacePalette implements Cloneable {
         this.name = name;
     }
 
-    public boolean hasDescription() {
-        return description != null && !description.isEmpty();
-    }
-
-    public @NotNull List<String> getDescription() {
+    public @NotNull @UnmodifiableView List<String> getDescription() {
         if (description == null) {
-            description = new ArrayList<>();
+            return Collections.emptyList();
+        } else {
+            return Collections.unmodifiableList(description);
         }
-        return description;
     }
 
-    public void setDescription(@NotNull Collection<String> description) {
-        this.description = new ArrayList<>(description);
+    public void setDescription(@Nullable Collection<String> description) {
+        if (description != null && !description.isEmpty()) {
+            this.description = new ArrayList<>(description);
+        } else {
+            this.description = null;
+        }
     }
 
-    public void clearDescription() {
-        description = null;
-    }
-
-    public boolean hasCredits() {
-        return credits != null && !credits.isEmpty();
-    }
-
-    public @NotNull List<String> getCredits() {
+    public @NotNull @UnmodifiableView List<String> getCredits() {
         if (credits == null) {
-            credits = new ArrayList<>();
+            return Collections.emptyList();
+        } else {
+            return Collections.unmodifiableList(credits);
         }
-        return credits;
     }
 
-    public void setCredits(@NotNull Collection<String> credits) {
-        this.credits = new ArrayList<>(credits);
-    }
-
-    public void clearCredits() {
-        credits = null;
+    public void setCredits(@Nullable Collection<String> credits) {
+        if (credits != null && !credits.isEmpty()) {
+            this.credits = new ArrayList<>(credits);
+        } else {
+            this.credits = null;
+        }
     }
 
     public @NotNull @UnmodifiableView List<FaceGroup> getGroups() {
         return Collections.unmodifiableList(groups);
     }
 
-    public boolean containsGroup(@NotNull String name) {
+    public int size() {
+        return groups.size();
+    }
+
+    public boolean containsGroup(@NotNull FaceGroup group) {
+        return groups.contains(group);
+    }
+
+    public boolean containsName(@NotNull String name) {
         return groupsLookup.containsKey(name);
     }
 
@@ -267,14 +269,8 @@ public final class FacePalette implements Cloneable {
         for (var group : groups.values()) {
             palette.add(group);
         }
-
-        if (description != null) {
-            palette.setDescription(description);
-        }
-
-        if (credits != null) {
-            palette.setCredits(credits);
-        }
+        palette.setDescription(description);
+        palette.setCredits(credits);
 
         return palette;
     }
@@ -335,12 +331,8 @@ public final class FacePalette implements Cloneable {
         for (var face : faces.values()) {
             group.add(face);
         }
-
         group.setCharacterName(characterName);
-
-        if (description != null) {
-            group.setDescription(description);
-        }
+        group.setDescription(description);
 
         return group;
     }
@@ -382,16 +374,9 @@ public final class FacePalette implements Cloneable {
         }
 
         var face = new Face(name, imagePath);
-
-        if (characterName != null) {
-            face.setCharacterName(characterName);
-        }
-
-        if (description != null) {
-            face.setDescription(description);
-        }
-
+        face.setCharacterName(characterName);
         face.setIcon(icon);
+        face.setDescription(description);
 
         return face;
     }
