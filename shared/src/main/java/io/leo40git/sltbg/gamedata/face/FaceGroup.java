@@ -96,6 +96,10 @@ public final class FaceGroup implements Cloneable {
 
     void setPalette(@Nullable FacePalette palette) {
         this.palette = palette;
+
+        for (var face : faces) {
+            face.setGroup(this);
+        }
     }
 
     public @NotNull @UnmodifiableView List<Face> getFaces() {
@@ -230,6 +234,9 @@ public final class FaceGroup implements Cloneable {
     }
 
     public void clear() {
+        for (var face : faces) {
+            face.setGroup(null);
+        }
         faces.clear();
         facesLookup.clear();
         markDirty();

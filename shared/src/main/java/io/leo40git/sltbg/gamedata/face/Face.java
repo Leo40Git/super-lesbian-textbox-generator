@@ -30,6 +30,7 @@ public final class Face implements Cloneable {
     private boolean icon;
     private @Nullable List<String> description;
     private @Nullable FaceGroup group;
+    private @Nullable FacePalette palette, sourcePalette;
 
     public Face(@NotNull String name, @NotNull Path imagePath) {
         this.name = name;
@@ -123,8 +124,25 @@ public final class Face implements Cloneable {
         return group;
     }
 
+    public @Nullable FacePalette getPalette() {
+        return palette;
+    }
+
     void setGroup(@Nullable FaceGroup group) {
         this.group = group;
+        if (group != null) {
+            this.palette = group.getPalette();
+        } else {
+            this.palette = null;
+        }
+    }
+
+    public @Nullable FacePalette getSourcePalette() {
+        return sourcePalette;
+    }
+
+    void setSourcePalette(@Nullable FacePalette sourcePalette) {
+        this.sourcePalette = sourcePalette;
     }
 
     @Override
@@ -136,7 +154,7 @@ public final class Face implements Cloneable {
             throw new InternalError("Object.clone threw CloneNotSupportedException?!", e);
         }
 
-        clone.group = null;
+        clone.setGroup(null);
         clone.setDescription(description);
         return clone;
     }

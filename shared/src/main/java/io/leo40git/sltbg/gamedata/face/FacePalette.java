@@ -196,8 +196,19 @@ public final class FacePalette implements Cloneable {
     }
 
     public void clear() {
+        for (var group : groups) {
+            group.setPalette(null);
+        }
         groups.clear();
         groupsLookup.clear();
+    }
+
+    void setSource() {
+        for (var group : groups) {
+            for (var face : group.getFaces()) {
+                face.setSourcePalette(this);
+            }
+        }
     }
 
     @Override
@@ -271,6 +282,7 @@ public final class FacePalette implements Cloneable {
         }
         palette.setDescription(description);
         palette.setCredits(credits);
+        palette.setSource();
 
         return palette;
     }
