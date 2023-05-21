@@ -25,7 +25,6 @@ public final class FaceGroup implements Cloneable {
     private @NotNull List<Face> faces;
     private @NotNull Map<String, Face> facesLookup;
     private @Nullable String characterName;
-    private @Nullable String before, after;
     private @Nullable List<String> description;
     private @Nullable FacePalette palette;
 
@@ -64,22 +63,6 @@ public final class FaceGroup implements Cloneable {
 
     public void setCharacterName(@Nullable String characterName) {
         this.characterName = characterName;
-    }
-
-    public @Nullable String getBefore() {
-        return before;
-    }
-
-    public void setBefore(@Nullable String before) {
-        this.before = before;
-    }
-
-    public @Nullable String getAfter() {
-        return after;
-    }
-
-    public void setAfter(@Nullable String after) {
-        this.after = after;
     }
 
     public boolean hasDescription() {
@@ -272,13 +255,5 @@ public final class FaceGroup implements Cloneable {
         }
 
         markDirty();
-    }
-
-    public void sort() {
-        var sortHelper = new FaceSortHelper<Face>(faces.size());
-        for (var face : faces) {
-            sortHelper.add(face.getName(), face, face.getBefore(), face.getAfter());
-        }
-        faces = sortHelper.sort();
     }
 }
