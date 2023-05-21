@@ -20,10 +20,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-public final class FaceGroup implements Cloneable {
+public final class FaceGroup {
     private @NotNull String name;
-    private @NotNull List<Face> faces;
-    private @NotNull Map<String, Face> facesLookup;
+    private final @NotNull List<Face> faces;
+    private final @NotNull Map<String, Face> facesLookup;
     private @Nullable String after;
     private @Nullable String characterName;
     private @Nullable List<String> description;
@@ -160,10 +160,7 @@ public final class FaceGroup implements Cloneable {
             throw new IllegalArgumentException("Face with name \"" + face.getName() + "\" already exists in this category");
         }
 
-        if (face.getGroup() != null) {
-            face.getGroup().remove(face);
-        }
-
+        face.remove();
         faces.add(face);
         facesLookup.put(face.getName(), face);
         face.setGroup(this);
@@ -175,10 +172,7 @@ public final class FaceGroup implements Cloneable {
             throw new IllegalArgumentException("Face with name \"" + face.getName() + "\" already exists in this category");
         }
 
-        if (face.getGroup() != null) {
-            face.getGroup().remove(face);
-        }
-
+        face.remove();
         faces.add(index, face);
         facesLookup.put(face.getName(), face);
         face.setGroup(this);
@@ -242,24 +236,9 @@ public final class FaceGroup implements Cloneable {
         markDirty();
     }
 
-    @Override
-    public @NotNull FaceGroup clone() {
-        FaceGroup clone;
-        try {
-            clone = (FaceGroup) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError("Object.clone threw CloneNotSupportedException?!", e);
+    public void remove() {
+        if (palette != null) {
+            palette.remove(this);
         }
-
-        clone.palette = null;
-        clone.markDirty();
-
-        clone.faces = new ArrayList<>(faces.size());
-        clone.facesLookup = new HashMap<>(faces.size());
-        for (var face : faces) {
-            clone.add(face.clone());
-        }
-
-        return clone;
     }
 }

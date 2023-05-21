@@ -29,10 +29,10 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import org.quiltmc.json5.JsonReader;
 
-public final class FacePalette implements Cloneable {
+public final class FacePalette {
     private @NotNull String name;
-    private @NotNull List<FaceGroup> groups;
-    private @NotNull Map<String, FaceGroup> groupsLookup;
+    private final @NotNull List<FaceGroup> groups;
+    private final @NotNull Map<String, FaceGroup> groupsLookup;
     private @Nullable List<String> description, credits;
     
     public FacePalette(@NotNull String name) {
@@ -127,10 +127,7 @@ public final class FacePalette implements Cloneable {
             throw new IllegalArgumentException("FaceGroup with name \"" + group.getName() + "\" already exists in this category");
         }
 
-        if (group.getPalette() != null) {
-            group.getPalette().remove(group);
-        }
-
+        group.remove();
         groups.add(group);
         groupsLookup.put(group.getName(), group);
         group.setPalette(this);
@@ -141,10 +138,7 @@ public final class FacePalette implements Cloneable {
             throw new IllegalArgumentException("FaceGroup with name \"" + group.getName() + "\" already exists in this category");
         }
 
-        if (group.getPalette() != null) {
-            group.getPalette().remove(group);
-        }
-
+        group.remove();
         groups.add(index, group);
         groupsLookup.put(group.getName(), group);
         group.setPalette(this);
@@ -209,24 +203,6 @@ public final class FacePalette implements Cloneable {
                 face.setSourcePalette(this);
             }
         }
-    }
-
-    @Override
-    public @NotNull FacePalette clone() {
-        FacePalette clone;
-        try {
-            clone = (FacePalette) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError("Object.clone threw CloneNotSupportedException?!", e);
-        }
-
-        clone.groups = new ArrayList<>(groups.size());
-        clone.groupsLookup = new HashMap<>(groups.size());
-        for (var group : groups) {
-            clone.add(group.clone());
-        }
-
-        return clone;
     }
 
     @Contract("_, _ -> new")

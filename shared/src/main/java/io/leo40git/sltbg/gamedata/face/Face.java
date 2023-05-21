@@ -130,10 +130,17 @@ public final class Face implements Cloneable {
 
     void setGroup(@Nullable FaceGroup group) {
         this.group = group;
+
         if (group != null) {
-            this.palette = group.getPalette();
+            palette = group.getPalette();
         } else {
-            this.palette = null;
+            palette = null;
+        }
+    }
+
+    public void remove() {
+        if (group != null) {
+            group.remove(this);
         }
     }
 
