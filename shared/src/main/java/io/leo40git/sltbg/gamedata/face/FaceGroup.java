@@ -24,6 +24,7 @@ public final class FaceGroup implements Cloneable {
     private @NotNull String name;
     private @NotNull List<Face> faces;
     private @NotNull Map<String, Face> facesLookup;
+    private @Nullable String after;
     private @Nullable String characterName;
     private @Nullable List<String> description;
     private @Nullable FacePalette palette;
@@ -55,6 +56,14 @@ public final class FaceGroup implements Cloneable {
         }
 
         this.name = name;
+    }
+
+    public @Nullable String getAfter() {
+        return after;
+    }
+
+    public void setAfter(@Nullable String after) {
+        this.after = after;
     }
 
     public @Nullable String getCharacterName() {

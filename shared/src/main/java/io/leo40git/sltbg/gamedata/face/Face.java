@@ -24,6 +24,7 @@ public final class Face implements Cloneable {
 
     private @NotNull String name;
     private @NotNull Path imagePath;
+    private @Nullable String after;
     private @Nullable String characterName;
     private boolean characterNameSet;
     private boolean icon;
@@ -57,6 +58,14 @@ public final class Face implements Cloneable {
 
     public void setImagePath(@NotNull Path imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public @Nullable String getAfter() {
+        return after;
+    }
+
+    public void setAfter(@Nullable String after) {
+        this.after = after;
     }
 
     public @NotNull String getCharacterName() {

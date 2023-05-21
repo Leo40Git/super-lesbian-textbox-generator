@@ -18,6 +18,7 @@ public final class FaceFields {
     public static final String GROUPS = "groups";
     public static final String FACES = "faces";
     public static final String IMAGE_PATH = "path";
+    public static final String AFTER = "after";
     public static final String CHARACTER_NAME = "char_name";
     public static final String ICON = "icon";
     public static final String DESCRIPTION = "description";

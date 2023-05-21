@@ -288,6 +288,7 @@ public final class FacePalette implements Cloneable {
         final String startLocation = reader.locationString();
 
         Map<String, Face> faces = null;
+        String after = null;
         String characterName = null;
         List<String> description = null;
 
@@ -316,6 +317,7 @@ public final class FacePalette implements Cloneable {
                     }
                     reader.endObject();
                 }
+                case FaceFields.AFTER -> after = reader.nextString();
                 case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
                 case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
                 default -> reader.skipValue();
@@ -331,6 +333,7 @@ public final class FacePalette implements Cloneable {
         for (var face : faces.values()) {
             group.add(face);
         }
+        group.setAfter(after);
         group.setCharacterName(characterName);
         group.setDescription(description);
 
@@ -343,6 +346,7 @@ public final class FacePalette implements Cloneable {
         final String startLocation = reader.locationString();
 
         Path imagePath = null;
+        String after = null;
         String characterName = null;
         List<String> description = null;
         boolean icon = false;
@@ -361,6 +365,7 @@ public final class FacePalette implements Cloneable {
                         throw new MalformedJsonException("Image path" + reader.locationString() + " is invalid: \"" + relativePath + "\"", e);
                     }
                 }
+                case FaceFields.AFTER -> after = reader.nextString();
                 case FaceFields.CHARACTER_NAME -> characterName = reader.nextString();
                 case FaceFields.DESCRIPTION -> description = JsonReadUtils.readStringArray(reader);
                 case FaceFields.ICON -> icon = reader.nextBoolean();
@@ -374,6 +379,7 @@ public final class FacePalette implements Cloneable {
         }
 
         var face = new Face(name, imagePath);
+        face.setAfter(after);
         face.setCharacterName(characterName);
         face.setIcon(icon);
         face.setDescription(description);
