@@ -241,19 +241,4 @@ public final class FaceGroup implements Cloneable {
 
         return clone;
     }
-
-    public void merge(@NotNull FaceGroup other) {
-        for (var otherFace : other.getFaces()) {
-            if (facesLookup.containsKey(otherFace.getName())) {
-                throw new IllegalArgumentException("Face with name \"" + otherFace.getName() + "\" already exists in this category");
-            }
-
-            var myFace = otherFace.clone();
-            faces.add(myFace);
-            facesLookup.put(myFace.getName(), myFace);
-            myFace.setGroup(this);
-        }
-
-        markDirty();
-    }
 }

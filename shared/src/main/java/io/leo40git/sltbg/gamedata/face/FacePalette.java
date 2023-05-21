@@ -216,17 +216,6 @@ public final class FacePalette implements Cloneable {
         return clone;
     }
 
-    public void merge(@NotNull FacePalette other) {
-        for (var otherGroup : other.getGroups()) {
-            var myGroup = getGroup(otherGroup.getName());
-            if (myGroup != null) {
-                myGroup.merge(otherGroup);
-            } else {
-                add(otherGroup.clone());
-            }
-        }
-    }
-
     @Contract("_, _ -> new")
     public static @NotNull FacePalette read(@NotNull JsonReader reader, @NotNull Path imageRoot) throws IOException {
         final String startLocation = reader.locationString();
@@ -315,6 +304,9 @@ public final class FacePalette implements Cloneable {
                 case FaceFields.FACES -> {
                     if (faces == null) {
                         faces = new HashMap<>();
+                    } else {
+                        throw new MalformedJsonException(
+                                "Duplicate '" + FaceFields.FACES + "' field" + reader.locationString());
                     }
 
                     reader.beginObject();
@@ -344,9 +336,7 @@ public final class FacePalette implements Cloneable {
             group.add(face);
         }
 
-        if (characterName != null) {
-            group.setCharacterName(characterName);
-        }
+        group.setCharacterName(characterName);
 
         if (description != null) {
             group.setDescription(description);
